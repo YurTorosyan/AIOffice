@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.local
 work/
+__pycache__/
+*.pyc

@@ -1,8 +1,9 @@
 import { configuration, team } from '../config.ts';
 import type { OfficeState } from '../domain.ts';
 import { statusActivity } from './agents.ts';
+import { getAgentSkillAssignment } from '../agents/registry.ts';
 export function createOffice(): OfficeState {
-  const agents = team.map(([id, role, name]) => ({ id, role, name, status: 'idle' as const, currentTask: null, progress: 0, activity: statusActivity.idle, lastActivity: null, startedAt: null, completedAt: null }));
+  const agents = team.map(([id, role, name]) => ({ id, role, name, ...getAgentSkillAssignment(id), status: 'idle' as const, currentTask: null, progress: 0, activity: statusActivity.idle, lastActivity: null, startedAt: null, completedAt: null }));
   return { agents, tasks: [], projects: [{ id: configuration.projectId, name: 'AI Office', repository: null, status: 'demo', agents: agents.map(a => a.id) }], activity: [] };
 }
 export function metrics(state: OfficeState) {

@@ -1,0 +1,32 @@
+{
+  "skills": [
+    { "id": "project-architecture", "name": "Project Architecture", "description": "Требования, архитектурные решения и план задач для команды.", "path": ".agents/skills/project-architecture/SKILL.md" },
+    { "id": "ui-ux-design", "name": "UI/UX Design", "description": "Сценарии, доступность и дизайн-спецификации до реализации интерфейса.", "path": ".agents/skills/ui-ux-design/SKILL.md" },
+    { "id": "frontend-engineering", "name": "Frontend Engineering", "description": "React и TypeScript по согласованному дизайну с проверкой интерфейса.", "path": ".agents/skills/frontend-engineering/SKILL.md" },
+    { "id": "backend-engineering", "name": "Backend Engineering", "description": "Контракты API, данные, валидация и надёжность при согласованной необходимости backend.", "path": ".agents/skills/backend-engineering/SKILL.md" },
+    { "id": "technical-seo", "name": "Technical SEO", "description": "Семантика, метаданные, индексируемость и производительность публичных страниц.", "path": ".agents/skills/technical-seo/SKILL.md" },
+    { "id": "security-audit", "name": "Security Audit", "description": "Модель угроз и проверка рисков с доказательствами и рекомендациями.", "path": ".agents/skills/security-audit/SKILL.md" },
+    { "id": "quality-assurance", "name": "Quality Assurance", "description": "План проверок, регрессии и воспроизводимые отчёты о дефектах.", "path": ".agents/skills/quality-assurance/SKILL.md" },
+    { "id": "independent-code-review", "name": "Independent Code Review", "description": "Независимое ревью готовых изменений с приоритетами и ссылками на код.", "path": ".agents/skills/independent-code-review/SKILL.md" }
+  ],
+  "customAgents": [
+    { "id": "lead-developer", "employeeId": "lead", "skillId": "project-architecture", "path": ".codex/agents/lead-developer.toml" },
+    { "id": "ui-ux-designer", "employeeId": "design", "skillId": "ui-ux-design", "path": ".codex/agents/ui-ux-designer.toml" },
+    { "id": "frontend-developer", "employeeId": "frontend", "skillId": "frontend-engineering", "path": ".codex/agents/frontend-developer.toml" },
+    { "id": "backend-developer", "employeeId": "backend", "skillId": "backend-engineering", "path": ".codex/agents/backend-developer.toml" },
+    { "id": "seo-specialist", "employeeId": "seo", "skillId": "technical-seo", "path": ".codex/agents/seo-specialist.toml" },
+    { "id": "security-engineer", "employeeId": "security", "skillId": "security-audit", "path": ".codex/agents/security-engineer.toml" },
+    { "id": "qa-engineer", "employeeId": "qa", "skillId": "quality-assurance", "path": ".codex/agents/qa-engineer.toml" },
+    { "id": "technical-reviewer", "employeeId": "review", "skillId": "independent-code-review", "path": ".codex/agents/technical-reviewer.toml" }
+  ],
+  "employees": [
+    { "id": "lead", "role": "Lead Developer", "skillId": "project-architecture", "customAgentId": "lead-developer", "responsibility": "Планирует архитектуру, распределяет задачи и разрешает технические противоречия с учётом решений Director." },
+    { "id": "design", "role": "UI/UX Designer", "skillId": "ui-ux-design", "customAgentId": "ui-ux-designer", "responsibility": "Проектирует взаимодействия, адаптивность и доступность; готовит спецификацию для Frontend." },
+    { "id": "frontend", "role": "Frontend Developer", "skillId": "frontend-engineering", "customAgentId": "frontend-developer", "responsibility": "Реализует и проверяет интерфейс на React и TypeScript по согласованному дизайну." },
+    { "id": "backend", "role": "Backend Developer", "skillId": "backend-engineering", "customAgentId": "backend-developer", "responsibility": "Проектирует контракты API и работу с данными; добавляет backend только в явно согласованном объёме." },
+    { "id": "seo", "role": "SEO Specialist", "skillId": "technical-seo", "customAgentId": "seo-specialist", "responsibility": "Проверяет техническое SEO и семантику; отличает публичный сайт от локального приложения." },
+    { "id": "security", "role": "Security Engineer", "skillId": "security-audit", "customAgentId": "security-engineer", "responsibility": "Выявляет риски на границах доверия и предлагает исправления с оценкой серьёзности и доказательствами." },
+    { "id": "qa", "role": "QA Engineer", "skillId": "quality-assurance", "customAgentId": "qa-engineer", "responsibility": "Проверяет поведение и регрессии, воспроизводит дефекты и сообщает фактические результаты тестов." },
+    { "id": "review", "role": "Technical Reviewer", "skillId": "independent-code-review", "customAgentId": "technical-reviewer", "responsibility": "Независимо проверяет готовые изменения; не реализует рассматриваемое исправление и не подменяет выводы мнением Lead." }
+  ]
+}

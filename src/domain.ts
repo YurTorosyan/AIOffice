@@ -3,7 +3,10 @@ export type AgentStatus = typeof statuses[number];
 export const taskStatuses = ['pending', 'in_progress', 'review', 'testing', 'completed', 'failed'] as const;
 export type TaskStatus = typeof taskStatuses[number];
 export type Priority = 'low' | 'normal' | 'high';
-export interface Agent {
+export interface AgentSkillAssignment {
+  skillId: string; skillName: string; skillDescription: string; customAgentId: string; responsibility: string;
+}
+export interface Agent extends AgentSkillAssignment {
   id: string; role: string; name: string; status: AgentStatus;
   currentTask: string | null; progress: number; activity: string;
   lastActivity: string | null; startedAt: string | null; completedAt: string | null;

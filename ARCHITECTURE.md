@@ -1,5 +1,16 @@
 # Архитектура
 
+## Этап 3 — конфигурация ролей
+
+- `src/agents/registry.json` содержит нормализованные определения восьми Skills, восьми профилей и восьми employee-связок. `registry.ts` проверяет ссылки, уникальность, владельцев профилей, количество и существующие роли из config.ts до создания состояния.
+- `Agent` дополнен полями skillId, skillName, skillDescription, customAgentId, responsibility. `createOffice()` заполняет их из реестра. TaskSystem/state/helpers сохраняют метаданные при обновлениях без новых команд и без изменения workflow.
+- `src/ui/AgentSkills.tsx` показывает метаданные в текущей карточке сотрудника, не читая файловую систему и не дублируя mapping.
+- `.agents/skills/<id>/SKILL.md` — инструкции с YAML metadata; `.codex/agents/<id>.toml` — проектный профиль только с name, description, developer_instructions. Связь со Skill явная в тексте; доступные проектные Skills не эксклюзивны.
+- `scripts/validate_agents.py` проверяет файлы, YAML SafeLoader и TOML через tomllib, наличие восьми артефактов каждого типа и ссылки. PyYAML — только локальный инструмент проверки в игнорируемом work/, не runtime-зависимость браузера.
+- Проверки включают отображение реального компонента Employee Details, отсутствующие/дублирующиеся определения, ошибочные назначения, синтаксис и сохранение metadata через workflow/reset.
+
+Подробности: docs/TEAM_STRUCTURE.md, docs/AGENT_SKILLS.md, docs/AGENT_PROFILES.md. Этап 3 не запускает профили и не добавляет API или runtime Codex. Ни конструктор модели, ни UI не запускают процессы по customAgentId.
+
 ## Этап 2 — действующая модель
 
 `Agent State (state/agents.ts)` → `Task System (tasks/TaskSystem.ts)` → `Event System (events/EventBus.ts)` → `CodexAdapter` → `UI`.
