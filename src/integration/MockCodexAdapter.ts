@@ -1,13 +1,26 @@
-import { configuration, team } from '../config.ts';
-import { statuses, type AgentUpdate } from '../domain.ts';
+import type { OfficeCommand } from '../domain.ts';
+import { configuration } from '../config.ts';
 import type { CodexAdapter } from './CodexAdapter.ts';
+import { TaskSystem } from '../tasks/TaskSystem.ts';
+import { MockTeamWorkflow } from './MockTeamWorkflow.ts';
 export class MockCodexAdapter implements CodexAdapter {
   readonly source = 'mock' as const;
-  private listeners = new Set<(event:AgentUpdate)=>void>();
+  private system = new TaskSystem();
+  private workflow = new MockTeamWorkflow(this.system);
   private timer: ReturnType<typeof setInterval> | undefined;
-  private step = 0;
-  subscribe(listener:(event:AgentUpdate)=>void) { this.listeners.add(listener); return ()=>{this.listeners.delete(listener);}; }
-  start() { if(this.timer) return; this.timer=setInterval(()=>{ const i=this.step%team.length; const cycle=Math.floor(this.step/team.length); const status=statuses[(cycle+i)%statuses.length]; const event:AgentUpdate={agentId:team[i][0],status,progress:status==='Completed'?100:(this.step*13+28)%95,timestamp:new Date().toISOString(),id:`mock-${this.step++}-${Date.now()}`}; this.listeners.forEach(listener=>listener(event)); },configuration.tickMs); }
-  stop() { clearInterval(this.timer); this.timer=undefined; }
-  reset() { this.stop(); this.step=0; }
+  getSnapshot = () => this.system.getSnapshot();
+  getAgents = () => this.getSnapshot().agents;
+  getTasks = () => this.getSnapshot().tasks;
+  getEvents = () => this.getSnapshot().activity;
+  subscribeToEvents: CodexAdapter['subscribeToEvents'] = listener => this.system.events.subscribe(listener);
+  dispatch = (command: OfficeCommand) => {
+    if (['running', 'paused'].includes(this.workflow.getSnapshot().status)) throw new Error('Дождитесь завершения workflow или сбросьте его');
+    return this.system.dispatch(command);
+  };
+  getWorkflow = () => this.workflow.getSnapshot();
+  startWorkflow() { this.workflow.start(); }
+  advanceWorkflow() { this.workflow.advance(); }
+  start() { this.workflow.resume(); if (!this.timer) this.timer = setInterval(() => this.advanceWorkflow(), configuration.tickMs); }
+  stop() { clearInterval(this.timer); this.timer = undefined; this.workflow.pause(); }
+  reset() { this.stop(); this.system.reset(); this.workflow = new MockTeamWorkflow(this.system); }
 }

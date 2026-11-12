@@ -1,3 +1,8 @@
-import type { AgentUpdate } from '../domain.ts';
-// Internal AI Office contract. This is not a Codex API or protocol.
-export interface CodexAdapter { readonly source: 'mock' | 'codex'; subscribe(listener:(event:AgentUpdate)=>void):()=>void; start():void; stop():void; reset():void }
+import type { ActivityEvent, Agent, OfficeCommand, OfficeState, Task } from '../domain.ts';
+// AI Office's own contract; not a Codex API. No real implementation in stage 2.
+export interface CodexAdapter {
+  readonly source: 'mock' | 'codex';
+  getAgents(): Agent[]; getTasks(): Task[]; getEvents(): ActivityEvent[]; getSnapshot(): OfficeState;
+  subscribeToEvents(listener: (event: ActivityEvent) => void): () => void;
+  dispatch(command: OfficeCommand): string | undefined;
+}
