@@ -1,5 +1,19 @@
 # Архитектура
 
+## Stage 3B — текущий community-каталог
+
+Восемь работников/профилей сохранены. Registry расширен нормализованными skillAssignments (skillId, assignedEmployeeId, justification): несколько Skills на работника и обоснованное общее назначение. Сейчас 12 установленных Skills из четырёх upstream-репозиториев и три неустановленных кандидата; прежние локальные Skills архивированы в docs/legacy-agent-skills.
+
+Каждый Skill хранит original name, GitHub repository/path, лицензию и её источник, точный sourceCommit, installedVersion, статус, зависимости и ограничения. Agent сохраняет прежние primary-поля и дополнен списком skills с assignedEmployeeId. UI не содержит дублирующей таблицы назначений.
+
+Физические файлы подтверждаются .agents/community-skills.lock.json (upstream Git blobs + SHA-256 всех установленных ресурсов). .gitattributes запрещает преобразование переводов строк у vendor-файлов. inspect-community-skills.mjs читает только локальные файлы, обнаруживает отсутствующие/изменённые/лишние файлы и не выполняет чужой код. Generated evidence обновляется перед dev/test/build и используется моделью. Production build/preview отказываются продолжать при неполной установке; dev может показать фактическую ошибку. После изменения Skills нужен restart dev или rebuild: браузерный bundle содержит снимок проверки, а не live filesystem monitor.
+
+Статусы: installed, available, verification_required, installation_failed. Источники проверяются строгим GitHub URL и безопасным относительным путём; версии — full 40-character commits. Старое ограничение «ровно 8 Skills» заменено текущим запросом Director; ровно 8 работников и 8 профилей остаётся обязательным.
+
+TaskSystem, EventBus, MockTeamWorkflow, исходная сцена и анимации не менялись. Codex CLI 0.144.5 проверен как host для формата Skills; runtime в приложение не подключён и реальная работа агентов не запускалась. Полный аудитный каталог: docs/COMMUNITY_SKILLS_CATALOG.md.
+
+Ниже — история предыдущих этапов; актуальные назначения описаны выше и в каталоге.
+
 ## Этап 3 — конфигурация ролей
 
 - `src/agents/registry.json` содержит нормализованные определения восьми Skills, восьми профилей и восьми employee-связок. `registry.ts` проверяет ссылки, уникальность, владельцев профилей, количество и существующие роли из config.ts до создания состояния.

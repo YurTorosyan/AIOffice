@@ -1,40 +1,22 @@
-# Codex Custom Agent profiles
+# Codex Custom Agent profiles — Stage 3B
 
-В `.codex/agents/` находятся ровно восемь проектных TOML-файлов:
+Сохранены восемь проектных TOML-файлов в `.codex/agents/`. В каждом только официальные required fields: name, description, developer_instructions. Формат описан в [официальной документации](https://learn.chatgpt.com/docs/agent-configuration/subagents). Профили не создают отдельные процессы и не подключают офис к Codex runtime.
 
-| Профиль / имя Codex | Работник | Основной Skill |
+| Profile | Employee | Primary community Skill |
 |---|---|---|
-| lead-developer.toml / lead-developer | lead | project-architecture |
-| ui-ux-designer.toml / ui-ux-designer | design | ui-ux-design |
-| frontend-developer.toml / frontend-developer | frontend | frontend-engineering |
-| backend-developer.toml / backend-developer | backend | backend-engineering |
-| seo-specialist.toml / seo-specialist | seo | technical-seo |
-| security-engineer.toml / security-engineer | security | security-audit |
-| qa-engineer.toml / qa-engineer | qa | quality-assurance |
-| technical-reviewer.toml / technical-reviewer | review | independent-code-review |
+| lead-developer.toml | lead | planning-and-task-breakdown |
+| ui-ux-designer.toml | design | frontend-design |
+| frontend-developer.toml | frontend | vercel-react-best-practices |
+| backend-developer.toml | backend | api-and-interface-design |
+| seo-specialist.toml | seo | seo-audit |
+| security-engineer.toml | security | security-and-hardening |
+| qa-engineer.toml | qa | test-driven-development |
+| technical-reviewer.toml | review | code-review-and-quality |
 
-Используются только три обязательных поддерживаемых поля: `name`, `description`, `developer_instructions`. Имя совпадает с именем файла без расширения и `customAgentId`. Профили не задают модель, полномочия, транспорт или выдуманное поле назначения Skill. Формат и размещение проверены по [официальной документации Custom Agents](https://learn.chatgpt.com/docs/agent-configuration/subagents).
+Developer instructions явно ссылаются на установленный основной Skill, дополнительные назначения берутся из единого реестра. Только Installed означает допустимый локальный источник инструкций; кандидаты Available/Verification required ещё не установлены и не должны автоматически скачиваться или запускаться. Указание стороннего Skill не повышает permissions и не разрешает выполнение чужих scripts без инспекции.
 
-## Как использовать
+Откройте корень AI Office в Codex. Пример будущего запроса: «Используй custom agent technical-reviewer для независимого ревью готового diff; основной Skill code-review-and-quality; не меняй рассматриваемое рабочее дерево». Это явный запрос на роль, а не кнопка runtime внутри офиса. Для примера upstream mutation experiment используйте только изолированную временную копию. Lead может применять тот же review Skill для предварительной самопроверки, но не заменяет независимое заключение Reviewer.
 
-Откройте корень AI Office в Codex. При наличии поддержки Custom Agents в вашей установленной версии запрос может выглядеть так:
+Director остаётся владельцем. Текущий внешний вид, восемь работников, архитектура состояния и mock workflow сохраняются. Backend не добавляется без реальной задачи; SEO не публикует локальное приложение; QA не выдаёт установку Playwright-примеров за готовое внешнее окружение.
 
-> Используй custom agent technical-reviewer для независимого ревью завершённых изменений. Прочитай .agents/skills/independent-code-review/SKILL.md, не меняй рассматриваемый код; верни findings с серьёзностью и file:line.
-
-Другой пример:
-
-> Используй custom agent lead-developer для плана этой задачи. Сначала прочитай .agents/skills/project-architecture/SKILL.md, затем верни решения, задачи, владельцев и проверки. Реальный Codex runtime к офису не подключай.
-
-Это примеры **явных будущих запросов на роль**, а не обещание, что карточка в офисе запустит соответствующий процесс. Не существует добавленного нами `/agent`-API или кнопки подключения. Запуск зависит от установленного Codex и настроек родительской сессии; сами TOML-файлы не повышают полномочия. Ограничение Reviewer на редактирование задано инструкциями, а не отдельной технической изоляцией.
-
-## Содержание и границы
-
-Каждый профиль указывает существующий employee ID, точную роль и путь к своему основному Skill. Он требует читать Skill перед ролью, сохранять решения Director, соблюдать границы специалистов и возвращать Lead структурированный результат: Outcome; Evidence and affected files; Checks; Risks or open decisions; Handoff owner and next action.
-
-Technical Reviewer остаётся независимым: не реализует рассматриваемое исправление и не принимает вывод Lead на веру. Несогласие сохраняется для Director. Lead координирует передачу результатов, но не подменяет ревью. Backend учитывает, что текущий проект работает без сервера; SEO учитывает локальный характер приложения.
-
-Все проектные Skills могут быть обнаружены любым профилем. Связь с основным Skill задаётся явными инструкциями и реестром приложения, а не автоматически при создании `SKILL.md`.
-
-## Обновление
-
-Сохраняйте имена и соответствия, если миграция не запрошена явно. Меняйте обязанности в соответствующих файлах и документации; при изменении назначения синхронно обновляйте `src/agents/registry.json`, текст инструкций и тесты. Проверяйте `npm run validate:agents`, `npm test`, `npm run build`. Профили этапа 3 проверены как конфигурационные артефакты; поведенческие испытания реального Codex не выполнялись и не требуются для mock-офиса.
+Обновляйте registry, профиль и каталог согласованно. После изменения выполните npm run validate:agents, npm test, npm run build и browser check. Профили остаются конфигурацией, их реальная эффективность в Codex не тестировалась на этом этапе.

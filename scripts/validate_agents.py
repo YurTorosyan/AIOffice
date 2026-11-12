@@ -40,9 +40,9 @@ def validate_assets(root=ROOT):
     profiles = registry['customAgents']
     employees = registry['employees']
     for label, rows in [('Skills', skills), ('Custom Agents', profiles), ('Employees', employees)]:
-        if len(rows) != 8 or len({row['id'] for row in rows}) != 8:
-            errors.append(f'{label}: expected exactly 8 unique definitions')
-    expected_skills = {s['path'] for s in skills}
+        if (label != 'Skills' and len(rows) != 8) or len({row['id'] for row in rows}) != len(rows):
+            errors.append(f'{label}: wrong count or duplicate definitions')
+    expected_skills = {s['path'] for s in skills if s['installationStatus'] == 'installed'}
     actual_skills = {p.relative_to(root).as_posix() for p in (root / '.agents/skills').glob('*/SKILL.md')}
     expected_profiles = {p['path'] for p in profiles}
     actual_profiles = {p.relative_to(root).as_posix() for p in (root / '.codex/agents').glob('*.toml')}
@@ -52,6 +52,8 @@ def validate_assets(root=ROOT):
         for path in sorted(actual - expected):
             errors.append(f'Unregistered {label} file: {path}')
     for skill in skills:
+        if skill['installationStatus'] != 'installed':
+            continue
         try:
             if skill['path'] != f".agents/skills/{skill['id']}/SKILL.md":
                 raise ValueError('Invalid Skill path')
@@ -60,8 +62,10 @@ def validate_assets(root=ROOT):
             if not match:
                 raise ValueError('Missing YAML frontmatter')
             metadata = yaml.load(match[1], Loader=UniqueKeyLoader)
-            if not isinstance(metadata, dict) or set(metadata) != {'name', 'description'}:
+            if not isinstance(metadata, dict) or not {'name', 'description'}.issubset(metadata):
                 raise ValueError('Expected name and description frontmatter fields')
+            if set(metadata) - {'name', 'description', 'license', 'metadata', 'allowed-tools', 'compatibility'}:
+                raise ValueError('Unsupported Skill frontmatter field')
             if metadata['name'] != skill['id'] or not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', metadata['name']) or len(metadata['name']) > 64:
                 raise ValueError('Skill name does not match registry/directory')
             if not isinstance(metadata['description'], str) or not 1 <= len(metadata['description'].strip()) <= 1024:
@@ -97,4 +101,4 @@ if __name__ == '__main__':
     if problems:
         print('\n'.join(problems))
         raise SystemExit(1)
-    print('Validated: 8 SKILL.md YAML manifests, 8 TOML profiles, 8 matching employee definitions.')
+    print('Validated: installed community Skill YAML manifests, 8 TOML profiles, 8 matching employee definitions.')

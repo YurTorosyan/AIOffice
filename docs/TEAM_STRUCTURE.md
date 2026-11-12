@@ -1,23 +1,25 @@
-# Постоянная команда AI Office
+# Постоянная команда AI Office — Stage 3B
 
 Director — владелец и источник решений; он не входит в восемь работников. IDs, имена, роли, рабочие места и внешность из `src/config.ts` сохранены. Дополнительных работников, управления составом или установки Skills через UI нет.
 
-| ID / имя | Роль | Ответственность | Основной Skill | Custom Agent |
-|---|---|---|---|---|
-| lead / Алекс | Lead Developer | Требования, архитектура, декомпозиция и разрешение технических противоречий | project-architecture | lead-developer |
-| design / Мия | UI/UX Designer | Исследование доступных пользовательских данных, сценарии, спецификации, доступность и адаптивность | ui-ux-design | ui-ux-designer |
-| frontend / Лео | Frontend Developer | React/TypeScript, компоненты и проверка согласованного интерфейса | frontend-engineering | frontend-developer |
-| backend / Ник | Backend Developer | Контракты, валидация, данные и надёжность; сервер только по согласованной необходимости | backend-engineering | backend-developer |
-| seo / Ева | SEO Specialist | Семантика, метаданные, индексируемость публичных страниц и производительность | technical-seo | seo-specialist |
-| security / Макс | Security Engineer | Модель угроз, доказанные риски, серьёзность и рекомендации по исправлению | security-audit | security-engineer |
-| qa / Сэм | QA Engineer | Планирование тестов, регрессии, воспроизведение дефектов, фактический pass/fail | quality-assurance | qa-engineer |
-| review / Ира | Technical Reviewer | Независимая проверка готового кода, рисков и пробелов в проверках | independent-code-review | technical-reviewer |
+| Работник | Основной Skill | Дополнительные назначения |
+|---|---|---|
+| Lead Developer | planning-and-task-breakdown | context-engineering, code-review-and-quality |
+| UI/UX Designer | frontend-design | ui-ux-pro-max |
+| Frontend Developer | vercel-react-best-practices | — |
+| Backend Developer | api-and-interface-design | source-driven-development |
+| SEO Specialist | seo-audit | schema, programmatic-seo |
+| Security Engineer | security-and-hardening | differential-review |
+| QA Engineer | test-driven-development | webapp-testing |
+| Technical Reviewer | code-review-and-quality | — |
+
+Имена и внешность работников не менялись. Точные IDs, имена и роли остаются в src/config.ts.
 
 ## Источник данных
 
-`src/agents/registry.json` — единый нормализованный каталог: восемь Skills, восемь профилей и восемь employee-связок. Registry Validator проверяет IDs, количество, роли, пути, уникальность основных назначений, владельца профиля и согласованность Skill. Файловый валидатор дополнительно проверяет наличие и реальный синтаксис YAML/TOML.
+`src/agents/registry.json` — единый каталог community Skills, восьми профилей, восьми employee-связок и обоснованных skillAssignments. Проверяются уникальные Skill IDs, GitHub repository/path/commit, роли, основные и множественные назначения. Дополнительный inspect-community-skills.mjs проверяет реальные файлы по SHA-256 lockfile; UI различает Installed, Available, Verification required и Installation failed.
 
-В `Agent` добавлены skillId, skillName, skillDescription, customAgentId и responsibility. `createOffice()` заполняет их через `getAgentSkillAssignment()`. Обновления задач сохраняют эти поля. UI получает готовые данные и не содержит таблицу ролей/Skills; компонент `AgentSkills` выводит их в существующей карточке. Графика продолжает добавляться только в слое представления.
+В Agent сохранены skillId/skillName/skillDescription/customAgentId/responsibility и добавлен список skills с источниками, лицензиями, версиями, фактическими статусами и assignedEmployeeId. Графика остаётся в слое представления. Неустановленные кандидаты не выполняются. Полный каталог: [COMMUNITY_SKILLS_CATALOG.md](COMMUNITY_SKILLS_CATALOG.md).
 
 ## Передача работы
 
@@ -25,4 +27,4 @@ Lead планирует и согласует архитектуру. UI/UX вы
 
 Сохраняется mock-маршрут задачи этапа 2: Lead создаёт → Frontend получает/выполняет → QA тестирует → Reviewer проверяет → Lead принимает результат → completed. Присвоение Skill не меняет шаги, события, паузу, сброс или ручную систему задач.
 
-На этапе 3 **ни один работник не запущен как реальный независимый процесс**. Все движения и события остаются mock. Skills и TOML — подготовленная конфигурационная основа; не соединение с runtime Codex. Инструкции вызова и поддержки: [AGENT_SKILLS.md](AGENT_SKILLS.md), [AGENT_PROFILES.md](AGENT_PROFILES.md).
+На этапе 3B **ни один работник не запущен как реальный независимый процесс**. Все движения и события остаются mock. Skills и TOML — подготовленная конфигурационная основа; не соединение с runtime Codex. Инструкции вызова и поддержки: [AGENT_SKILLS.md](AGENT_SKILLS.md), [AGENT_PROFILES.md](AGENT_PROFILES.md).

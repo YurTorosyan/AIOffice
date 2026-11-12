@@ -3,8 +3,16 @@ export type AgentStatus = typeof statuses[number];
 export const taskStatuses = ['pending', 'in_progress', 'review', 'testing', 'completed', 'failed'] as const;
 export type TaskStatus = typeof taskStatuses[number];
 export type Priority = 'low' | 'normal' | 'high';
+export type InstallationStatus = 'installed' | 'available' | 'verification_required' | 'installation_failed';
+export interface EmployeeSkill {
+  skillId: string; skillName: string; description: string; originalSkillName: string;
+  sourceRepository: string; sourcePath: string; license: string; sourceCommit: string;
+  installedVersion: string | null; assignedEmployeeId: string;
+  installationStatus: InstallationStatus; statusReason: string; dependencies: readonly string[]; risks: readonly string[];
+}
 export interface AgentSkillAssignment {
   skillId: string; skillName: string; skillDescription: string; customAgentId: string; responsibility: string;
+  skills: readonly EmployeeSkill[];
 }
 export interface Agent extends AgentSkillAssignment {
   id: string; role: string; name: string; status: AgentStatus;

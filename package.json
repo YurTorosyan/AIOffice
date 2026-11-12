@@ -1,6 +1,6 @@
 {
   "name": "ai-office", "version": "0.1.0", "private": true, "type": "module",
-  "scripts": { "dev": "vite --host 127.0.0.1", "build": "tsc --noEmit && vite build", "preview": "vite preview --host 127.0.0.1", "test": "node --experimental-strip-types --test tests/*.test.ts && python -m unittest discover -s tests -p test_*.py", "validate:agents": "python scripts/validate_agents.py" },
+  "scripts": { "predev": "node scripts/inspect-community-skills.mjs --write", "dev": "vite --host 127.0.0.1", "prebuild": "node scripts/inspect-community-skills.mjs --write && node scripts/inspect-community-skills.mjs", "build": "tsc --noEmit && vite build", "prepreview": "node scripts/inspect-community-skills.mjs --write && node scripts/inspect-community-skills.mjs", "preview": "vite preview --host 127.0.0.1", "pretest": "node scripts/inspect-community-skills.mjs --write", "test": "node --experimental-strip-types --test tests/*.test.ts && python -m unittest discover -s tests -p test_*.py", "validate:agents": "python scripts/validate_agents.py && node scripts/inspect-community-skills.mjs" },
   "dependencies": { "react": "19.2.8", "react-dom": "19.2.8" },
   "devDependencies": { "@types/react": "19.2.18", "@types/react-dom": "19.2.3", "typescript": "~5.9.3", "vite": "8.1.5" }
 }

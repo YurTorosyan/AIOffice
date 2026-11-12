@@ -1,32 +1,541 @@
 {
   "skills": [
-    { "id": "project-architecture", "name": "Project Architecture", "description": "Требования, архитектурные решения и план задач для команды.", "path": ".agents/skills/project-architecture/SKILL.md" },
-    { "id": "ui-ux-design", "name": "UI/UX Design", "description": "Сценарии, доступность и дизайн-спецификации до реализации интерфейса.", "path": ".agents/skills/ui-ux-design/SKILL.md" },
-    { "id": "frontend-engineering", "name": "Frontend Engineering", "description": "React и TypeScript по согласованному дизайну с проверкой интерфейса.", "path": ".agents/skills/frontend-engineering/SKILL.md" },
-    { "id": "backend-engineering", "name": "Backend Engineering", "description": "Контракты API, данные, валидация и надёжность при согласованной необходимости backend.", "path": ".agents/skills/backend-engineering/SKILL.md" },
-    { "id": "technical-seo", "name": "Technical SEO", "description": "Семантика, метаданные, индексируемость и производительность публичных страниц.", "path": ".agents/skills/technical-seo/SKILL.md" },
-    { "id": "security-audit", "name": "Security Audit", "description": "Модель угроз и проверка рисков с доказательствами и рекомендациями.", "path": ".agents/skills/security-audit/SKILL.md" },
-    { "id": "quality-assurance", "name": "Quality Assurance", "description": "План проверок, регрессии и воспроизводимые отчёты о дефектах.", "path": ".agents/skills/quality-assurance/SKILL.md" },
-    { "id": "independent-code-review", "name": "Independent Code Review", "description": "Независимое ревью готовых изменений с приоритетами и ссылками на код.", "path": ".agents/skills/independent-code-review/SKILL.md" }
+    {
+      "id": "planning-and-task-breakdown",
+      "skillId": "planning-and-task-breakdown",
+      "name": "Планирование и декомпозиция",
+      "skillName": "Планирование и декомпозиция",
+      "originalSkillName": "planning-and-task-breakdown",
+      "description": "Порядок задач, зависимости и проверяемые критерии.",
+      "path": ".agents/skills/planning-and-task-breakdown/SKILL.md",
+      "sourceRepository": "https://github.com/addyosmani/agent-skills",
+      "sourcePath": "skills/planning-and-task-breakdown",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installedVersion": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "Git and repository test/build tools (when invoked)"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority."
+      ]
+    },
+    {
+      "id": "context-engineering",
+      "skillId": "context-engineering",
+      "name": "Context Engineering",
+      "skillName": "Context Engineering",
+      "originalSkillName": "context-engineering",
+      "description": "Отбор проектного контекста и передача работы между сессиями.",
+      "path": ".agents/skills/context-engineering/SKILL.md",
+      "sourceRepository": "https://github.com/addyosmani/agent-skills",
+      "sourcePath": "skills/context-engineering",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installedVersion": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "Git and repository test/build tools (when invoked)"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority."
+      ]
+    },
+    {
+      "id": "frontend-design",
+      "skillId": "frontend-design",
+      "name": "Frontend Design",
+      "skillName": "Frontend Design",
+      "originalSkillName": "frontend-design",
+      "description": "Осмысленный дизайн интерфейсов с учётом существующего визуального направления.",
+      "path": ".agents/skills/frontend-design/SKILL.md",
+      "sourceRepository": "https://github.com/anthropics/skills",
+      "sourcePath": "skills/frontend-design",
+      "license": "Apache-2.0",
+      "licenseSource": "skills/frontend-design/LICENSE.txt",
+      "sourceCommit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "installedVersion": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority.",
+        "May propose strong visual changes; preserve the approved pixel-art office unless Director explicitly requests redesign."
+      ]
+    },
+    {
+      "id": "vercel-react-best-practices",
+      "skillId": "vercel-react-best-practices",
+      "name": "Vercel React Best Practices",
+      "skillName": "Vercel React Best Practices",
+      "originalSkillName": "vercel-react-best-practices",
+      "description": "Практики React: эффекты, рендеринг, загрузка и производительность.",
+      "path": ".agents/skills/vercel-react-best-practices/SKILL.md",
+      "sourceRepository": "https://github.com/vercel-labs/agent-skills",
+      "sourcePath": "skills/react-best-practices",
+      "license": "MIT",
+      "licenseSource": "skills/react-best-practices/SKILL.md",
+      "sourceCommit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "installedVersion": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "React project context; Next.js-specific advice applies only to Next.js"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority.",
+        "MIT is explicitly declared in SKILL.md; upstream has no separate root LICENSE at this commit. Some rules target Next.js/RSC and must not add those frameworks to this Vite app."
+      ]
+    },
+    {
+      "id": "api-and-interface-design",
+      "skillId": "api-and-interface-design",
+      "name": "API and Interface Design",
+      "skillName": "API and Interface Design",
+      "originalSkillName": "api-and-interface-design",
+      "description": "Стабильные контракты API, интерфейсов модулей и ошибок.",
+      "path": ".agents/skills/api-and-interface-design/SKILL.md",
+      "sourceRepository": "https://github.com/addyosmani/agent-skills",
+      "sourcePath": "skills/api-and-interface-design",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installedVersion": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "Git and repository test/build tools (when invoked)"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority."
+      ]
+    },
+    {
+      "id": "source-driven-development",
+      "skillId": "source-driven-development",
+      "name": "Source-Driven Development",
+      "skillName": "Source-Driven Development",
+      "originalSkillName": "source-driven-development",
+      "description": "Проверка подходов по официальной документации текущих версий.",
+      "path": ".agents/skills/source-driven-development/SKILL.md",
+      "sourceRepository": "https://github.com/addyosmani/agent-skills",
+      "sourcePath": "skills/source-driven-development",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installedVersion": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "Git and repository test/build tools (when invoked)"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority."
+      ]
+    },
+    {
+      "id": "seo-audit",
+      "skillId": "seo-audit",
+      "name": "SEO Audit",
+      "skillName": "SEO Audit",
+      "originalSkillName": "seo-audit",
+      "description": "Технический SEO-аудит, семантика, метаданные и индексируемость.",
+      "path": ".agents/skills/seo-audit/SKILL.md",
+      "sourceRepository": "https://github.com/coreyhaines31/marketingskills",
+      "sourcePath": "skills/seo-audit",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "1f837447b20bb6f0e72d87b80ece1c221c362c7d",
+      "installedVersion": "1f837447b20bb6f0e72d87b80ece1c221c362c7d",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "Authorized browser/public-page context for online checks"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority."
+      ]
+    },
+    {
+      "id": "schema",
+      "skillId": "schema",
+      "name": "Schema Markup",
+      "skillName": "Schema Markup",
+      "originalSkillName": "schema",
+      "description": "Корректная структурированная разметка для реального контента.",
+      "path": ".agents/skills/schema/SKILL.md",
+      "sourceRepository": "https://github.com/coreyhaines31/marketingskills",
+      "sourcePath": "skills/schema",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "1f837447b20bb6f0e72d87b80ece1c221c362c7d",
+      "installedVersion": "1f837447b20bb6f0e72d87b80ece1c221c362c7d",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "Authorized browser/public-page context for online checks"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority."
+      ]
+    },
+    {
+      "id": "security-and-hardening",
+      "skillId": "security-and-hardening",
+      "name": "Security and Hardening",
+      "skillName": "Security and Hardening",
+      "originalSkillName": "security-and-hardening",
+      "description": "Границы доверия, валидация и проверка рисков зависимостей.",
+      "path": ".agents/skills/security-and-hardening/SKILL.md",
+      "sourceRepository": "https://github.com/addyosmani/agent-skills",
+      "sourcePath": "skills/security-and-hardening",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installedVersion": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "Git and repository test/build tools (when invoked)"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority."
+      ]
+    },
+    {
+      "id": "test-driven-development",
+      "skillId": "test-driven-development",
+      "name": "Test-Driven Development",
+      "skillName": "Test-Driven Development",
+      "originalSkillName": "test-driven-development",
+      "description": "Проверяемое поведение через цикл red–green–refactor.",
+      "path": ".agents/skills/test-driven-development/SKILL.md",
+      "sourceRepository": "https://github.com/addyosmani/agent-skills",
+      "sourcePath": "skills/test-driven-development",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installedVersion": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "Git and repository test/build tools (when invoked)"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority."
+      ]
+    },
+    {
+      "id": "webapp-testing",
+      "skillId": "webapp-testing",
+      "name": "Webapp Testing",
+      "skillName": "Webapp Testing",
+      "originalSkillName": "webapp-testing",
+      "description": "Сценарии тестирования веб-приложений и примеры Python Playwright.",
+      "path": ".agents/skills/webapp-testing/SKILL.md",
+      "sourceRepository": "https://github.com/anthropics/skills",
+      "sourcePath": "skills/webapp-testing",
+      "license": "Apache-2.0",
+      "licenseSource": "skills/webapp-testing/LICENSE.txt",
+      "sourceCommit": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "installedVersion": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "Python + Playwright + browser binaries for the bundled examples (not installed in this stage)"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority.",
+        "with_server.py uses shell=True for user-supplied server commands; examples contain Linux output paths. Never run blind; use supported CUA browser tooling in this environment."
+      ]
+    },
+    {
+      "id": "code-review-and-quality",
+      "skillId": "code-review-and-quality",
+      "name": "Code Review and Quality",
+      "skillName": "Code Review and Quality",
+      "originalSkillName": "code-review-and-quality",
+      "description": "Ревью корректности, архитектуры, безопасности и качества кода.",
+      "path": ".agents/skills/code-review-and-quality/SKILL.md",
+      "sourceRepository": "https://github.com/addyosmani/agent-skills",
+      "sourcePath": "skills/code-review-and-quality",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installedVersion": "301b02b12bff98e4688e6984af6556802322bbde",
+      "installationStatus": "installed",
+      "verification": "Complete SKILL.md read; complete resource inventory/content scan; executable scripts inspected before copying. Codex CLI 0.144.5 standard Skill format checked; not runtime-executed.",
+      "dependencies": [
+        "Git and repository test/build tools (when invoked)"
+      ],
+      "risks": [
+        "Instructions are third-party content; Director scope and existing project rules take priority.",
+        "Upstream suggests mutation experiments; Technical Reviewer may only use an isolated copy, never edit the reviewed working tree. Lead self-review cannot replace independent review."
+      ]
+    },
+    {
+      "id": "programmatic-seo",
+      "skillId": "programmatic-seo",
+      "name": "Programmatic SEO",
+      "skillName": "Programmatic SEO",
+      "originalSkillName": "programmatic-seo",
+      "description": "Построение полезных SEO-страниц на основе шаблонов и данных.",
+      "path": ".agents/skills/programmatic-seo/SKILL.md",
+      "sourceRepository": "https://github.com/coreyhaines31/marketingskills",
+      "sourcePath": "skills/programmatic-seo",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "1f837447b20bb6f0e72d87b80ece1c221c362c7d",
+      "installedVersion": null,
+      "installationStatus": "available",
+      "verification": "Verified instruction-only Skill and references; intentionally not installed: this local office has no public pages at scale.",
+      "dependencies": [
+        "See verification notes; no optional tooling installed."
+      ],
+      "risks": [
+        "Verified instruction-only Skill and references; intentionally not installed: this local office has no public pages at scale."
+      ]
+    },
+    {
+      "id": "ui-ux-pro-max",
+      "skillId": "ui-ux-pro-max",
+      "name": "UI/UX Pro Max",
+      "skillName": "UI/UX Pro Max",
+      "originalSkillName": "ui-ux-pro-max",
+      "description": "Поисковая база дизайн-систем и UI/UX-рекомендаций.",
+      "path": ".agents/skills/ui-ux-pro-max/SKILL.md",
+      "sourceRepository": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourcePath": ".claude/skills/ui-ux-pro-max",
+      "license": "MIT",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "6ae86f61f520d6ca229d2f40e070410638c908c5",
+      "installedVersion": null,
+      "installationStatus": "verification_required",
+      "verification": "SKILL and license read; Python search/data bundle not fully verified for this Codex installation. CLAUDE_PLUGIN_ROOT paths need adaptation; overlaps selected frontend-design.",
+      "dependencies": [
+        "See verification notes; no optional tooling installed."
+      ],
+      "risks": [
+        "SKILL and license read; Python search/data bundle not fully verified for this Codex installation. CLAUDE_PLUGIN_ROOT paths need adaptation; overlaps selected frontend-design."
+      ]
+    },
+    {
+      "id": "differential-review",
+      "skillId": "differential-review",
+      "name": "Differential Review",
+      "skillName": "Differential Review",
+      "originalSkillName": "differential-review",
+      "description": "Специализированное security-ревью изменений по Git-истории.",
+      "path": ".agents/skills/differential-review/SKILL.md",
+      "sourceRepository": "https://github.com/trailofbits/skills",
+      "sourcePath": "plugins/differential-review/skills/differential-review",
+      "license": "CC-BY-SA-4.0",
+      "licenseSource": "LICENSE",
+      "sourceCommit": "149d7b21f4067765b82e67029730b42d228ef4b4",
+      "installedVersion": null,
+      "installationStatus": "verification_required",
+      "verification": "SKILL and repository Codex installation instructions inspected. References namespaced adversarial-modeler/plugin integrations not installed; complete plugin dependency review is pending.",
+      "dependencies": [
+        "See verification notes; no optional tooling installed."
+      ],
+      "risks": [
+        "SKILL and repository Codex installation instructions inspected. References namespaced adversarial-modeler/plugin integrations not installed; complete plugin dependency review is pending."
+      ]
+    }
   ],
   "customAgents": [
-    { "id": "lead-developer", "employeeId": "lead", "skillId": "project-architecture", "path": ".codex/agents/lead-developer.toml" },
-    { "id": "ui-ux-designer", "employeeId": "design", "skillId": "ui-ux-design", "path": ".codex/agents/ui-ux-designer.toml" },
-    { "id": "frontend-developer", "employeeId": "frontend", "skillId": "frontend-engineering", "path": ".codex/agents/frontend-developer.toml" },
-    { "id": "backend-developer", "employeeId": "backend", "skillId": "backend-engineering", "path": ".codex/agents/backend-developer.toml" },
-    { "id": "seo-specialist", "employeeId": "seo", "skillId": "technical-seo", "path": ".codex/agents/seo-specialist.toml" },
-    { "id": "security-engineer", "employeeId": "security", "skillId": "security-audit", "path": ".codex/agents/security-engineer.toml" },
-    { "id": "qa-engineer", "employeeId": "qa", "skillId": "quality-assurance", "path": ".codex/agents/qa-engineer.toml" },
-    { "id": "technical-reviewer", "employeeId": "review", "skillId": "independent-code-review", "path": ".codex/agents/technical-reviewer.toml" }
+    {
+      "id": "lead-developer",
+      "employeeId": "lead",
+      "skillId": "planning-and-task-breakdown",
+      "path": ".codex/agents/lead-developer.toml"
+    },
+    {
+      "id": "ui-ux-designer",
+      "employeeId": "design",
+      "skillId": "frontend-design",
+      "path": ".codex/agents/ui-ux-designer.toml"
+    },
+    {
+      "id": "frontend-developer",
+      "employeeId": "frontend",
+      "skillId": "vercel-react-best-practices",
+      "path": ".codex/agents/frontend-developer.toml"
+    },
+    {
+      "id": "backend-developer",
+      "employeeId": "backend",
+      "skillId": "api-and-interface-design",
+      "path": ".codex/agents/backend-developer.toml"
+    },
+    {
+      "id": "seo-specialist",
+      "employeeId": "seo",
+      "skillId": "seo-audit",
+      "path": ".codex/agents/seo-specialist.toml"
+    },
+    {
+      "id": "security-engineer",
+      "employeeId": "security",
+      "skillId": "security-and-hardening",
+      "path": ".codex/agents/security-engineer.toml"
+    },
+    {
+      "id": "qa-engineer",
+      "employeeId": "qa",
+      "skillId": "test-driven-development",
+      "path": ".codex/agents/qa-engineer.toml"
+    },
+    {
+      "id": "technical-reviewer",
+      "employeeId": "review",
+      "skillId": "code-review-and-quality",
+      "path": ".codex/agents/technical-reviewer.toml"
+    }
   ],
   "employees": [
-    { "id": "lead", "role": "Lead Developer", "skillId": "project-architecture", "customAgentId": "lead-developer", "responsibility": "Планирует архитектуру, распределяет задачи и разрешает технические противоречия с учётом решений Director." },
-    { "id": "design", "role": "UI/UX Designer", "skillId": "ui-ux-design", "customAgentId": "ui-ux-designer", "responsibility": "Проектирует взаимодействия, адаптивность и доступность; готовит спецификацию для Frontend." },
-    { "id": "frontend", "role": "Frontend Developer", "skillId": "frontend-engineering", "customAgentId": "frontend-developer", "responsibility": "Реализует и проверяет интерфейс на React и TypeScript по согласованному дизайну." },
-    { "id": "backend", "role": "Backend Developer", "skillId": "backend-engineering", "customAgentId": "backend-developer", "responsibility": "Проектирует контракты API и работу с данными; добавляет backend только в явно согласованном объёме." },
-    { "id": "seo", "role": "SEO Specialist", "skillId": "technical-seo", "customAgentId": "seo-specialist", "responsibility": "Проверяет техническое SEO и семантику; отличает публичный сайт от локального приложения." },
-    { "id": "security", "role": "Security Engineer", "skillId": "security-audit", "customAgentId": "security-engineer", "responsibility": "Выявляет риски на границах доверия и предлагает исправления с оценкой серьёзности и доказательствами." },
-    { "id": "qa", "role": "QA Engineer", "skillId": "quality-assurance", "customAgentId": "qa-engineer", "responsibility": "Проверяет поведение и регрессии, воспроизводит дефекты и сообщает фактические результаты тестов." },
-    { "id": "review", "role": "Technical Reviewer", "skillId": "independent-code-review", "customAgentId": "technical-reviewer", "responsibility": "Независимо проверяет готовые изменения; не реализует рассматриваемое исправление и не подменяет выводы мнением Lead." }
+    {
+      "id": "lead",
+      "role": "Lead Developer",
+      "skillId": "planning-and-task-breakdown",
+      "customAgentId": "lead-developer",
+      "responsibility": "Планирует архитектуру, распределяет задачи и разрешает технические противоречия с учётом решений Director."
+    },
+    {
+      "id": "design",
+      "role": "UI/UX Designer",
+      "skillId": "frontend-design",
+      "customAgentId": "ui-ux-designer",
+      "responsibility": "Проектирует взаимодействия, адаптивность и доступность; готовит спецификацию для Frontend."
+    },
+    {
+      "id": "frontend",
+      "role": "Frontend Developer",
+      "skillId": "vercel-react-best-practices",
+      "customAgentId": "frontend-developer",
+      "responsibility": "Реализует и проверяет интерфейс на React и TypeScript по согласованному дизайну."
+    },
+    {
+      "id": "backend",
+      "role": "Backend Developer",
+      "skillId": "api-and-interface-design",
+      "customAgentId": "backend-developer",
+      "responsibility": "Проектирует контракты API и работу с данными; добавляет backend только в явно согласованном объёме."
+    },
+    {
+      "id": "seo",
+      "role": "SEO Specialist",
+      "skillId": "seo-audit",
+      "customAgentId": "seo-specialist",
+      "responsibility": "Проверяет техническое SEO и семантику; отличает публичный сайт от локального приложения."
+    },
+    {
+      "id": "security",
+      "role": "Security Engineer",
+      "skillId": "security-and-hardening",
+      "customAgentId": "security-engineer",
+      "responsibility": "Выявляет риски на границах доверия и предлагает исправления с оценкой серьёзности и доказательствами."
+    },
+    {
+      "id": "qa",
+      "role": "QA Engineer",
+      "skillId": "test-driven-development",
+      "customAgentId": "qa-engineer",
+      "responsibility": "Проверяет поведение и регрессии, воспроизводит дефекты и сообщает фактические результаты тестов."
+    },
+    {
+      "id": "review",
+      "role": "Technical Reviewer",
+      "skillId": "code-review-and-quality",
+      "customAgentId": "technical-reviewer",
+      "responsibility": "Независимо проверяет готовые изменения; не реализует рассматриваемое исправление и не подменяет выводы мнением Lead."
+    }
+  ],
+  "skillAssignments": [
+    {
+      "skillId": "planning-and-task-breakdown",
+      "assignedEmployeeId": "lead",
+      "justification": "Planning/context ownership; code review is a pre-handoff self-check and does not replace Technical Reviewer."
+    },
+    {
+      "skillId": "context-engineering",
+      "assignedEmployeeId": "lead",
+      "justification": "Planning/context ownership; code review is a pre-handoff self-check and does not replace Technical Reviewer."
+    },
+    {
+      "skillId": "code-review-and-quality",
+      "assignedEmployeeId": "lead",
+      "justification": "Planning/context ownership; code review is a pre-handoff self-check and does not replace Technical Reviewer."
+    },
+    {
+      "skillId": "frontend-design",
+      "assignedEmployeeId": "design",
+      "justification": "Design direction within the approved office identity; large design-search bundle remains unverified."
+    },
+    {
+      "skillId": "ui-ux-pro-max",
+      "assignedEmployeeId": "design",
+      "justification": "Design direction within the approved office identity; large design-search bundle remains unverified."
+    },
+    {
+      "skillId": "vercel-react-best-practices",
+      "assignedEmployeeId": "frontend",
+      "justification": "React performance and maintainability in the existing Vite application."
+    },
+    {
+      "skillId": "api-and-interface-design",
+      "assignedEmployeeId": "backend",
+      "justification": "Contract-first API/interface design plus official-source verification; no unrequested backend."
+    },
+    {
+      "skillId": "source-driven-development",
+      "assignedEmployeeId": "backend",
+      "justification": "Contract-first API/interface design plus official-source verification; no unrequested backend."
+    },
+    {
+      "skillId": "seo-audit",
+      "assignedEmployeeId": "seo",
+      "justification": "Audit and accurate schema; programmatic SEO is optional for a future public site."
+    },
+    {
+      "skillId": "schema",
+      "assignedEmployeeId": "seo",
+      "justification": "Audit and accurate schema; programmatic SEO is optional for a future public site."
+    },
+    {
+      "skillId": "programmatic-seo",
+      "assignedEmployeeId": "seo",
+      "justification": "Audit and accurate schema; programmatic SEO is optional for a future public site."
+    },
+    {
+      "skillId": "security-and-hardening",
+      "assignedEmployeeId": "security",
+      "justification": "Threat modeling and hardening; differential plugin remains pending verification."
+    },
+    {
+      "skillId": "differential-review",
+      "assignedEmployeeId": "security",
+      "justification": "Threat modeling and hardening; differential plugin remains pending verification."
+    },
+    {
+      "skillId": "test-driven-development",
+      "assignedEmployeeId": "qa",
+      "justification": "TDD and browser-testing methodology; external Playwright examples are optional and not executed."
+    },
+    {
+      "skillId": "webapp-testing",
+      "assignedEmployeeId": "qa",
+      "justification": "TDD and browser-testing methodology; external Playwright examples are optional and not executed."
+    },
+    {
+      "skillId": "code-review-and-quality",
+      "assignedEmployeeId": "review",
+      "justification": "Independent five-axis review; do not implement the changes under review."
+    }
   ]
 }

@@ -22,7 +22,7 @@ class AgentAssetValidationTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
 
     def test_missing_skill_file(self):
-        (self.root / '.agents/skills/project-architecture/SKILL.md').unlink()
+        (self.root / '.agents/skills/planning-and-task-breakdown/SKILL.md').unlink()
         self.assertTrue(any('Missing Skill file' in e for e in validate_assets(self.root)))
 
     def test_missing_custom_agent_file(self):
@@ -30,13 +30,13 @@ class AgentAssetValidationTests(unittest.TestCase):
         self.assertTrue(any('Missing Custom Agent file' in e for e in validate_assets(self.root)))
 
     def test_invalid_yaml_syntax(self):
-        path = self.root / '.agents/skills/ui-ux-design/SKILL.md'
+        path = self.root / '.agents/skills/frontend-design/SKILL.md'
         path.write_text('---\nname: [broken\ndescription: design\n---\nInstructions\n', encoding='utf-8')
-        self.assertTrue(any('ui-ux-design' in e for e in validate_assets(self.root)))
+        self.assertTrue(any('frontend-design' in e for e in validate_assets(self.root)))
 
     def test_duplicate_yaml_key(self):
-        path = self.root / '.agents/skills/ui-ux-design/SKILL.md'
-        path.write_text('---\nname: ui-ux-design\nname: ignored\ndescription: design\n---\nInstructions\n', encoding='utf-8')
+        path = self.root / '.agents/skills/frontend-design/SKILL.md'
+        path.write_text('---\nname: frontend-design\nname: ignored\ndescription: design\n---\nInstructions\n', encoding='utf-8')
         self.assertTrue(any('Duplicate YAML field' in e for e in validate_assets(self.root)))
 
     def test_invalid_toml_syntax(self):
@@ -46,7 +46,7 @@ class AgentAssetValidationTests(unittest.TestCase):
 
     def test_profile_skill_reference_mismatch(self):
         path = self.root / '.codex/agents/frontend-developer.toml'
-        path.write_text(path.read_text(encoding='utf-8').replace('.agents/skills/frontend-engineering/SKILL.md', '.agents/skills/security-audit/SKILL.md'), encoding='utf-8')
+        path.write_text(path.read_text(encoding='utf-8').replace('.agents/skills/vercel-react-best-practices/SKILL.md', '.agents/skills/security-and-hardening/SKILL.md'), encoding='utf-8')
         self.assertTrue(any('explicitly reference' in e for e in validate_assets(self.root)))
 
 

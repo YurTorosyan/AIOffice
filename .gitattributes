@@ -1,0 +1,3 @@
+# Preserve exact upstream bytes and pinned hashes across Windows/Linux checkouts.
+.agents/skills/** -text
+.agents/references/** -text
