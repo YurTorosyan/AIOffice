@@ -1,5 +1,9 @@
 # Правила проекта
 
+## Текущий Stage 4A
+
+Director разрешил локальный app-server мост и только реальный read-only pilot существующего Lead Developer. Остальные семь не подключаются. Mock остаётся по умолчанию; не менять состав, сцену, анимации, workflow и community receipts. Никаких произвольных HTTP shell/RPC/prompt endpoints, автоматического расширения прав или передачи credentials в браузер. После проверок и commit остановиться; следующий этап не начинать. Исторические запреты runtime ниже относятся к предыдущим этапам; текущее разрешение ограничено этим пилотом. Подробности: docs/CODEX_RUNTIME.md.
+
 - Приложение самостоятельное. Не связывать с MASIX.
 - Ровно 8 работников: Lead Developer, UI/UX Designer, Frontend Developer, Backend Developer, SEO Specialist, Security Engineer, QA Engineer, Technical Reviewer.
 - Director — владелец, не работник. Не добавлять управление составом.

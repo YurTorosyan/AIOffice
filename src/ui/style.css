@@ -11,3 +11,11 @@
 .agent-skills{border-top:1px solid #ffffff08;padding:16px 20px}.agent-skills>small{font-size:8px;letter-spacing:1.1px;color:#91a18f}.agent-skills h3{font-size:12px;font-weight:500;margin:8px 0}.agent-skills p{font-size:10px;line-height:1.65;color:#9aaa94;margin:7px 0 12px}.agent-skills summary{font-size:9px;color:#aebf9d;cursor:pointer}.agent-skills code{display:block;font-size:9px;color:#c0cfa8;margin-top:9px;overflow-wrap:anywhere}.agent-skills summary:focus-visible{outline:2px solid #c5d99e;outline-offset:3px}@media(max-width:540px){.agent-skills{grid-column:1/-1;padding:14px 18px}}
 
 .community-skills{list-style:none;padding:0;margin:10px 0 18px}.community-skills>li{border-bottom:1px solid #ffffff09;padding:0 0 12px;margin-bottom:12px}.installation-status{display:inline-block;font-size:8px;line-height:1.5;border:1px solid #ffffff12;border-radius:3px;padding:2px 5px;color:#a8b8a2}.installation-status.installed{color:#a9cc7e;border-color:#a9cc7e30}.installation-status.available{color:#a9b2bb}.installation-status.verification_required{color:#d7b87e}.installation-status.installation_failed{color:#ed9186}.community-skills a{display:block;color:#b6cba3;font-size:9px;margin-top:8px;overflow-wrap:anywhere}.community-skills details p{font-size:9px}
+/* Stage 4A: compact controls, original office scene and character animations unchanged. */
+.runtime-panel{padding:12px 18px;border-bottom:1px solid #ffffff0a;background:#1b2522;color:#b9c7a5;font-size:12px;overflow-wrap:anywhere}
+.runtime-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.runtime-controls button,.runtime-approval button{font:inherit;color:#d5dfc0;background:#314334;border:1px solid #a7bc8430;border-radius:5px;padding:5px 8px;cursor:pointer}
+.runtime-controls button:disabled{opacity:.4;cursor:default}
+.runtime-panel details{margin-top:10px}.runtime-panel summary{cursor:pointer}.runtime-panel ol{padding-left:20px}
+.runtime-result{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;max-height:360px;overflow:auto;line-height:1.6}
+.progress-track.indeterminate{background:repeating-linear-gradient(110deg,#414b64 0 10px,#2b3040 10px 20px)}

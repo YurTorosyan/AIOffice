@@ -1,0 +1,120 @@
+{
+  "cliVersion": "codex-cli 0.144.5",
+  "authenticationDetected": true,
+  "integration": "app-server stdio",
+  "execution": "completed",
+  "startedAt": "2026-11-12T21:23:09.491Z",
+  "completedAt": "2026-11-12T21:24:46.762Z",
+  "discoveredAndExplicitlyInvokedSkills": [
+    "planning-and-task-breakdown",
+    "context-engineering",
+    "code-review-and-quality"
+  ],
+  "profile": {
+    "path": ".codex/agents/lead-developer.toml",
+    "sha256": "3de367276c46b600f263c79f2a088e0e832e0027acc266c9c67812db07c4b683",
+    "mode": "explicit-developer-instructions"
+  },
+  "contextFiles": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "5acc45c260c3fc6807430b8f38c512a5d0e6c5c616b8f5f19a0249af794ab3ab"
+    },
+    {
+      "path": "PROJECT.md",
+      "sha256": "7abed73c43f227e4c4bf66f3fb09a10e1e9e799bf528c4b8af73a83a5693b951"
+    },
+    {
+      "path": "ARCHITECTURE.md",
+      "sha256": "2124f1f9103051c6576aca20e8fbe9b6dd8b95b75ee449f80b7a84d17cc28781"
+    },
+    {
+      "path": "docs/TEAM_STRUCTURE.md",
+      "sha256": "6a56b2c3967bfc0036c9bbbe395dd01790fd62af1f88098802ba02a14c367622"
+    },
+    {
+      "path": "docs/AGENT_SKILLS.md",
+      "sha256": "7511659cf0562c7d2c8be5bb599ebf2a874a064627d8bdb5b8922d5e361921df"
+    },
+    {
+      "path": "docs/AGENT_PROFILES.md",
+      "sha256": "ea5a2e0ee4ab270a978a2884ccb51c324112619e99de6324daccf3c90a4d96be"
+    },
+    {
+      "path": "src/integration/CodexAdapter.ts",
+      "sha256": "be150d9d2dee912359d822d0893143e7a7757f7f2b4b67aaa41aed90f43ea5cf"
+    },
+    {
+      "path": "src/integration/MockCodexAdapter.ts",
+      "sha256": "47330c87688eb686faf02fdb2c920e7353300ccdf1eadba1fa966d13dd4ef521"
+    },
+    {
+      "path": "src/agents/registry.json",
+      "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+    },
+    {
+      "path": ".codex/agents/lead-developer.toml",
+      "sha256": "3de367276c46b600f263c79f2a088e0e832e0027acc266c9c67812db07c4b683"
+    },
+    {
+      "path": "package.json",
+      "sha256": "9dd0c2e8e20cc5542f6943a28c44766699980180aa6b39ee479723e5522147b7"
+    },
+    {
+      "path": "src/domain.ts",
+      "sha256": "0964c6f285ffdaf50c9bc833cfce1fcae60a7ef81efc29d948641ea1622b7dba"
+    }
+  ],
+  "eventMethods": {
+    "runtime/connected": 1,
+    "task/submitted": 1,
+    "thread/started": 1,
+    "turn/started": 1,
+    "item/started": 8,
+    "item/completed": 8,
+    "item/agentMessage/delta": 1,
+    "turn/plan/updated": 3,
+    "turn/completed": 1
+  },
+  "commandItemEvents": 0,
+  "sourceFilesCompared": 190,
+  "changedSourceFiles": [],
+  "sandbox": {
+    "type": "readOnly",
+    "networkAccess": false
+  },
+  "approvalPolicy": "on-request",
+  "approvalsReviewer": "user",
+  "firstAttempt": {
+    "runtimeStatus": "completed",
+    "taskOutcome": "blocked: nested Windows sandbox helper unavailable",
+    "requestApprovalEvents": 1,
+    "approvalDecision": "decline",
+    "projectFilesUnchanged": 190
+  },
+  "note": "Profile explicitly supplied as developer instructions; no named subagent auto-selection or specialist runtime claimed.",
+  "cleanDisconnectionConfirmed": true,
+  "eventsAfterDisconnection": 26,
+  "realInterruptCheck": "not run: automatic approval review rejected another real task; covered by fixture tests",
+  "browser": {
+    "startupMode": "mock",
+    "fixedEmployees": 8,
+    "otherRealEmployeesConnected": 0,
+    "mockWorkflow": "completed 8/8",
+    "manualTask": "backend assigned, started, 25%, completed",
+    "pauseResumeReset": "passed",
+    "mobileViewport": "390x844",
+    "documentWidth": 375,
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "postCorrection": "latest production bundle reloaded; existing disconnected/completed result and 26-event log observed, console errors/warnings 0/0; no further Codex task"
+  },
+  "validation": {
+    "nodeTests": 56,
+    "pythonTests": 6,
+    "build": "passed; 35 modules; JS 262.68 kB, gzip 79.18 kB",
+    "communityInstallations": "12/12 verified; 3 uninstalled candidates",
+    "pythonDependency": "PyYAML 6.0.3 in ignored work/validation-deps-stage4a; process-scoped PYTHONPATH because old temporary dependency directory was unreadable"
+  },
+  "postPilotCorrection": "Adapter polling updates separated from once-only real event subscriptions; verified by regression test."
+}

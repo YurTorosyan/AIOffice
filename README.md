@@ -1,4 +1,4 @@
-# AI Office · Stage 3B
+# AI Office · Stage 4A
 
 Самостоятельный локальный пиксельный офис для восьми постоянных работников AI-команды.
 
@@ -47,8 +47,17 @@ npm run preview
 
 ## Codex
 
-Это mock-режим: офис не подключён к реальным сессиям Codex. Внутренний интерфейс CodexAdapter и MockCodexAdapter имеют общий контракт. Это не API Codex. Архитектура этапа 2 и исследование этапа 1: ARCHITECTURE.md. Реальная интеграция — отдельный будущий этап после проверки официальной документации.
+Стартовый режим — mock. Для реального read-only pilot только Lead Developer нужен установленный Codex CLI 0.144.5 и существующий вход через `codex login`. В обычном PowerShell пользователя выполните:
+
+```powershell
+npm run build
+npm run bridge
+```
+
+Откройте http://127.0.0.1:8787, выберите «Codex pilot →», «Подключить», «Задание на чтение». Остальные семь сотрудников не подключаются. Возврат в mock закрывает подключение; перезагрузка страницы сама по себе не останавливает runtime. Остановка bridge — Ctrl+C. После изменений server-кода мост нужно перезапустить.
+
+Протокол, sandbox/approval boundaries и ограничения: [CODEX_RUNTIME](docs/CODEX_RUNTIME.md). Фактические результаты проверки: [STAGE4A-REPORT](STAGE4A-REPORT.md). Внутренний CodexAdapter — контракт AI Office, а не выдуманный API Codex.
 
 Stage 3B устанавливает 12 реальных community Skills в `.agents/skills/`; восемь профилей в `.codex/agents/` сохранены. Три дополнительных кандидата явно не установлены. Для обнаружения откройте корень AI Office в Codex и начните новый ход/сессию. Полный каталог, лицензии, источники, ограничения и версии: [COMMUNITY_SKILLS_CATALOG](docs/COMMUNITY_SKILLS_CATALOG.md). Команда и поддержка: [TEAM_STRUCTURE](docs/TEAM_STRUCTURE.md), [AGENT_SKILLS](docs/AGENT_SKILLS.md), [AGENT_PROFILES](docs/AGENT_PROFILES.md).
 
-Перед запуском и build проверяются физические файлы. После изменения файлов Skills перезапустите dev или пересоберите production. Примеры webapp-testing требуют отдельно Python Playwright/browser binaries; они не устанавливались и не выполнялись. Исходные custom-written Skills этапа 3 сохранены в docs/legacy-agent-skills. Профили не запускались как реальные независимые агенты.
+Перед запуском и build проверяются физические файлы. После изменения файлов Skills перезапустите dev или пересоберите production. Примеры webapp-testing требуют отдельно Python Playwright/browser binaries; они не устанавливались и не выполнялись. Исходные custom-written Skills этапа 3 сохранены в docs/legacy-agent-skills. На Stage 3B профили не запускались; Stage 4A проверяет отдельно только Lead.

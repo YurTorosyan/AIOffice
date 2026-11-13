@@ -1,5 +1,9 @@
 # Codex Custom Agent profiles — Stage 3B
 
+## Stage 4A — узкое разрешение Lead
+
+Мост читает существующий lead-developer.toml и передаёт его developer_instructions в root thread. В изученной stable-схеме ThreadStartParams нет выбора root-профиля по имени; автоматический выбор named subagent не заявляется. Остальные семь профилей остаются конфигурацией. Для пилота запрещены запись и делегирование. Подробности и доказательства реального запуска: ../STAGE4A-REPORT.md и CODEX_RUNTIME.md. Ниже — результаты предыдущего этапа.
+
 Сохранены восемь проектных TOML-файлов в `.codex/agents/`. В каждом только официальные required fields: name, description, developer_instructions. Формат описан в [официальной документации](https://learn.chatgpt.com/docs/agent-configuration/subagents). Профили не создают отдельные процессы и не подключают офис к Codex runtime.
 
 | Profile | Employee | Primary community Skill |

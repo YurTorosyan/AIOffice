@@ -1,5 +1,5 @@
 import type { ActivityEvent, Agent, OfficeCommand, OfficeState, Task } from '../domain.ts';
-// AI Office's own contract; not a Codex API. No real implementation in stage 2.
+// AI Office's own contract; not a Codex wire API. Both adapters preserve this interface.
 export interface CodexAdapter {
   readonly source: 'mock' | 'codex';
   getAgents(): Agent[]; getTasks(): Task[]; getEvents(): ActivityEvent[]; getSnapshot(): OfficeState;

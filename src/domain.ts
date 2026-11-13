@@ -16,19 +16,19 @@ export interface AgentSkillAssignment {
 }
 export interface Agent extends AgentSkillAssignment {
   id: string; role: string; name: string; status: AgentStatus;
-  currentTask: string | null; progress: number; activity: string;
+  currentTask: string | null; progress: number; progressIndeterminate?: boolean; activity: string;
   lastActivity: string | null; startedAt: string | null; completedAt: string | null;
 }
 export interface Task {
   id: string; title: string; description: string; status: TaskStatus;
-  assignedAgent: string | null; priority: Priority; progress: number;
+  assignedAgent: string | null; priority: Priority; progress: number; progressIndeterminate?: boolean;
   createdAt: string; startedAt: string | null; completedAt: string | null;
 }
 export interface Project { id: string; name: string; repository: string | null; status: 'demo'; agents: string[] }
-export type EventType = 'task_created' | 'task_assigned' | 'task_started' | 'task_progress' | 'task_review' | 'task_testing' | 'task_completed' | 'task_failed' | 'agent_status_changed';
+export type EventType = 'task_created' | 'task_assigned' | 'task_started' | 'task_progress' | 'task_review' | 'task_testing' | 'task_completed' | 'task_failed' | 'agent_status_changed' | 'runtime_event';
 export interface ActivityEvent {
   id: string; type: EventType; agentId: string; taskId: string | null;
-  message: string; timestamp: string; status: AgentStatus; source: 'mock';
+  message: string; timestamp: string; status: AgentStatus; source: 'mock' | 'codex'; runtimeMethod?: string;
 }
 export interface OfficeState { agents: Agent[]; tasks: Task[]; projects: Project[]; activity: ActivityEvent[] }
 export type OfficeCommand =

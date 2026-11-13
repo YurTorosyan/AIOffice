@@ -1,5 +1,13 @@
 # Архитектура
 
+## Stage 4A — локальный Lead pilot
+
+UI → общий CodexAdapter → RealCodexAdapter → нормализованный локальный HTTP-контракт → LeadPilot → AppServerRpc → официальный codex app-server по stdio. HTTP-мост слушает только 127.0.0.1:8787, не публикует generic RPC/shell и не получает ключи от браузера. Состояния/задачи/события проецируются вне React; runtime progress неопределён до подтверждённого завершения. Семь сотрудников остаются idle. MockCodexAdapter и TaskSystem сохраняются.
+
+RuntimeSnapshot отделён от wire protocol Codex. Транспорт stdio проверен по схемам CLI 0.144.5; другой CLI отклоняется до проверки. Профиль Lead явно загружается из существующего TOML в developerInstructions, а не выбирается выдуманным параметром имени агента. Три installed Skills подтверждаются receipts, затем реальным skills/list; turn получает явные skill inputs. Только turn/completed с completed означает успех. Ошибки, waiting/approval, запрос interrupt и disconnect имеют отдельные состояния.
+
+Полный жизненный цикл, sandbox/approval boundaries, запуск и ограничения: docs/CODEX_RUNTIME.md. Stage 4A не подключает других сотрудников и не запускает следующий этап. Ниже — историческое состояние.
+
 ## Stage 3B — текущий community-каталог
 
 Восемь работников/профилей сохранены. Registry расширен нормализованными skillAssignments (skillId, assignedEmployeeId, justification): несколько Skills на работника и обоснованное общее назначение. Сейчас 12 установленных Skills из четырёх upstream-репозиториев и три неустановленных кандидата; прежние локальные Skills архивированы в docs/legacy-agent-skills.

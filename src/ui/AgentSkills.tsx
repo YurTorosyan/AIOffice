@@ -3,7 +3,7 @@ const labels: Record<InstallationStatus, string> = {
   installed: 'Installed', available: 'Available · не установлен',
   verification_required: 'Verification required', installation_failed: 'Installation failed',
 };
-export function AgentSkills({ agent }: { agent: AgentSkillAssignment }) {
+export function AgentSkills({ agent, runtimeConnected = false }: { agent: AgentSkillAssignment; runtimeConnected?: boolean }) {
   return <section className="agent-skills" aria-label="Навык и ответственность сотрудника">
     <small>COMMUNITY SKILLS · {agent.skills.length}</small>
     <ul className="community-skills">{agent.skills.map(skill => <li key={skill.skillId}>
@@ -18,6 +18,6 @@ export function AgentSkills({ agent }: { agent: AgentSkillAssignment }) {
       </details>
     </li>)}</ul>
     <small>ОТВЕТСТВЕННОСТЬ</small><p>{agent.responsibility}</p>
-    <details><summary>Профиль Codex</summary><code>{agent.customAgentId}</code><p>Конфигурация подготовлена. В офисе работает mock, реальные агенты не запущены.</p></details>
+    <details><summary>Профиль Codex</summary><code>{agent.customAgentId}</code><p>{runtimeConnected?'Lead подключён к Codex; профиль передаётся как developer instructions при запуске задания.':'Профиль подготовлен. В mock реальные агенты не запущены. Этот сотрудник сейчас не подключён к реальному Codex.'}</p></details>
   </section>;
 }
