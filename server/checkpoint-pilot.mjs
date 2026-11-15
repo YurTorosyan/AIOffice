@@ -69,7 +69,7 @@ export class CheckpointPilot extends LeadPilot {
     const event = this.state.events.at(-1); event.id = `codex-${randomUUID()}`; event.origin = ['turn/started','turn/completed','turn/plan/updated','item/started','item/completed','item/agentMessage/delta','error','item/commandExecution/requestApproval','item/fileChange/requestApproval','item/permissions/requestApproval'].includes(method)?'runtime':'bridge'; event.taskId = this.state.taskId;
     if (!this.book) return;
     if (method === 'task/submitted') {
-      this.state.taskId = this.agentId==='lead'?`pilot-${this.state.startedAt}`:`pilot-${this.agentId}-${randomUUID()}`; event.taskId = this.state.taskId;
+      this.state.taskId = this.taskIdentifier ?? (this.agentId==='lead'?`pilot-${this.state.startedAt}`:`pilot-${this.agentId}-${randomUUID()}`); event.taskId = this.state.taskId;
       this.book.tasks.push({ id:this.state.taskId,title:this.taskTitle??'Read-only план AI Office',description:this.prompt??pilotPrompt,agentId:this.agentId,projectId:'office-demo',status:'in_progress',createdAt:this.state.startedAt,completedAt:null });
     }
     const task = this.book.tasks.find(t => t.id === this.state.taskId);
@@ -77,6 +77,8 @@ export class CheckpointPilot extends LeadPilot {
     else if (task && this.state.execution === 'error') { task.status = 'failed'; task.completedAt = this.state.completedAt; this.closeCheckpoints(task.id,'invalid'); }
     if (task && active(this.state.execution) && !method.startsWith('checkpoint_') && !method.startsWith('task_resume')) this.capture(this.pauseWanted ?? 'manual_checkpoint',false,false,false);
     this.persist();
+    // Stage 5 must not launch a model turn unless its owned task AND checkpoint are durable.
+    if(method==='task/submitted'&&this.state.recoveryError)throw new Error('Recovery storage unavailable before submission');
   }
   closeCheckpoints(taskId,status) { for (const cp of this.book.checkpoints.filter(c => c.taskId === taskId)) { cp.status = status; cp.resumable = false; } }
   async start() {

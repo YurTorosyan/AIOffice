@@ -1,3 +1,7 @@
+# Stage 5 — текущая архитектура
+
+WorkflowPanel → WorkflowClient → Orchestrator → ExecutionPort. RealExecutionPort использует прежний TeamRuntime / CheckpointPilot / AppServerRpc; MockExecutionPort использует существующий MockCodexAdapter и Stage 4B storage. План Lead проходит проверку DAG и ролей; отдельный atomic workflows.json хранит граф, входы, результаты, события и execution IDs. Исторические ограничения ниже относятся к прежним этапам. См. docs/ORCHESTRATOR.md.
+
 # Архитектура
 
 ## Stage 4C — текущая архитектура

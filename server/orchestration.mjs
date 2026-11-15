@@ -1,0 +1,32 @@
+import { readFileSync,writeFileSync,existsSync,lstatSync,mkdirSync,renameSync,unlinkSync,openSync,fsyncSync,closeSync,realpathSync } from 'node:fs';
+import {resolve,relative} from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {Orchestrator} from '../src/orchestration/Orchestrator.ts';
+import {emptyWorkflows,taskPrompt,validateWorkflowBook} from '../src/orchestration/model.ts';
+/** Fixed local file, under the existing bridge writer lock. Invalid data is never overwritten. */
+export class WorkflowFileStorage {
+ constructor(root){this.root=realpathSync(root);this.dir=resolve(this.root,'.ai-office');this.file=resolve(this.dir,'workflows.json');}
+ check(){if(existsSync(this.dir)&&(lstatSync(this.dir).isSymbolicLink()||relative(this.root,realpathSync(this.dir)).startsWith('..')))throw new Error('Unsafe workflow directory');if(existsSync(this.file)&&lstatSync(this.file).isSymbolicLink())throw new Error('Unsafe workflow file');}
+ load(){this.check();if(!existsSync(this.file))return emptyWorkflows('codex');const bytes=readFileSync(this.file);if(bytes.length>8_000_000)throw new Error('Workflow file too large');return validateWorkflowBook(JSON.parse(bytes),'codex');}
+ save(book){const safe=validateWorkflowBook(book,'codex');this.check();mkdirSync(this.dir,{recursive:true,mode:0o700});this.check();const bytes=JSON.stringify(safe);if(bytes.length>8_000_000)throw new Error('Workflow file too large');const temp=resolve(this.dir,`workflows-${randomUUID()}.tmp`);writeFileSync(temp,bytes,{flag:'wx',mode:0o600});const fd=openSync(temp,'r+');try{fsyncSync(fd);}finally{closeSync(fd);}try{for(let n=0;;n++){try{renameSync(temp,this.file);break;}catch(e){if(n===4||!['EPERM','EACCES','EBUSY','EEXIST'].includes(e.code))throw e;Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,15*(n+1));}}}finally{if(existsSync(temp))unlinkSync(temp);}}
+}
+export class RealExecutionPort {
+ source='codex';constructor(team){this.team=team;this.maxActive=team.maxActive;}
+ availability(){return Object.fromEntries([...this.team.members].map(([id,p])=>[id,{connected:p.state.connection==='connected',execution:p.state.execution,currentTask:p.state.taskId,skills:p.state.skills,recoveryError:p.state.recoveryError}]));}
+ async start(t,context,id){await this.team.startWork(t.agentId,{id,title:t.title,prompt:taskPrompt(t,context)});}
+ read(t){const p=this.team.members.get(t.agentId),s=p.state;
+  if(s.taskId!==t.executionId){const saved=p.book.tasks.find(x=>x.id===t.executionId),cp=p.book.checkpoints.filter(c=>c.taskId===t.executionId).at(-1);return {id:t.executionId,status:saved?.status==='completed'&&cp?.lastKnownState.workNotes.length?'completed':'missing',result:cp?.lastKnownState.workNotes.at(-1),kind:'permanent',error:'Owned execution no longer selected; inspect its saved checkpoint/result'};}
+  const cp=s.checkpoints?.filter(c=>c.taskId===t.executionId).at(-1);
+  return {id:t.executionId,status:s.approval?'approval':s.execution==='completed'?'completed':s.execution==='paused'?'paused':s.execution==='error'?'failed':['starting','resuming'].includes(s.execution)?'starting':['working','waiting','pausing','interrupting'].includes(s.execution)?'running':'missing',result:s.result,error:s.error??undefined,kind:s.pauseReason==='limit_reached'?'usage_limit':s.pauseReason==='connection_lost'?'disconnect':s.execution==='error'?'recoverable':'pause',checkpointId:cp?.id??null};
+ }
+ pause(t){return this.team.action('pause',{agentId:t.agentId});}
+ resume(t){return this.team.action('resume',{agentId:t.agentId,taskId:t.executionId});}
+ async cancel(t){const p=this.team.members.get(t.agentId);if(p.state.taskId!==t.executionId)return;if(p.state.approval)p.rejectApproval();if(['working','waiting'].includes(p.state.execution))await this.pause(t);if(p.state.execution==='paused'){const cp=p.book.checkpoints.filter(c=>c.taskId===t.executionId).at(-1);if(!cp?.lastKnownState.stopConfirmed)throw new Error('Stop not confirmed');const saved=p.book.tasks.find(x=>x.id===t.executionId);saved.status='failed';saved.completedAt=new Date().toISOString();p.closeCheckpoints(saved.id,'invalid');Object.assign(p.state,{execution:'idle',taskId:null,approval:null});p.event('task_cancelled','Director cancelled orchestrated work; checkpoint retained, not resumable');}else if(p.state.execution==='error'&&p.book.tasks.find(x=>x.id===t.executionId)?.status==='failed'){Object.assign(p.state,{execution:'idle',taskId:null,error:null});p.event('task_cancelled','Director closed failed orchestrated execution');}}
+ async resolveApproval(t){const p=this.team.members.get(t.agentId);if(p.state.approval)p.rejectApproval();if(p.state.execution==='working')await p.pause();}
+ async prepareRetry(t){const p=this.team.members.get(t.agentId);if(p.state.taskId!==t.executionId||p.book.tasks.find(x=>x.id===t.executionId)?.status!=='failed'||p.state.execution!=='error')throw new Error('Failure not confirmed');Object.assign(p.state,{execution:'idle',taskId:null,error:null});}
+}
+export function createOrchestration(root,team,storage=new WorkflowFileStorage(root)){
+ const engine=new Orchestrator(new RealExecutionPort(team),storage);
+ let busy=false;const timer=setInterval(async()=>{if(busy||engine.recoveryError)return;busy=true;try{await engine.resumeEligible();await engine.tick();}catch{/* Engine records storage errors; no blind execution retry. */}finally{busy=false;}},500);timer.unref();
+ return {engine,close:()=>clearInterval(timer)};
+}

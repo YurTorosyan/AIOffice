@@ -4,6 +4,7 @@ import { useOffice } from './useOffice.ts';
 import { agentView, displayStatus, taskDisplayStatus } from './presentation.ts';
 import { TaskPanel } from './TaskPanel.tsx';
 import { RuntimePanel } from './RuntimePanel.tsx';
+import { WorkflowPanel } from './WorkflowPanel.tsx';
 import { AgentSkills } from './AgentSkills.tsx';
 import { configuration } from '../config.ts';
 import { statuses } from '../domain.ts';
@@ -15,7 +16,7 @@ function Clock() {
  return <time dateTime={now.toISOString()} title="Время в Ереване">◷ {now.toLocaleTimeString('ru-RU',{timeZone:'Asia/Yerevan',hour:'2-digit',minute:'2-digit'})}</time>;
 }
 export function App() {
- const {state,workflow,running,error,dispatch,startWorkflow,toggle,reset,mode,runtime,busy,pilotAction,changeMode,checkpoints,controlTask}=useOffice();
+ const {state,workflow,running,error,dispatch,startWorkflow,toggle,reset,mode,runtime,busy,pilotAction,changeMode,checkpoints,controlTask,orchestration,orchestrationClient,refreshOrchestration}=useOffice();
  const [selected,setSelected]=useState('lead'),[filter,setFilter]=useState('all');
  const [tab,setTab]=useState<'office'|'tasks'>('office');
  const [detailTab,setDetailTab]=useState<'task'|'activity'|'stats'>('task');
@@ -49,6 +50,7 @@ export function App() {
      {runtime.teamError&&<p className="command-error" role="alert">{runtime.teamError}</p>}
      <details className="employee-control-drawer" open={mode==='codex'}><summary>{mode==='mock'?'Mock-сессии сотрудников':'Codex · управление выбранным сотрудником'}</summary><RuntimePanel runtime={selectedRuntime} busy={busy||(mode==='mock'&&['running','paused'].includes(workflow.status))} action={pilotAction} agentId={selected} role={agent.role} source={mode}/></details>
      <details className="office-controls"><summary>Task Panel · задачи и контрольные точки <span>↗</span></summary><TaskPanel checkpoints={checkpoints} control={controlTask} busy={busy} source={mode} state={state} locked={locked} dispatch={dispatch}/></details>
+     <WorkflowPanel client={orchestrationClient} mode={mode} snapshot={orchestration} onUpdate={refreshOrchestration}/>
      <details className="status-key"><summary>Статусы сотрудников</summary><div className="legend">{statuses.map(s=><span key={s}><i style={{background:statusColors[displayStatus[s]]}}/>{displayStatus[s]}</span>)}</div></details>
     </section>
     <aside><section className="agent-panel"><div className="agent-profile"><div className="portrait"><Character agent={agent} large/></div><div><small className="section-label">СОТРУДНИК #{String(agents.findIndex(a=>a.id===agent.id)+1).padStart(2,'0')}</small><h2>{agent.role}</h2><span className="status-badge" style={{color:statusColors[agent.status],background:statusColors[agent.status]+'14'}}><i style={{background:statusColors[agent.status]}}/>{agent.status}</span><p>{agent.name}</p></div></div>

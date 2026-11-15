@@ -23,6 +23,14 @@ export class MockCodexAdapter implements CodexAdapter {
     catch { this.recoveryError = 'Mock checkpoint повреждён или недоступен. Исходные данные не перезаписаны.'; }
   }
   getCheckpoints = () => structuredClone(this.book.checkpoints);
+  /** Orchestrator uses the same task state and Stage 4B storage, with a traceable execution ID. */
+  startOrchestrated(agentId:string,id:string,title:string,description:string) {
+    if(!/^[a-zA-Z0-9_.:-]{1,160}$/.test(id)||!this.getAgents().some(a=>a.id===agentId)||this.getTasks().some(t=>t.id===id||t.assignedAgent===agentId&&!['completed','failed'].includes(t.status)))throw new Error('Mock employee unavailable or duplicate execution');
+    if(['running','paused'].includes(this.workflow.getSnapshot().status))throw new Error('Legacy mock workflow active');
+    const now=new Date().toISOString();this.connectedEmployees.add(agentId);
+    this.system.restoreTask({id,title:safeText(title),description:safeText(description),assignedAgent:agentId,status:'in_progress',priority:'normal',progress:0,createdAt:now,startedAt:now,completedAt:null});
+    this.log('task_created',id,'Orchestrator assigned read-only mock analysis');this.log('task_started',id,'Mock execution started');this.checkpoint('manual_checkpoint',id);
+  }
   getRecoveryError = () => this.recoveryError;
   private save() { this.storage.save(this.book); }
   private log(type: EventType,taskId: string,text: string) { this.system.recordRecovery(type,taskId,`mock · ${text}`); }
@@ -78,7 +86,7 @@ export class MockCodexAdapter implements CodexAdapter {
     const state=this.getSnapshot();
     const members=Object.fromEntries(state.agents.map(agent=>{
       const task=state.tasks.find(t=>t.id===agent.currentTask)??state.tasks.filter(t=>t.assignedAgent===agent.id).at(-1);
-      const execution:RuntimeSnapshot['execution']=task?.status==='paused'?'paused':task?.status==='completed'?'completed':task?.status==='failed'?'error':task&&task.status!=='pending'?'working':'idle';
+      const execution:RuntimeSnapshot['execution']=task?.status==='paused'?'paused':task?.status==='completed'?'completed':task?.status==='failed'?(agent.status==='idle'?'idle':'error'):task&&task.status!=='pending'?'working':'idle';
       const threadId=task?`mock-${agent.id}-${task.id}`:null;
       const events:RuntimeEvent[]=state.activity.filter(e=>e.agentId===agent.id).reverse().map(e=>({id:e.id,method:e.type,message:e.message,timestamp:e.timestamp,source:'mock',agentId:agent.id,taskId:e.taskId,threadId,turnId:null,execution,taskStartedAt:task?.startedAt??null}));
       const runtime:RuntimeSnapshot={source:'mock',agentId:agent.id,role:agent.role,connection:this.connectedEmployees.has(agent.id)?'connected':'disconnected',execution,version:'Mock · no Codex process',authenticated:false,threadId,turnId:null,skills:agent.skills.filter(s=>s.installationStatus==='installed').map(s=>s.skillId),profile:null,instructionSources:[],contextFiles:[],result:execution==='completed'?'Mock: симуляция завершена; реальный Codex не запускался.':'',plan:[],events,error:execution==='error'?'Mock: ошибка симуляции':null,approval:null,startedAt:task?.startedAt??null,completedAt:task?.completedAt??null,taskId:task?.id??null,pauseReason:task?.pauseReason,checkpoints:this.getCheckpoints().filter(c=>c.agentId===agent.id),savedTasks:this.book.tasks.filter(t=>t.agentId===agent.id),recoveryError:this.recoveryError};

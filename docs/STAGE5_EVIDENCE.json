@@ -1,0 +1,288 @@
+{
+  "workflowId": "a905a0d0-e74f-4a51-8039-f3c5f0754719",
+  "source": "codex",
+  "status": "completed",
+  "createdAt": "2026-11-15T19:10:57.695Z",
+  "completedAt": "2026-11-15T19:12:03.678Z",
+  "contextFilesUnchanged": 32,
+  "executionOrderingVerified": true,
+  "activeEmployees": [],
+  "connectedEmployees": 8,
+  "handoff": {
+    "actualDirectDependency": "backend-post-action",
+    "actualDecisionCount": 1,
+    "originalDecisionCount": 2,
+    "issue": "Initial context budget retained only one shortened decision. Fixed after the live run; no extra model calls.",
+    "correctedContextMatchesOriginalResult": true,
+    "correctedDecisionCount": 2,
+    "regressionTests": "27/27 orchestration unit tests passed, including two-observation preservation"
+  },
+  "tasks": [
+    {
+      "id": "plan",
+      "agentId": "lead",
+      "status": "completed",
+      "dependencies": [],
+      "attempts": 1,
+      "executionId": "wf-a905a0d0-e74f-4a51-8039-f3c5f0754719-plan-1",
+      "checkpointId": "942bbdc7-c0e2-4fea-8d28-0f57c40e5c52",
+      "startedAt": "2026-11-15T19:10:58.150Z",
+      "completedAt": "2026-11-15T19:11:20.413Z",
+      "resultSha256": "089417b80d0293f8acd0e64b6a5392f624a23c23345123a3ccec096d36987391",
+      "decisions": 0,
+      "warnings": 1,
+      "unresolved": 1,
+      "filesChanged": []
+    },
+    {
+      "id": "backend-post-action",
+      "agentId": "backend",
+      "status": "completed",
+      "dependencies": [],
+      "attempts": 1,
+      "executionId": "wf-a905a0d0-e74f-4a51-8039-f3c5f0754719-backend-post-action-1",
+      "checkpointId": "50d0b991-ab11-417a-ad5e-fbda8a830e56",
+      "startedAt": "2026-11-15T19:11:20.436Z",
+      "completedAt": "2026-11-15T19:11:42.200Z",
+      "resultSha256": "6dce34da787583f4cf00c8b9365a15256f789f7c4801aa94b792fc145359f8d5",
+      "decisions": 2,
+      "warnings": 1,
+      "unresolved": 0,
+      "filesChanged": []
+    },
+    {
+      "id": "review-backend-observations",
+      "agentId": "review",
+      "status": "completed",
+      "dependencies": [
+        "backend-post-action"
+      ],
+      "attempts": 1,
+      "executionId": "wf-a905a0d0-e74f-4a51-8039-f3c5f0754719-review-backend-observations-1",
+      "checkpointId": "ba1fba03-e98c-460c-bb4d-b9676254b957",
+      "startedAt": "2026-11-15T19:11:42.213Z",
+      "completedAt": "2026-11-15T19:12:03.666Z",
+      "resultSha256": "d22edfe46ebb6562545310d6ddeaf52b53e1acd087da0c061552f92112943701",
+      "decisions": 3,
+      "warnings": 3,
+      "unresolved": 1,
+      "filesChanged": []
+    }
+  ],
+  "events": [
+    {
+      "type": "workflow_created",
+      "taskId": null,
+      "agentId": "lead",
+      "timestamp": "2026-11-15T19:10:57.695Z"
+    },
+    {
+      "type": "dependency_satisfied",
+      "taskId": "plan",
+      "agentId": "lead",
+      "timestamp": "2026-11-15T19:10:58.148Z"
+    },
+    {
+      "type": "task_started",
+      "taskId": "plan",
+      "agentId": "lead",
+      "timestamp": "2026-11-15T19:11:09.681Z"
+    },
+    {
+      "type": "plan_generated",
+      "taskId": null,
+      "agentId": "lead",
+      "timestamp": "2026-11-15T19:11:20.413Z"
+    },
+    {
+      "type": "task_assigned",
+      "taskId": "backend-post-action",
+      "agentId": "backend",
+      "timestamp": "2026-11-15T19:11:20.413Z"
+    },
+    {
+      "type": "task_assigned",
+      "taskId": "review-backend-observations",
+      "agentId": "review",
+      "timestamp": "2026-11-15T19:11:20.413Z"
+    },
+    {
+      "type": "task_completed",
+      "taskId": "plan",
+      "agentId": "lead",
+      "timestamp": "2026-11-15T19:11:20.413Z"
+    },
+    {
+      "type": "dependency_satisfied",
+      "taskId": "backend-post-action",
+      "agentId": "backend",
+      "timestamp": "2026-11-15T19:11:20.435Z"
+    },
+    {
+      "type": "task_started",
+      "taskId": "backend-post-action",
+      "agentId": "backend",
+      "timestamp": "2026-11-15T19:11:32.105Z"
+    },
+    {
+      "type": "task_completed",
+      "taskId": "backend-post-action",
+      "agentId": "backend",
+      "timestamp": "2026-11-15T19:11:42.200Z"
+    },
+    {
+      "type": "dependency_satisfied",
+      "taskId": "review-backend-observations",
+      "agentId": "review",
+      "timestamp": "2026-11-15T19:11:42.212Z"
+    },
+    {
+      "type": "task_started",
+      "taskId": "review-backend-observations",
+      "agentId": "review",
+      "timestamp": "2026-11-15T19:11:53.500Z"
+    },
+    {
+      "type": "task_completed",
+      "taskId": "review-backend-observations",
+      "agentId": "review",
+      "timestamp": "2026-11-15T19:12:03.666Z"
+    },
+    {
+      "type": "workflow_completed",
+      "taskId": null,
+      "agentId": "lead",
+      "timestamp": "2026-11-15T19:12:03.678Z"
+    }
+  ],
+  "sourceHashes": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "ca0e2c06af00831fdc2cb67f3b5e17c9c3411e910a2118a61a5f93341377b0d5"
+    },
+    {
+      "path": "PROJECT.md",
+      "sha256": "98c455a7d4a901e28ef3b94d9d3c1e9b8c5bc7c24cdc3ece7e7f5722b251be05"
+    },
+    {
+      "path": "ARCHITECTURE.md",
+      "sha256": "8226548f9aa000fe42963e8c17dd3c6caa9dac571d6b867db22742fb27509b15"
+    },
+    {
+      "path": "docs/TEAM_STRUCTURE.md",
+      "sha256": "3e44e9374a9abd23a854b3209e74425589f1ecd1d39c74be10dba7e42a76c0ae"
+    },
+    {
+      "path": "src/agents/registry.json",
+      "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+    },
+    {
+      "path": "src/domain.ts",
+      "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+    },
+    {
+      "path": "package.json",
+      "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+    },
+    {
+      "path": ".codex/agents/lead-developer.toml",
+      "sha256": "9c029cfe8de2f5670bb464e8994641b7115d22c2bfcccb882da1d35e2224409f"
+    },
+    {
+      "path": "src/integration/CodexAdapter.ts",
+      "sha256": "083d832b307f501343460c43c752b68c5f2595016ccc452d341431b55963e756"
+    },
+    {
+      "path": "server/team.mjs",
+      "sha256": "13a5d7d2809b96f0b82c01be0eaeccdee3d767f0579cbef90019f3b10d7a600f"
+    },
+    {
+      "path": "server/checkpoint-pilot.mjs",
+      "sha256": "18e600e04611f0f2a4f00021b5bf47d7dd9499bec0f13577cc9f5fd8df5504a6"
+    },
+    {
+      "path": ".codex/agents/ui-ux-designer.toml",
+      "sha256": "3add4cc389d966af767795f77b2bb396fa5694e48ec264db9f665fb0dff35f89"
+    },
+    {
+      "path": "src/ui/App.tsx",
+      "sha256": "ec5cbb5068101ef11732f3ab6bc1b8e035eb1db1a95324a949adae286a449dfe"
+    },
+    {
+      "path": "src/ui/Office.tsx",
+      "sha256": "0b9cdab896ae93cc4c50699523818562225d1d5f8b69adb04d59d8cbcdf031af"
+    },
+    {
+      "path": "src/ui/style.css",
+      "sha256": "d38e381e8f418b90173af905322157070ee800fc1e4b0c92da6e4defbedff33f"
+    },
+    {
+      "path": ".codex/agents/frontend-developer.toml",
+      "sha256": "33080fac7a2d630d201186a78f5081badadcc326a9be2406c8914b9268a50264"
+    },
+    {
+      "path": "src/ui/useOffice.ts",
+      "sha256": "03f80eede44118bfca04fddda76fd0f3c1432315a75525a680581ce60c9c3732"
+    },
+    {
+      "path": "src/integration/RealCodexAdapter.ts",
+      "sha256": "4ef7d5cd79731aa823bd22a127586c8fbd968dd5f5b4ca2748f2af97db1200e8"
+    },
+    {
+      "path": ".codex/agents/backend-developer.toml",
+      "sha256": "d9c6a9458458fc96938ed349cd7ae751c61b40545d17b5b801c1a5fdec438d43"
+    },
+    {
+      "path": "server/http.mjs",
+      "sha256": "0d52a5cc6ae96718cdbc66ec16604f760bebe9b70ae892546afbf7669e21bf5c"
+    },
+    {
+      "path": "server/checkpoint-store.mjs",
+      "sha256": "096afba589fdb215623eab6d00c47c24d570f84aa2bd79e181148a4dc8f64425"
+    },
+    {
+      "path": "server/team-store.mjs",
+      "sha256": "2ee3f5c651dc5b435db2732018fb9a1395a6de6ab00ce3705f4c9b1051bb8626"
+    },
+    {
+      "path": ".codex/agents/seo-specialist.toml",
+      "sha256": "4fc2a1405e20e971597664a753cf819eb7bef8df92b6c086dec39f5f8d716098"
+    },
+    {
+      "path": "index.html",
+      "sha256": "819c0580e8ddc38eb4e01046a53c4d5976601eb1ad22f519062a7738361b4818"
+    },
+    {
+      "path": ".codex/agents/security-engineer.toml",
+      "sha256": "f341d9d421d9234aa5d8c686b6d232ba2509dba00f9930bfed30b5524ad0a870"
+    },
+    {
+      "path": "server/employee-config.mjs",
+      "sha256": "55f6a7c3fdec776fa376921a36926eb19febdfaeae98109f07d2bae0b16573b5"
+    },
+    {
+      "path": "server/rpc.mjs",
+      "sha256": "2246ba396da23b64a8de9343f01d7e718ae229cd210dc23cdd35ec0423116271"
+    },
+    {
+      "path": ".codex/agents/qa-engineer.toml",
+      "sha256": "2b1752b4e5ff88dbf8f122a9507af3c9aa5044dd6947d9351e7372a844a540d5"
+    },
+    {
+      "path": "tests/state.test.ts",
+      "sha256": "5a6acb5ba86bbbacab32bf7d94cdc7f6cc74dfc28885e8b8b91259470e8f35d3"
+    },
+    {
+      "path": "tests/team.test.mjs",
+      "sha256": "0b4ff6076219368878f488c70961ff29e7ba33eab93b0b23f791bb03fda2107c"
+    },
+    {
+      "path": "tests/team-adapter.test.ts",
+      "sha256": "4fd599fde1e2a02d8e324380a635684c57394c8a2c84c9e976357515d61ecca0"
+    },
+    {
+      "path": ".codex/agents/technical-reviewer.toml",
+      "sha256": "17971cfb880f6a21ae282f227b72cbd4ef25e9efcf098e6ecd9685f6def859aa"
+    }
+  ]
+}
