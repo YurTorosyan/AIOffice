@@ -18,6 +18,6 @@ export function AgentSkills({ agent, runtimeConnected = false }: { agent: AgentS
       </details>
     </li>)}</ul>
     <small>ОТВЕТСТВЕННОСТЬ</small><p>{agent.responsibility}</p>
-    <details><summary>Профиль Codex</summary><code>{agent.customAgentId}</code><p>{runtimeConnected?'Lead подключён к Codex; профиль передаётся как developer instructions при запуске задания.':'Профиль подготовлен. В mock реальные агенты не запущены. Этот сотрудник сейчас не подключён к реальному Codex.'}</p></details>
+    <details><summary>Профиль Codex</summary><code>{agent.customAgentId}</code><p>{runtimeConnected?'Сотрудник подключён к Codex; профиль передаётся как developer instructions при запуске задания.':'Профиль подготовлен. В mock реальные агенты не запущены. Этот сотрудник сейчас не подключён к реальному Codex.'}</p></details>
   </section>;
 }

@@ -3,7 +3,8 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
 import { resolve, extname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CheckpointPilot } from './checkpoint-pilot.mjs';
+import { TeamRuntime } from './team.mjs';
+import { employeeIds } from './employee-config.mjs';
 import { FileCheckpointStorage } from './checkpoint-store.mjs';
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 export function createBridge({ pilot, root, port = 8787 }) {
@@ -27,7 +28,10 @@ export function createBridge({ pilot, root, port = 8787 }) {
         let body = ''; for await (const chunk of request) { body += chunk; if (body.length > 1024) { reply(413, { error: 'Request too large' }); return; } }
         const data = JSON.parse(body);
         const methods = { connect: () => pilot.connect(), start: () => pilot.start(), interrupt: () => pilot.interrupt(), reject: () => pilot.rejectApproval(), disconnect: () => pilot.disconnect(), pause:()=>pilot.pause(),resume:()=>pilot.resume(data.taskId),checkpoint:()=>pilot.checkpoint(),control:()=>pilot.control(data.command,data.taskId) };
-        if (!data || typeof data !== 'object' || !Object.hasOwn(methods, data.action) || Object.keys(data).some(k => !['action','taskId','command'].includes(k)) || (data.taskId !== undefined && (typeof data.taskId !== 'string' || data.taskId.length > 160 || !['resume','control'].includes(data.action))) || (data.command !== undefined && (typeof data.command !== 'string' || data.command.length > 100 || data.action !== 'control')) || (data.action==='control' && typeof data.command!=='string')) { reply(400, { error: 'Invalid pilot action' }); return; }
+        if(!data||typeof data!=='object'||Array.isArray(data)){reply(400,{error:'Invalid pilot action'});return;}
+        if (data?.agentId !== undefined && !employeeIds.includes(data.agentId)) { reply(400,{error:'Invalid employee'});return; }
+        if (typeof pilot.action==='function') { for(const key of ['connect_all','disconnect_all'])methods[key]=()=>pilot.action(key); for(const key of ['connect','start','interrupt','reject','disconnect','pause','resume','checkpoint','control'])methods[key]=()=>pilot.action(key,{agentId:data.agentId??'lead',taskId:data.taskId,command:data.command}); }
+        if (!data || typeof data !== 'object' || !Object.hasOwn(methods, data.action) || Object.keys(data).some(k => !['action','agentId','taskId','command'].includes(k)) || (data.taskId !== undefined && (typeof data.taskId !== 'string' || data.taskId.length > 160 || !['resume','control'].includes(data.action))) || (data.command !== undefined && (typeof data.command !== 'string' || data.command.length > 100 || data.action !== 'control')) || (data.action==='control' && typeof data.command!=='string')) { reply(400, { error: 'Invalid pilot action' }); return; }
         await methods[data.action](); reply(200, pilot.snapshot());
       } catch (error) {
         const publicErrors = ['Выберите задачу: доступно несколько контрольных точек','Нет задачи для возобновления','Используйте: Пауза, Продолжим работу, Показать checkpoint, Где остановились','A task is already running','No running task to pause'];
@@ -50,10 +54,10 @@ export function createBridge({ pilot, root, port = 8787 }) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const storage=new FileCheckpointStorage(root);const unlock=storage.acquireLock();
-  const bridge = createBridge({ root, pilot: new CheckpointPilot({ root,storage }) });
+  const bridge = createBridge({ root, pilot: new TeamRuntime({ root,storage }) });
   bridge.server.once('error',()=>{unlock();process.exitCode=1;});
   process.on('exit',unlock);
-  await bridge.listen(); console.log('AI Office bridge: http://127.0.0.1:8787 (mock default; Lead read-only checkpoint/resume pilot)');
+  await bridge.listen(); console.log('AI Office bridge: http://127.0.0.1:8787 (mock default; eight isolated read-only employees)');
   const stop = () => bridge.close().then(() => {unlock();process.exit();});
   process.on('SIGINT', stop); process.on('SIGTERM', stop);
 }

@@ -33,7 +33,7 @@ function date(value: unknown) { text(value, 40); if (!Number.isFinite(Date.parse
 function strings(value: unknown) { if (!Array.isArray(value) || value.length > 100) throw new Error('Invalid checkpoint list'); value.forEach(v => text(v)); }
 export function validateCheckpoint(value: unknown, source: 'mock' | 'codex'): TaskCheckpoint {
   object(value); keys(value, ['id','taskId','agentId','projectId','reason','status','source','taskTitle','taskDescription','taskStatus','completedWork','remainingWork','importantDecisions','relevantFiles','lastKnownState','codexThreadId','createdAt','resumable']);
-  id(value.id); id(value.taskId); if (!employees.includes(value.agentId) || (source === 'codex' && value.agentId !== 'lead') || value.projectId !== 'office-demo' || value.source !== source) throw new Error('Wrong checkpoint assignment');
+  id(value.id); id(value.taskId); if (!employees.includes(value.agentId) || value.projectId !== 'office-demo' || value.source !== source) throw new Error('Wrong checkpoint assignment');
   if (!pauseReasons.includes(value.reason) || !['paused','resumable','resumed','invalid','completed'].includes(value.status) || typeof value.resumable !== 'boolean' || (value.resumable && !['paused','resumable'].includes(value.status))) throw new Error('Invalid checkpoint status');
   for (const field of ['taskTitle','taskDescription','taskStatus']) text(value[field]);
   if (!['pending','in_progress','review','testing','paused','completed','failed'].includes(value.taskStatus)) throw new Error('Invalid checkpoint task status');
@@ -57,10 +57,12 @@ export function validateBook(value: unknown, source: 'mock' | 'codex'): Recovery
   object(value); keys(value,['version','source','tasks','checkpoints']);
   if (value.version !== 1 || value.source !== source || !Array.isArray(value.tasks) || !Array.isArray(value.checkpoints) || value.tasks.length > 100 || value.checkpoints.length > 500) throw new Error('Invalid recovery file');
   const tasks = value.tasks.map((task: unknown) => { object(task); keys(task,['id','title','description','agentId','projectId','status','createdAt','completedAt']); id(task.id); text(task.title); text(task.description); date(task.createdAt); if (task.completedAt !== null) date(task.completedAt);
-    if (!employees.includes(task.agentId) || (source === 'codex' && task.agentId !== 'lead') || task.projectId !== 'office-demo' || !['in_progress','paused','completed','failed'].includes(task.status)) throw new Error('Invalid recovery task'); return task as RecoveryTask; });
+    if (!employees.includes(task.agentId) || task.projectId !== 'office-demo' || !['in_progress','paused','completed','failed'].includes(task.status)) throw new Error('Invalid recovery task'); return task as RecoveryTask; });
   const checkpoints = value.checkpoints.map((c: unknown) => validateCheckpoint(c,source));
   if (new Set(tasks.map((t: RecoveryTask) => t.id)).size !== tasks.length || new Set(checkpoints.map((c: TaskCheckpoint) => c.id)).size !== checkpoints.length) throw new Error('Duplicate recovery identifiers');
   for (const c of checkpoints) { const task = tasks.find((t: RecoveryTask) => t.id === c.taskId); if (!task || task.agentId !== c.agentId || task.description !== c.taskDescription || (c.resumable && ['completed','failed'].includes(task.status))) throw new Error('Checkpoint task missing or mismatched'); }
+  const owners=new Map<string,string>();
+  for(const cp of checkpoints){if(cp.codexThreadId){const owner=owners.get(cp.codexThreadId);if(owner&&owner!==cp.agentId)throw new Error('Codex thread shared between employees');owners.set(cp.codexThreadId,cp.agentId);}}
   return structuredClone({ version: 1, source, tasks, checkpoints });
 }
 export function latestCheckpoint(book: RecoveryBook, taskId?: string): TaskCheckpoint {

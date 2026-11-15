@@ -30,7 +30,7 @@ export function Character({agent,large=false}:{agent:Agent;large?:boolean}) {
 }
 
 const activitySymbols:Record<Agent['status'],string>={Working:'⌨',Thinking:'···',Waiting:'☕',Reviewing:'≡',Testing:'✓',Idle:'z',Error:'!',Completed:'★'};
-export function Office({agents,selected,onSelect,tasks}:{agents:Agent[];selected:string;onSelect:(id:string)=>void;tasks:Record<string,string>}) {
+export function Office({agents,selected,onSelect,tasks,runtimeStates,runtimeSource='codex'}:{agents:Agent[];selected:string;onSelect:(id:string)=>void;tasks:Record<string,string>;runtimeStates?:Record<string,{connection:string;execution:string}>;runtimeSource?:'mock'|'codex'}) {
  return <svg className="office-scene illustrated-office" viewBox="0 0 1600 1000" role="group" aria-label="Пиксельный офис: восемь рабочих мест">
   <defs>
    {/* The desk is a separate painted asset. Foreground masks put monitors and desktop in front of the employee. */}
@@ -45,6 +45,7 @@ export function Office({agents,selected,onSelect,tasks}:{agents:Agent[];selected
   </g>
   {agents.map((agent,i)=>{
    const x=28+(i%4)*396, y=255+Math.floor(i/4)*260;
+   const connection=runtimeStates?.[agent.id];
    const title=agent.currentTask?tasks[agent.currentTask]:'Нет активной задачи';
    return <g key={agent.id} transform={`translate(${x} ${y})`}
     className={`workstation ${selected===agent.id?'selected':''}`}>
@@ -61,8 +62,9 @@ export function Office({agents,selected,onSelect,tasks}:{agents:Agent[];selected
     {agent.currentTask&&<g aria-label={`Прогресс: ${agent.progressIndeterminate?'не определён':agent.progress+'%'}`}><rect x="99" y="177" width="162" height="3" rx="1.5" fill="#38384c"/><rect className={agent.progressIndeterminate?'desk-progress-indeterminate':''} x="99" y="177" width={agent.progressIndeterminate?45:162*agent.progress/100} height="3" rx="1.5" fill={statusColors[agent.status]}/></g>}
     <g className={`bubble bubble-${agent.status}`} transform="translate(284 -51)" aria-hidden="true">
      <rect width="45" height="27" rx="6" fill="#1d2338" fillOpacity=".94" stroke={statusColors[agent.status]} strokeOpacity=".55"/>
-     <path d="M8 27V33L16 27" fill="#1d2338"/><text x="22.5" y="19" textAnchor="middle" fill={statusColors[agent.status]} fontSize="16">{activitySymbols[agent.status]}</text>
+     <path d="M8 27V33L16 27" fill="#1d2338"/><text x="22.5" y="19" textAnchor="middle" fill={statusColors[agent.status]} fontSize="16">{connection?.execution==='paused'?'Ⅱ':activitySymbols[agent.status]}</text>
     </g>
+    {connection&&<g className="desk-connection" aria-hidden="true"><rect x="103" y="183" width="154" height="15" rx="4" fill="#182034" fillOpacity=".9"/><circle cx="111" cy="190.5" r="3" fill={connection.connection==='connected'?'#7ce744':connection.connection==='error'?'#ff777b':'#9aa4be'}/><text x="120" y="194" fontSize="9" fill="#d5def3">{runtimeSource==='mock'?'MOCK':'Codex'} · {connection.connection} {connection.execution==='paused'?'· Paused':''}</text></g>}
     <path className="workstation-target" d="M80-75H280V54H360V240H0V54H80Z" fill="transparent"
      role="button" tabIndex={0} aria-label={`${agent.role}, ${agent.status}, ${title}`} aria-pressed={selected===agent.id}
      onClick={()=>onSelect(agent.id)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(agent.id);}}}/>

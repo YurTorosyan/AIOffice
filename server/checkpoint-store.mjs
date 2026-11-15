@@ -4,7 +4,8 @@ import { randomUUID } from 'node:crypto';
 import { emptyBook, validateBook } from '../src/checkpoints/model.ts';
 /** One atomic local JSON file, never a database or a credentials store. */
 export class FileCheckpointStorage {
-  constructor(root) {
+  constructor(root, {rename = renameSync, wait = ms => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,ms)} = {}) {
+    this.rename = rename; this.wait = wait;
     this.root = realpathSync(root); this.directory = resolve(this.root,'.ai-office'); this.file = resolve(this.directory,'recovery.json');
   }
   check() {
@@ -24,7 +25,13 @@ export class FileCheckpointStorage {
     const temporary = resolve(this.directory,`recovery-${randomUUID()}.tmp`);
     writeFileSync(temporary,bytes,{ flag:'wx',mode:0o600 });
     const fd = openSync(temporary,'r+'); try { fsyncSync(fd); } finally { closeSync(fd); }
-    renameSync(temporary,this.file);
+    try {
+      // Windows scanners can briefly hold the destination. Keep replacement atomic; never unlink the live book.
+      for(let attempt=0;;attempt++){
+        try { this.rename(temporary,this.file);break; }
+        catch(error){if(attempt===4||!['EPERM','EACCES','EBUSY','EEXIST'].includes(error.code))throw error;this.wait(15*(attempt+1));}
+      }
+    } finally { if(existsSync(temporary))unlinkSync(temporary); }
   }
   acquireLock() {
     this.check();mkdirSync(this.directory,{recursive:true,mode:0o700});this.check();

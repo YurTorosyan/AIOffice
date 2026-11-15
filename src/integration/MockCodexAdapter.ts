@@ -1,3 +1,4 @@
+import type {PilotAction,PilotOptions,RuntimeSnapshot,RuntimeEvent} from './runtime.ts';
 import type { OfficeCommand, Task, TaskStatus, EventType } from '../domain.ts';
 import { emptyBook, latestCheckpoint, validateBook, resolveControl, safeText, MemoryCheckpointStorage, type CheckpointStorage, type RecoveryBook, type TaskCheckpoint, type PauseReason } from '../checkpoints/model.ts';
 import { BrowserCheckpointStorage } from '../checkpoints/browser.ts';
@@ -8,15 +9,16 @@ import { MockTeamWorkflow } from './MockTeamWorkflow.ts';
 export class MockCodexAdapter implements CodexAdapter {
   readonly source = 'mock' as const;
   private system = new TaskSystem();
+  private connectedEmployees=new Set<string>();
   private workflow = new MockTeamWorkflow(this.system);
   private timer: ReturnType<typeof setInterval> | undefined;
   private storage: CheckpointStorage; private book: RecoveryBook = emptyBook('mock'); private recoveryError: string | null = null;
   constructor(storage: CheckpointStorage = typeof window === 'undefined'?new MemoryCheckpointStorage():new BrowserCheckpointStorage()) {
     this.storage = storage;
     try {
-      this.book = validateBook(storage.load(),'mock'); const task=[...this.book.tasks].reverse().find(t=>['paused','in_progress'].includes(t.status));
-      const cp=task?[...this.book.checkpoints].reverse().find(c=>c.taskId===task.id):undefined;
-      if (cp&&task) { if(!cp.resumable){cp.resumable=true;cp.status='resumable';cp.reason='connection_lost';cp.lastKnownState.stopConfirmed=true;task.status='paused';}this.restore(cp);this.save(); }
+      this.book = validateBook(storage.load(),'mock');
+      for(const task of this.book.tasks.filter(t=>['paused','in_progress'].includes(t.status))){const cp=[...this.book.checkpoints].reverse().find(c=>c.taskId===task.id);if(!cp)throw new Error('Missing mock recovery context');if(!cp.resumable){cp.resumable=true;cp.status='resumable';cp.reason='connection_lost';cp.lastKnownState.stopConfirmed=true;task.status='paused';}this.restore(cp);}
+      if(this.book.tasks.length)this.save();
     }
     catch { this.recoveryError = 'Mock checkpoint повреждён или недоступен. Исходные данные не перезаписаны.'; }
   }
@@ -72,6 +74,50 @@ export class MockCodexAdapter implements CodexAdapter {
     if (action==='resume') return this.resumeTask(taskId); if (action==='checkpoint') { this.checkpoint('manual_checkpoint',taskId); return; }
     if (!this.book.checkpoints.some(c=>!taskId||c.taskId===taskId)) throw new Error('Нет сохранённого checkpoint');
   }
+  getRuntime = ():RuntimeSnapshot => {
+    const state=this.getSnapshot();
+    const members=Object.fromEntries(state.agents.map(agent=>{
+      const task=state.tasks.find(t=>t.id===agent.currentTask)??state.tasks.filter(t=>t.assignedAgent===agent.id).at(-1);
+      const execution:RuntimeSnapshot['execution']=task?.status==='paused'?'paused':task?.status==='completed'?'completed':task?.status==='failed'?'error':task&&task.status!=='pending'?'working':'idle';
+      const threadId=task?`mock-${agent.id}-${task.id}`:null;
+      const events:RuntimeEvent[]=state.activity.filter(e=>e.agentId===agent.id).reverse().map(e=>({id:e.id,method:e.type,message:e.message,timestamp:e.timestamp,source:'mock',agentId:agent.id,taskId:e.taskId,threadId,turnId:null,execution,taskStartedAt:task?.startedAt??null}));
+      const runtime:RuntimeSnapshot={source:'mock',agentId:agent.id,role:agent.role,connection:this.connectedEmployees.has(agent.id)?'connected':'disconnected',execution,version:'Mock · no Codex process',authenticated:false,threadId,turnId:null,skills:agent.skills.filter(s=>s.installationStatus==='installed').map(s=>s.skillId),profile:null,instructionSources:[],contextFiles:[],result:execution==='completed'?'Mock: симуляция завершена; реальный Codex не запускался.':'',plan:[],events,error:execution==='error'?'Mock: ошибка симуляции':null,approval:null,startedAt:task?.startedAt??null,completedAt:task?.completedAt??null,taskId:task?.id??null,pauseReason:task?.pauseReason,checkpoints:this.getCheckpoints().filter(c=>c.agentId===agent.id),savedTasks:this.book.tasks.filter(t=>t.agentId===agent.id),recoveryError:this.recoveryError};
+      return [agent.id,runtime];
+    }));
+    return {...members.lead,members,maxActive:8,activeEmployees:Object.entries(members).filter(([,r])=>r.execution==='working').map(([id])=>id)};
+  };
+  async action(action:PilotAction,{agentId='lead',taskId,command}:PilotOptions={}) {
+    if(action==='connect_all'){for(const agent of this.getAgents())this.connectedEmployees.add(agent.id);return;}
+    if(action==='disconnect_all'){for(const id of [...this.connectedEmployees])await this.action('disconnect',{agentId:id});return;}
+    const agent=this.getAgents().find(a=>a.id===agentId);if(!agent)throw new Error('Unknown employee');
+    const task=taskId?this.getTasks().find(t=>t.id===taskId):this.getTasks().find(t=>t.id===agent.currentTask);
+    if(taskId&&(!task||task.assignedAgent!==agentId))throw new Error('Task belongs to another employee');
+    if(action==='connect'){this.connectedEmployees.add(agentId);return;}
+    if(action==='disconnect'){if(task&&!['completed','failed','paused'].includes(task.status))this.pauseTask(task.id,'connection_lost');this.connectedEmployees.delete(agentId);return;}
+    if(action==='start'){
+      if(!this.connectedEmployees.has(agentId))throw new Error('Подключите mock-сессию сотрудника.');
+      if(this.getTasks().some(t=>t.assignedAgent===agentId&&!['completed','failed'].includes(t.status)))throw new Error('Employee already has an active task');
+      const id=this.dispatch({type:'create',title:`Mock · ${agent.role}`,description:`Изолированная симуляция задачи ${agent.role}. Реальный Codex не используется.`,priority:'normal',actorId:agentId});
+      if(!id)throw new Error('Mock task not created');
+      this.dispatch({type:'assign',taskId:id,agentId});this.dispatch({type:'transition',taskId:id,status:'in_progress'});
+      if(agentId==='qa'||agentId==='review')this.dispatch({type:'transition',taskId:id,status:agentId==='qa'?'testing':'review'});
+      this.checkpoint('manual_checkpoint',id);return;
+    }
+    if(!task)throw new Error('Выберите задачу сотрудника');
+    if(action==='control'){await this.controlTask(command??'',task.id);return;}
+    if(action==='pause'||action==='interrupt'||action==='mock_limit'){this.pauseTask(task.id,action==='mock_limit'?'limit_reached':'user_pause');return;}
+    if(action==='resume'){this.connectedEmployees.add(agentId);this.resumeTask(task.id);return;}
+    if(action==='checkpoint'){this.checkpoint('manual_checkpoint',task.id);return;}
+    if(action==='mock_error'){this.dispatch({type:'transition',taskId:task.id,status:'failed'});return;}
+    if(action==='mock_step'){
+      if(task.status==='paused'||['completed','failed'].includes(task.status))throw new Error('Mock task is not running');
+      if(task.progress>=75)this.dispatch({type:'transition',taskId:task.id,status:'completed'});
+      else if(task.status==='in_progress')this.dispatch({type:'progress',taskId:task.id,progress:task.progress+25});
+      else this.dispatch({type:'transition',taskId:task.id,status:'completed'});
+      return;
+    }
+    throw new Error('Unsupported mock action');
+  }
   getSnapshot = () => this.system.getSnapshot();
   getAgents = () => this.getSnapshot().agents;
   getTasks = () => this.getSnapshot().tasks;
@@ -95,5 +141,5 @@ export class MockCodexAdapter implements CodexAdapter {
   }
   start() { if (this.getTasks().some(t => t.status==='paused')) return; this.workflow.resume(); if (!this.timer) this.timer = setInterval(() => this.advanceWorkflow(), configuration.tickMs); }
   stop() { clearInterval(this.timer); this.timer = undefined; this.workflow.pause(); }
-  reset() { this.stop(); this.system.reset(); this.workflow = new MockTeamWorkflow(this.system); this.book=emptyBook('mock'); this.recoveryError=null; this.save(); }
+  reset() { this.stop(); this.system.reset(); this.workflow = new MockTeamWorkflow(this.system); this.book=emptyBook('mock'); this.connectedEmployees.clear(); this.recoveryError=null; this.save(); }
 }

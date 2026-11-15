@@ -11,12 +11,12 @@ export function useOffice() {
   const adapter = mode === 'mock' ? mock : real;
   const [state, setState] = useState(() => adapter.getSnapshot());
   const [workflow, setWorkflow] = useState(() => mock.getWorkflow());
-  const [runtime, setRuntime] = useState(() => real.getRuntime());
+  const [runtime, setRuntime] = useState(() => adapter.getRuntime());
   const [checkpoints,setCheckpoints] = useState(()=>adapter.getCheckpoints());
   const [busy, setBusy] = useState(false);
   const [running, setRunning] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const refresh = () => { setState(adapter.getSnapshot()); setWorkflow(mock.getWorkflow()); setRuntime(real.getRuntime()); setCheckpoints(adapter.getCheckpoints()); };
+  const refresh = () => { setState(adapter.getSnapshot()); setWorkflow(mock.getWorkflow()); setRuntime(adapter.getRuntime()); setCheckpoints(adapter.getCheckpoints()); };
   useEffect(() => {
     let mounted = true;
     const onUpdate = () => queueMicrotask(() => { if (mounted) refresh(); });
@@ -31,7 +31,7 @@ export function useOffice() {
   };
   const pilotAction = async (command: PilotAction,options?:PilotOptions) => {
     setBusy(true); setError(null);
-    try { await real.action(command,options); }
+    try { await adapter.action(command,options); }
     catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
     finally { setBusy(false); refresh(); }
   };
@@ -39,7 +39,7 @@ export function useOffice() {
   return { state, workflow, running, error:error??(mode==='mock'?mock.getRecoveryError():null), mode, runtime, busy, pilotAction,checkpoints,controlTask,
     changeMode: async () => {
       setBusy(true); setError(null);
-      try { if (mode === 'codex' && (runtime.connection === 'connected' || ['starting','working','waiting','interrupting'].includes(runtime.execution))) await real.action('disconnect'); setMode(mode === 'mock' ? 'codex' : 'mock'); }
+      try { await adapter.action('disconnect_all'); setMode(mode === 'mock' ? 'codex' : 'mock'); }
       catch { setError('Не удалось закрыть подключение. Остановите мост перед переключением.'); }
       finally { setBusy(false); }
     },

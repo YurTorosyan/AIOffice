@@ -23,7 +23,7 @@ export function TaskPanel({ state, locked, dispatch, source = 'mock',checkpoints
     {terminal && <p className="empty-state">Исполнитель: {state.agents.find(a => a.id === task.assignedAgent)?.role ?? '—'}. Задача закрыта.</p>}
     <small>Создана: {new Date(task.createdAt).toLocaleTimeString('ru-RU')}</small>
     </div> : <p className="empty-state">{source==='codex'?'Запустите задание на чтение в Codex pilot.':'Создайте задачу или запустите mock workflow.'}</p>}
-    {locked && <p className="empty-state">{source==='codex'?'Только Lead pilot. Ручные задачи доступны в mock.':'Задачами управляет workflow. Пауза сохраняет этот режим; сброс отменяет его.'}</p>}
+    {locked && <p className="empty-state">{source==='codex'?'В Codex доступны отдельные read-only задания сотрудников. Ручные задачи доступны в mock.':'Задачами управляет workflow. Пауза сохраняет этот режим; сброс отменяет его.'}</p>}
     {control&&<CheckpointPanel checkpoints={checkpoints} taskId={task?.id} active={!!task&&!terminal&&task.status!=='paused'} busy={busy} control={control}/>}
   </section>;
 }

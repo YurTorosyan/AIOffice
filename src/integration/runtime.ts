@@ -1,6 +1,7 @@
 /** AI Office public bridge contract, NOT the Codex wire protocol. No credentials/raw RPC cross this boundary. */
-export interface RuntimeEvent { id: string; method: string; message: string; timestamp: string; source: 'codex'; origin?:'runtime'|'bridge';threadId: string | null; turnId: string | null; execution: RuntimeSnapshot['execution']; taskStartedAt: string | null }
+export interface RuntimeEvent { id: string; method: string; message: string; timestamp: string; source: 'codex'|'mock'; taskId?:string|null; agentId?:string; origin?:'runtime'|'bridge';threadId: string | null; turnId: string | null; execution: RuntimeSnapshot['execution']; taskStartedAt: string | null }
 export interface RuntimeSnapshot {
+  source?:'mock'|'codex'; agentId?:string; role?:string; members?:Record<string,RuntimeSnapshot>; maxActive?:number; activeEmployees?:string[]; teamError?:string|null;
   connection: 'disconnected' | 'connecting' | 'connected' | 'error';
   execution: 'idle' | 'starting' | 'working' | 'waiting' | 'interrupting' | 'pausing' | 'paused' | 'resuming' | 'completed' | 'interrupted' | 'error';
   checkpoints?: TaskCheckpoint[]; savedTasks?: RecoveryTask[]; taskId?: string | null; pauseReason?: string | null; resumeMode?: string | null; recoveryError?: string | null;
@@ -10,8 +11,8 @@ export interface RuntimeSnapshot {
   result: string; plan: { step: string; status: string }[]; events: RuntimeEvent[];
   error: string | null; approval: { method: string; message: string } | null; startedAt: string | null; completedAt: string | null;
 }
-export type PilotAction = 'connect' | 'start' | 'interrupt' | 'reject' | 'disconnect' | 'pause' | 'resume' | 'checkpoint' | 'control';
-export interface PilotOptions { taskId?: string; command?: string }
+export type PilotAction = 'connect' | 'start' | 'interrupt' | 'reject' | 'disconnect' | 'pause' | 'resume' | 'checkpoint' | 'control' | 'connect_all' | 'disconnect_all' | 'mock_step' | 'mock_error' | 'mock_limit';
+export interface PilotOptions { agentId?:string; taskId?: string; command?: string }
 export interface RuntimeTransport { snapshot(): Promise<RuntimeSnapshot>; action(action: PilotAction, options?: PilotOptions): Promise<RuntimeSnapshot> }
 export class LocalBridgeTransport implements RuntimeTransport {
   private token: string | null = null;

@@ -55,3 +55,8 @@ aside{min-width:0;background:#171927;padding:9px 8px}.agent-panel{background:#1b
 .illustrated-office .selection,.illustrated-office .bubble{pointer-events:none}
 .workstation-target{cursor:pointer;outline:none}
 .workstation:has(.workstation-target:focus-visible) .selection{opacity:1;stroke:#fff4cf;stroke-width:3}
+.employee-control-drawer>summary{padding:12px 18px;color:#b8c8e8;cursor:pointer;font-size:12px;border-top:1px solid #343b54}
+.employee-connection{margin:0 14px 14px;padding:10px;background:#20283d;border:1px solid #394460;border-radius:5px;font-size:10px;color:#c9d7f0;overflow-wrap:anywhere}
+.employee-connection i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:7px}.employee-connection small{display:block;margin-top:6px;font:9px Consolas,monospace;color:#9cadcd}
+.runtime-identifiers{display:flex;flex-wrap:wrap;gap:10px 25px;font-size:10px;overflow-wrap:anywhere}.runtime-identifiers>div{min-width:100px;max-width:100%}.runtime-identifiers dt{color:#92a7c9}.runtime-identifiers dd{margin:4px 0;color:#ccdcf4}
+@media(min-width:541px) and (max-width:950px){.employee-connection{grid-column:1;grid-row:2}.skill-preview{grid-row:3}.skills-drawer{grid-row:4}.agent-panel>#employee-content{grid-row:2/5}}

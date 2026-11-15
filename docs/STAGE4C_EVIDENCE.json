@@ -1,0 +1,1479 @@
+{
+  "startedAt": "2026-11-15T16:28:38.158Z",
+  "sourceHashes": {
+    "AGENTS.md": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1",
+    "PROJECT.md": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0",
+    "ARCHITECTURE.md": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873",
+    "docs/TEAM_STRUCTURE.md": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54",
+    "src/agents/registry.json": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0",
+    "src/domain.ts": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e",
+    "package.json": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6",
+    ".codex/agents/lead-developer.toml": "9c029cfe8de2f5670bb464e8994641b7115d22c2bfcccb882da1d35e2224409f",
+    "src/integration/CodexAdapter.ts": "083d832b307f501343460c43c752b68c5f2595016ccc452d341431b55963e756",
+    "server/team.mjs": "9626efd5192d58c97252839dc7e8eb6137d897895f74feb5b28141857dbaa2ad",
+    "server/checkpoint-pilot.mjs": "eb586fab2ca79c6580ed979d6f7bbfcda7f271fb99f6120d542316b6838e0f6e",
+    ".codex/agents/ui-ux-designer.toml": "3add4cc389d966af767795f77b2bb396fa5694e48ec264db9f665fb0dff35f89",
+    "src/ui/App.tsx": "92da0257574865576bf0323b56a8a4cc9d241a5e4bebacb66ba32c89a6ddeefc",
+    "src/ui/Office.tsx": "0b9cdab896ae93cc4c50699523818562225d1d5f8b69adb04d59d8cbcdf031af",
+    "src/ui/style.css": "f89d6c33b026651692bd6d3708855593ce51d32aaf32b1258050ccb32d015127",
+    ".codex/agents/frontend-developer.toml": "33080fac7a2d630d201186a78f5081badadcc326a9be2406c8914b9268a50264",
+    "src/ui/useOffice.ts": "93cf9e58874d59946c96916cfda38d9f72ddf6fa41bfc78f7d17701a666dc9bc",
+    "src/integration/RealCodexAdapter.ts": "2a51de1bb393ed8b7873c24bf5fb202e3a98c8474c190fd6a3ec2f3d793c4bc7",
+    ".codex/agents/backend-developer.toml": "d9c6a9458458fc96938ed349cd7ae751c61b40545d17b5b801c1a5fdec438d43",
+    "server/http.mjs": "ef726a265c2b3feca7d313f50f2e28dd7b366fd3b5670f0ea79117dc41933cd6",
+    "server/checkpoint-store.mjs": "096afba589fdb215623eab6d00c47c24d570f84aa2bd79e181148a4dc8f64425",
+    "server/team-store.mjs": "2ee3f5c651dc5b435db2732018fb9a1395a6de6ab00ce3705f4c9b1051bb8626",
+    ".codex/agents/seo-specialist.toml": "4fc2a1405e20e971597664a753cf819eb7bef8df92b6c086dec39f5f8d716098",
+    "index.html": "819c0580e8ddc38eb4e01046a53c4d5976601eb1ad22f519062a7738361b4818",
+    ".codex/agents/security-engineer.toml": "f341d9d421d9234aa5d8c686b6d232ba2509dba00f9930bfed30b5524ad0a870",
+    "server/employee-config.mjs": "55f6a7c3fdec776fa376921a36926eb19febdfaeae98109f07d2bae0b16573b5",
+    "server/rpc.mjs": "2246ba396da23b64a8de9343f01d7e718ae229cd210dc23cdd35ec0423116271",
+    ".codex/agents/qa-engineer.toml": "2b1752b4e5ff88dbf8f122a9507af3c9aa5044dd6947d9351e7372a844a540d5",
+    "tests/state.test.ts": "5a6acb5ba86bbbacab32bf7d94cdc7f6cc74dfc28885e8b8b91259470e8f35d3",
+    "tests/team.test.mjs": "611fb71ffc561fe2a087d72b2f8d9febb6555c1bdd28861711d4bcd29517dbda",
+    "tests/team-adapter.test.ts": "4fd599fde1e2a02d8e324380a635684c57394c8a2c84c9e976357515d61ecca0",
+    ".codex/agents/technical-reviewer.toml": "17971cfb880f6a21ae282f227b72cbd4ef25e9efcf098e6ecd9685f6def859aa"
+  },
+  "connected": {
+    "lead": {
+      "connection": "connected",
+      "execution": "paused",
+      "taskId": "pilot-2026-11-15T11:31:14.688Z",
+      "threadId": "01a1def9-cab8-7803-a595-4fdc717d9283",
+      "turnId": "01a1def9-df73-7092-8558-cea915979499",
+      "skills": [
+        "planning-and-task-breakdown",
+        "context-engineering",
+        "code-review-and-quality"
+      ],
+      "profile": {
+        "path": ".codex/agents/lead-developer.toml",
+        "sha256": "9c029cfe8de2f5670bb464e8994641b7115d22c2bfcccb882da1d35e2224409f",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "21857cdb9aab333357d8ccc6d285c4c51062a6b5c2f185be65c1f2535272c1a8"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "d299c13826591347a429854d16d19052572fc57fb280ec9af4e855433d3d4993"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "95430da71d17cb341f4384c642037ec3559eb76bdaeaa236082af8e97ff96d3a"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "6a56b2c3967bfc0036c9bbbe395dd01790fd62af1f88098802ba02a14c367622"
+        },
+        {
+          "path": "docs/AGENT_SKILLS.md",
+          "sha256": "7511659cf0562c7d2c8be5bb599ebf2a874a064627d8bdb5b8922d5e361921df"
+        },
+        {
+          "path": "docs/AGENT_PROFILES.md",
+          "sha256": "ea5a2e0ee4ab270a978a2884ccb51c324112619e99de6324daccf3c90a4d96be"
+        },
+        {
+          "path": "src/integration/CodexAdapter.ts",
+          "sha256": "083d832b307f501343460c43c752b68c5f2595016ccc452d341431b55963e756"
+        },
+        {
+          "path": "src/integration/MockCodexAdapter.ts",
+          "sha256": "67feefd03deb2d388f9b211a0782f3026ad8a52ccb77b21911515660d1eb685e"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": ".codex/agents/lead-developer.toml",
+          "sha256": "88ca04d1aa31653cafe980e63bad5524253ba81b16528151359622be778d55a8"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "d1979234-b69f-4fe4-845c-84d4c6e9060e",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T10:03:22.679Z",
+          "codexThreadId": "01a1dea9-58ff-7cf3-baad-9542295c609a",
+          "resumable": false,
+          "reason": "user_pause",
+          "stopConfirmed": true
+        },
+        {
+          "id": "0011ff6d-84d4-45fd-adbd-a8e8740ba9ca",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T10:03:22.679Z",
+          "codexThreadId": "01a1dea9-58ff-7cf3-baad-9542295c609a",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        },
+        {
+          "id": "621de155-6fac-4f86-821b-c6bb212ae90d",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T10:08:41.364Z",
+          "codexThreadId": "01a1deae-3794-7071-8ae8-ff83008c253e",
+          "resumable": false,
+          "reason": "connection_lost",
+          "stopConfirmed": false
+        },
+        {
+          "id": "1e48d5bf-c86d-4736-888f-8929bbd0eb5c",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T10:08:41.364Z",
+          "codexThreadId": "01a1deae-3794-7071-8ae8-ff83008c253e",
+          "resumable": false,
+          "reason": "user_pause",
+          "stopConfirmed": true
+        },
+        {
+          "id": "16527dfd-f677-493a-9b9d-fbbcc06fde7c",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T10:08:41.364Z",
+          "codexThreadId": "01a1deae-3794-7071-8ae8-ff83008c253e",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        },
+        {
+          "id": "d52eafa8-03a0-4cb8-9460-42f9b581609e",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T11:31:14.688Z",
+          "codexThreadId": "01a1def9-cab8-7803-a595-4fdc717d9283",
+          "resumable": true,
+          "reason": "user_pause",
+          "stopConfirmed": true
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 0
+    },
+    "design": {
+      "connection": "connected",
+      "execution": "idle",
+      "taskId": null,
+      "threadId": null,
+      "turnId": null,
+      "skills": [
+        "frontend-design"
+      ],
+      "profile": {
+        "path": ".codex/agents/ui-ux-designer.toml",
+        "sha256": "3add4cc389d966af767795f77b2bb396fa5694e48ec264db9f665fb0dff35f89",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [],
+      "checkpointIds": [],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 0
+    },
+    "frontend": {
+      "connection": "connected",
+      "execution": "completed",
+      "taskId": "pilot-frontend-38865090-91c2-48b1-80c5-fe00c0b7bdc9",
+      "threadId": "01a1e008-114d-7962-92b2-7a849ebf3943",
+      "turnId": "01a1e008-266c-7ae2-a6c8-c11746f8b75f",
+      "skills": [
+        "vercel-react-best-practices"
+      ],
+      "profile": {
+        "path": ".codex/agents/frontend-developer.toml",
+        "sha256": "33080fac7a2d630d201186a78f5081badadcc326a9be2406c8914b9268a50264",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/frontend-developer.toml",
+          "sha256": "33080fac7a2d630d201186a78f5081badadcc326a9be2406c8914b9268a50264"
+        },
+        {
+          "path": "src/ui/App.tsx",
+          "sha256": "92da0257574865576bf0323b56a8a4cc9d241a5e4bebacb66ba32c89a6ddeefc"
+        },
+        {
+          "path": "src/ui/useOffice.ts",
+          "sha256": "93cf9e58874d59946c96916cfda38d9f72ddf6fa41bfc78f7d17701a666dc9bc"
+        },
+        {
+          "path": "src/integration/RealCodexAdapter.ts",
+          "sha256": "2a51de1bb393ed8b7873c24bf5fb202e3a98c8474c190fd6a3ec2f3d793c4bc7"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "d2841fe7-95ff-4a0d-9717-647d903daa98",
+          "agentId": "frontend",
+          "taskId": "pilot-frontend-38865090-91c2-48b1-80c5-fe00c0b7bdc9",
+          "codexThreadId": "01a1e008-114d-7962-92b2-7a849ebf3943",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 2651
+    },
+    "backend": {
+      "connection": "connected",
+      "execution": "completed",
+      "taskId": "pilot-backend-f8d2eb1e-7fba-4427-a336-e147531af1b0",
+      "threadId": "01a1e008-13ee-72b2-a871-9e97f27a1890",
+      "turnId": "01a1e008-291e-7581-a073-c1e8f455b9bc",
+      "skills": [
+        "api-and-interface-design",
+        "source-driven-development"
+      ],
+      "profile": {
+        "path": ".codex/agents/backend-developer.toml",
+        "sha256": "d9c6a9458458fc96938ed349cd7ae751c61b40545d17b5b801c1a5fdec438d43",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/backend-developer.toml",
+          "sha256": "d9c6a9458458fc96938ed349cd7ae751c61b40545d17b5b801c1a5fdec438d43"
+        },
+        {
+          "path": "server/http.mjs",
+          "sha256": "ef726a265c2b3feca7d313f50f2e28dd7b366fd3b5670f0ea79117dc41933cd6"
+        },
+        {
+          "path": "server/team.mjs",
+          "sha256": "9626efd5192d58c97252839dc7e8eb6137d897895f74feb5b28141857dbaa2ad"
+        },
+        {
+          "path": "server/checkpoint-store.mjs",
+          "sha256": "096afba589fdb215623eab6d00c47c24d570f84aa2bd79e181148a4dc8f64425"
+        },
+        {
+          "path": "server/team-store.mjs",
+          "sha256": "2ee3f5c651dc5b435db2732018fb9a1395a6de6ab00ce3705f4c9b1051bb8626"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "2a10d308-f1e7-4414-a536-4b9bc6b6eabc",
+          "agentId": "backend",
+          "taskId": "pilot-backend-f8d2eb1e-7fba-4427-a336-e147531af1b0",
+          "codexThreadId": "01a1e008-13ee-72b2-a871-9e97f27a1890",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 2516
+    },
+    "seo": {
+      "connection": "connected",
+      "execution": "idle",
+      "taskId": null,
+      "threadId": null,
+      "turnId": null,
+      "skills": [
+        "seo-audit",
+        "schema"
+      ],
+      "profile": {
+        "path": ".codex/agents/seo-specialist.toml",
+        "sha256": "4fc2a1405e20e971597664a753cf819eb7bef8df92b6c086dec39f5f8d716098",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [],
+      "checkpointIds": [],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 0
+    },
+    "security": {
+      "connection": "connected",
+      "execution": "idle",
+      "taskId": null,
+      "threadId": null,
+      "turnId": null,
+      "skills": [
+        "security-and-hardening"
+      ],
+      "profile": {
+        "path": ".codex/agents/security-engineer.toml",
+        "sha256": "f341d9d421d9234aa5d8c686b6d232ba2509dba00f9930bfed30b5524ad0a870",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [],
+      "checkpointIds": [],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 0
+    },
+    "qa": {
+      "connection": "connected",
+      "execution": "idle",
+      "taskId": null,
+      "threadId": null,
+      "turnId": null,
+      "skills": [
+        "test-driven-development",
+        "webapp-testing"
+      ],
+      "profile": {
+        "path": ".codex/agents/qa-engineer.toml",
+        "sha256": "2b1752b4e5ff88dbf8f122a9507af3c9aa5044dd6947d9351e7372a844a540d5",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [],
+      "checkpointIds": [],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 0
+    },
+    "review": {
+      "connection": "connected",
+      "execution": "idle",
+      "taskId": null,
+      "threadId": null,
+      "turnId": null,
+      "skills": [
+        "code-review-and-quality"
+      ],
+      "profile": {
+        "path": ".codex/agents/technical-reviewer.toml",
+        "sha256": "17971cfb880f6a21ae282f227b72cbd4ef25e9efcf098e6ecd9685f6def859aa",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [],
+      "checkpointIds": [],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 0
+    }
+  },
+  "concurrency": {
+    "at": "2026-11-15T16:28:49.938Z",
+    "design": {
+      "connection": "connected",
+      "execution": "working",
+      "taskId": "pilot-design-51ddada0-91f5-47b4-a784-6f37a4aa4125",
+      "threadId": "01a1e00a-12a4-7100-8e1c-5ae7af46cbd4",
+      "turnId": "01a1e00a-2765-7a72-a781-b242a1e3e880",
+      "skills": [
+        "frontend-design"
+      ],
+      "profile": {
+        "path": ".codex/agents/ui-ux-designer.toml",
+        "sha256": "3add4cc389d966af767795f77b2bb396fa5694e48ec264db9f665fb0dff35f89",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/ui-ux-designer.toml",
+          "sha256": "3add4cc389d966af767795f77b2bb396fa5694e48ec264db9f665fb0dff35f89"
+        },
+        {
+          "path": "src/ui/App.tsx",
+          "sha256": "92da0257574865576bf0323b56a8a4cc9d241a5e4bebacb66ba32c89a6ddeefc"
+        },
+        {
+          "path": "src/ui/Office.tsx",
+          "sha256": "0b9cdab896ae93cc4c50699523818562225d1d5f8b69adb04d59d8cbcdf031af"
+        },
+        {
+          "path": "src/ui/style.css",
+          "sha256": "f89d6c33b026651692bd6d3708855593ce51d32aaf32b1258050ccb32d015127"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "7f9d5bc1-32cd-4706-a6be-726ff28d81a7",
+          "agentId": "design",
+          "taskId": "pilot-design-51ddada0-91f5-47b4-a784-6f37a4aa4125",
+          "codexThreadId": "01a1e00a-12a4-7100-8e1c-5ae7af46cbd4",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 0
+    },
+    "seo": {
+      "connection": "connected",
+      "execution": "working",
+      "taskId": "pilot-seo-53904bf5-7c8d-417c-b8af-29ddc77bbbee",
+      "threadId": "01a1e00a-1470-7e13-94da-de9064e68499",
+      "turnId": "01a1e00a-294d-71d2-9c84-5c9b4792665a",
+      "skills": [
+        "seo-audit",
+        "schema"
+      ],
+      "profile": {
+        "path": ".codex/agents/seo-specialist.toml",
+        "sha256": "4fc2a1405e20e971597664a753cf819eb7bef8df92b6c086dec39f5f8d716098",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/seo-specialist.toml",
+          "sha256": "4fc2a1405e20e971597664a753cf819eb7bef8df92b6c086dec39f5f8d716098"
+        },
+        {
+          "path": "index.html",
+          "sha256": "819c0580e8ddc38eb4e01046a53c4d5976601eb1ad22f519062a7738361b4818"
+        },
+        {
+          "path": "src/ui/App.tsx",
+          "sha256": "92da0257574865576bf0323b56a8a4cc9d241a5e4bebacb66ba32c89a6ddeefc"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "f938fe8d-757d-479f-b3dc-a1cc78e2c042",
+          "agentId": "seo",
+          "taskId": "pilot-seo-53904bf5-7c8d-417c-b8af-29ddc77bbbee",
+          "codexThreadId": "01a1e00a-1470-7e13-94da-de9064e68499",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 0
+    },
+    "activeEmployees": [
+      "design",
+      "seo"
+    ]
+  },
+  "results": {
+    "frontend": {
+      "connection": "connected",
+      "execution": "completed",
+      "taskId": "pilot-frontend-38865090-91c2-48b1-80c5-fe00c0b7bdc9",
+      "threadId": "01a1e008-114d-7962-92b2-7a849ebf3943",
+      "turnId": "01a1e008-266c-7ae2-a6c8-c11746f8b75f",
+      "skills": [
+        "vercel-react-best-practices"
+      ],
+      "profile": {
+        "path": ".codex/agents/frontend-developer.toml",
+        "sha256": "33080fac7a2d630d201186a78f5081badadcc326a9be2406c8914b9268a50264",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/frontend-developer.toml",
+          "sha256": "33080fac7a2d630d201186a78f5081badadcc326a9be2406c8914b9268a50264"
+        },
+        {
+          "path": "src/ui/App.tsx",
+          "sha256": "92da0257574865576bf0323b56a8a4cc9d241a5e4bebacb66ba32c89a6ddeefc"
+        },
+        {
+          "path": "src/ui/useOffice.ts",
+          "sha256": "93cf9e58874d59946c96916cfda38d9f72ddf6fa41bfc78f7d17701a666dc9bc"
+        },
+        {
+          "path": "src/integration/RealCodexAdapter.ts",
+          "sha256": "2a51de1bb393ed8b7873c24bf5fb202e3a98c8474c190fd6a3ec2f3d793c4bc7"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "d2841fe7-95ff-4a0d-9717-647d903daa98",
+          "agentId": "frontend",
+          "taskId": "pilot-frontend-38865090-91c2-48b1-80c5-fe00c0b7bdc9",
+          "codexThreadId": "01a1e008-114d-7962-92b2-7a849ebf3943",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 2651,
+      "mentionedSkills": [
+        "vercel-react-best-practices"
+      ],
+      "resultSha256": "f02471aa3320b89ef57a9270c5973bede0caae598ceee63dc01180d760ca04cf",
+      "cliVersion": "codex-cli 0.144.5"
+    },
+    "backend": {
+      "connection": "connected",
+      "execution": "completed",
+      "taskId": "pilot-backend-f8d2eb1e-7fba-4427-a336-e147531af1b0",
+      "threadId": "01a1e008-13ee-72b2-a871-9e97f27a1890",
+      "turnId": "01a1e008-291e-7581-a073-c1e8f455b9bc",
+      "skills": [
+        "api-and-interface-design",
+        "source-driven-development"
+      ],
+      "profile": {
+        "path": ".codex/agents/backend-developer.toml",
+        "sha256": "d9c6a9458458fc96938ed349cd7ae751c61b40545d17b5b801c1a5fdec438d43",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/backend-developer.toml",
+          "sha256": "d9c6a9458458fc96938ed349cd7ae751c61b40545d17b5b801c1a5fdec438d43"
+        },
+        {
+          "path": "server/http.mjs",
+          "sha256": "ef726a265c2b3feca7d313f50f2e28dd7b366fd3b5670f0ea79117dc41933cd6"
+        },
+        {
+          "path": "server/team.mjs",
+          "sha256": "9626efd5192d58c97252839dc7e8eb6137d897895f74feb5b28141857dbaa2ad"
+        },
+        {
+          "path": "server/checkpoint-store.mjs",
+          "sha256": "096afba589fdb215623eab6d00c47c24d570f84aa2bd79e181148a4dc8f64425"
+        },
+        {
+          "path": "server/team-store.mjs",
+          "sha256": "2ee3f5c651dc5b435db2732018fb9a1395a6de6ab00ce3705f4c9b1051bb8626"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "2a10d308-f1e7-4414-a536-4b9bc6b6eabc",
+          "agentId": "backend",
+          "taskId": "pilot-backend-f8d2eb1e-7fba-4427-a336-e147531af1b0",
+          "codexThreadId": "01a1e008-13ee-72b2-a871-9e97f27a1890",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 2516,
+      "mentionedSkills": [
+        "api-and-interface-design",
+        "source-driven-development"
+      ],
+      "resultSha256": "cf419284f36822a5e7c58f39839f5f89ac868341b0dbf4014e674514bf51e169",
+      "cliVersion": "codex-cli 0.144.5"
+    },
+    "design": {
+      "connection": "connected",
+      "execution": "completed",
+      "taskId": "pilot-design-51ddada0-91f5-47b4-a784-6f37a4aa4125",
+      "threadId": "01a1e00a-12a4-7100-8e1c-5ae7af46cbd4",
+      "turnId": "01a1e00b-0f85-71d0-b7cd-feaf722ce8c2",
+      "skills": [
+        "frontend-design"
+      ],
+      "profile": {
+        "path": ".codex/agents/ui-ux-designer.toml",
+        "sha256": "3add4cc389d966af767795f77b2bb396fa5694e48ec264db9f665fb0dff35f89",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/ui-ux-designer.toml",
+          "sha256": "3add4cc389d966af767795f77b2bb396fa5694e48ec264db9f665fb0dff35f89"
+        },
+        {
+          "path": "src/ui/App.tsx",
+          "sha256": "92da0257574865576bf0323b56a8a4cc9d241a5e4bebacb66ba32c89a6ddeefc"
+        },
+        {
+          "path": "src/ui/Office.tsx",
+          "sha256": "0b9cdab896ae93cc4c50699523818562225d1d5f8b69adb04d59d8cbcdf031af"
+        },
+        {
+          "path": "src/ui/style.css",
+          "sha256": "f89d6c33b026651692bd6d3708855593ce51d32aaf32b1258050ccb32d015127"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "7f9d5bc1-32cd-4706-a6be-726ff28d81a7",
+          "agentId": "design",
+          "taskId": "pilot-design-51ddada0-91f5-47b4-a784-6f37a4aa4125",
+          "codexThreadId": "01a1e00a-12a4-7100-8e1c-5ae7af46cbd4",
+          "resumable": false,
+          "reason": "user_pause",
+          "stopConfirmed": true
+        },
+        {
+          "id": "3daeb69e-f39e-45d3-9bf1-a9189a812122",
+          "agentId": "design",
+          "taskId": "pilot-design-51ddada0-91f5-47b4-a784-6f37a4aa4125",
+          "codexThreadId": "01a1e00a-12a4-7100-8e1c-5ae7af46cbd4",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": "original_thread",
+      "recoveryError": null,
+      "resultLength": 2377,
+      "mentionedSkills": [
+        "frontend-design"
+      ],
+      "resultSha256": "f90a98eb0b6dc1b77ebc73c5d7966eec4cd51f965e867015353b5fbf7deeb22a",
+      "cliVersion": "codex-cli 0.144.5"
+    },
+    "seo": {
+      "connection": "connected",
+      "execution": "completed",
+      "taskId": "pilot-seo-53904bf5-7c8d-417c-b8af-29ddc77bbbee",
+      "threadId": "01a1e00a-1470-7e13-94da-de9064e68499",
+      "turnId": "01a1e00a-294d-71d2-9c84-5c9b4792665a",
+      "skills": [
+        "seo-audit",
+        "schema"
+      ],
+      "profile": {
+        "path": ".codex/agents/seo-specialist.toml",
+        "sha256": "4fc2a1405e20e971597664a753cf819eb7bef8df92b6c086dec39f5f8d716098",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/seo-specialist.toml",
+          "sha256": "4fc2a1405e20e971597664a753cf819eb7bef8df92b6c086dec39f5f8d716098"
+        },
+        {
+          "path": "index.html",
+          "sha256": "819c0580e8ddc38eb4e01046a53c4d5976601eb1ad22f519062a7738361b4818"
+        },
+        {
+          "path": "src/ui/App.tsx",
+          "sha256": "92da0257574865576bf0323b56a8a4cc9d241a5e4bebacb66ba32c89a6ddeefc"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "f938fe8d-757d-479f-b3dc-a1cc78e2c042",
+          "agentId": "seo",
+          "taskId": "pilot-seo-53904bf5-7c8d-417c-b8af-29ddc77bbbee",
+          "codexThreadId": "01a1e00a-1470-7e13-94da-de9064e68499",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 2458,
+      "mentionedSkills": [
+        "seo-audit",
+        "schema"
+      ],
+      "resultSha256": "5476c56b4037a061e5027f0bfee8dfbf8ed5d5fa38ab2356c9ed034631b9ea98",
+      "cliVersion": "codex-cli 0.144.5"
+    },
+    "security": {
+      "connection": "connected",
+      "execution": "completed",
+      "taskId": "pilot-security-71692fb5-06c9-4f0c-b649-da7cd0f238e8",
+      "threadId": "01a1e00b-9c1b-7882-b717-3ffaf8cfb25f",
+      "turnId": "01a1e00b-b0d2-7293-805d-9c8b8ec47d6b",
+      "skills": [
+        "security-and-hardening"
+      ],
+      "profile": {
+        "path": ".codex/agents/security-engineer.toml",
+        "sha256": "f341d9d421d9234aa5d8c686b6d232ba2509dba00f9930bfed30b5524ad0a870",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/security-engineer.toml",
+          "sha256": "f341d9d421d9234aa5d8c686b6d232ba2509dba00f9930bfed30b5524ad0a870"
+        },
+        {
+          "path": "server/http.mjs",
+          "sha256": "ef726a265c2b3feca7d313f50f2e28dd7b366fd3b5670f0ea79117dc41933cd6"
+        },
+        {
+          "path": "server/employee-config.mjs",
+          "sha256": "55f6a7c3fdec776fa376921a36926eb19febdfaeae98109f07d2bae0b16573b5"
+        },
+        {
+          "path": "server/team-store.mjs",
+          "sha256": "2ee3f5c651dc5b435db2732018fb9a1395a6de6ab00ce3705f4c9b1051bb8626"
+        },
+        {
+          "path": "server/rpc.mjs",
+          "sha256": "2246ba396da23b64a8de9343f01d7e718ae229cd210dc23cdd35ec0423116271"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "90ca0cdb-c06b-4ca3-902c-f2442e9a0cca",
+          "agentId": "security",
+          "taskId": "pilot-security-71692fb5-06c9-4f0c-b649-da7cd0f238e8",
+          "codexThreadId": "01a1e00b-9c1b-7882-b717-3ffaf8cfb25f",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 2553,
+      "mentionedSkills": [
+        "security-and-hardening"
+      ],
+      "resultSha256": "c84f7f7c2dc5e5b868c1da8264682aa9f88b21064acc096093554f0abda46a91",
+      "cliVersion": "codex-cli 0.144.5"
+    },
+    "qa": {
+      "connection": "connected",
+      "execution": "completed",
+      "taskId": "pilot-qa-0f700a48-e938-4829-8740-efb87761759f",
+      "threadId": "01a1e00b-9dd0-7591-ac68-0e06e9db59fd",
+      "turnId": "01a1e00b-b2a7-7410-a7f7-36b925c3bca3",
+      "skills": [
+        "test-driven-development",
+        "webapp-testing"
+      ],
+      "profile": {
+        "path": ".codex/agents/qa-engineer.toml",
+        "sha256": "2b1752b4e5ff88dbf8f122a9507af3c9aa5044dd6947d9351e7372a844a540d5",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/qa-engineer.toml",
+          "sha256": "2b1752b4e5ff88dbf8f122a9507af3c9aa5044dd6947d9351e7372a844a540d5"
+        },
+        {
+          "path": "tests/state.test.ts",
+          "sha256": "5a6acb5ba86bbbacab32bf7d94cdc7f6cc74dfc28885e8b8b91259470e8f35d3"
+        },
+        {
+          "path": "tests/team.test.mjs",
+          "sha256": "611fb71ffc561fe2a087d72b2f8d9febb6555c1bdd28861711d4bcd29517dbda"
+        },
+        {
+          "path": "tests/team-adapter.test.ts",
+          "sha256": "4fd599fde1e2a02d8e324380a635684c57394c8a2c84c9e976357515d61ecca0"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "98781b6b-217d-45d8-9282-6163ce21d423",
+          "agentId": "qa",
+          "taskId": "pilot-qa-0f700a48-e938-4829-8740-efb87761759f",
+          "codexThreadId": "01a1e00b-9dd0-7591-ac68-0e06e9db59fd",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 2720,
+      "mentionedSkills": [
+        "test-driven-development",
+        "webapp-testing"
+      ],
+      "resultSha256": "0984eb419a2640bce68c7b7c0d5c5adebe13567e235d09cf2f2372c584a40792",
+      "cliVersion": "codex-cli 0.144.5"
+    },
+    "review": {
+      "connection": "connected",
+      "execution": "completed",
+      "taskId": "pilot-review-a74b45ff-2f1e-4c47-92c5-fc535b90e6fb",
+      "threadId": "01a1e00c-2dad-71d3-80db-44084a5975bc",
+      "turnId": "01a1e00c-4283-7cd2-81ed-db6a879d18e4",
+      "skills": [
+        "code-review-and-quality"
+      ],
+      "profile": {
+        "path": ".codex/agents/technical-reviewer.toml",
+        "sha256": "17971cfb880f6a21ae282f227b72cbd4ef25e9efcf098e6ecd9685f6def859aa",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/technical-reviewer.toml",
+          "sha256": "17971cfb880f6a21ae282f227b72cbd4ef25e9efcf098e6ecd9685f6def859aa"
+        },
+        {
+          "path": "server/team.mjs",
+          "sha256": "9626efd5192d58c97252839dc7e8eb6137d897895f74feb5b28141857dbaa2ad"
+        },
+        {
+          "path": "server/team-store.mjs",
+          "sha256": "2ee3f5c651dc5b435db2732018fb9a1395a6de6ab00ce3705f4c9b1051bb8626"
+        },
+        {
+          "path": "src/integration/RealCodexAdapter.ts",
+          "sha256": "2a51de1bb393ed8b7873c24bf5fb202e3a98c8474c190fd6a3ec2f3d793c4bc7"
+        },
+        {
+          "path": "tests/team.test.mjs",
+          "sha256": "611fb71ffc561fe2a087d72b2f8d9febb6555c1bdd28861711d4bcd29517dbda"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "b6e5c6a9-0d36-4393-8fa7-be00feff9a66",
+          "agentId": "review",
+          "taskId": "pilot-review-a74b45ff-2f1e-4c47-92c5-fc535b90e6fb",
+          "codexThreadId": "01a1e00c-2dad-71d3-80db-44084a5975bc",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 2317,
+      "mentionedSkills": [
+        "code-review-and-quality"
+      ],
+      "resultSha256": "790f9c118b6650318b198af16f5b475f8cf45be14037f891ea031cf8a281ae8c",
+      "cliVersion": "codex-cli 0.144.5"
+    },
+    "lead": {
+      "connection": "connected",
+      "execution": "completed",
+      "taskId": "pilot-2026-11-15T11:31:14.688Z",
+      "threadId": "01a1def9-cab8-7803-a595-4fdc717d9283",
+      "turnId": "01a1e00c-cfb4-70b0-9053-9de4ab644901",
+      "skills": [
+        "planning-and-task-breakdown",
+        "context-engineering",
+        "code-review-and-quality"
+      ],
+      "profile": {
+        "path": ".codex/agents/lead-developer.toml",
+        "sha256": "9c029cfe8de2f5670bb464e8994641b7115d22c2bfcccb882da1d35e2224409f",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/lead-developer.toml",
+          "sha256": "9c029cfe8de2f5670bb464e8994641b7115d22c2bfcccb882da1d35e2224409f"
+        },
+        {
+          "path": "src/integration/CodexAdapter.ts",
+          "sha256": "083d832b307f501343460c43c752b68c5f2595016ccc452d341431b55963e756"
+        },
+        {
+          "path": "server/team.mjs",
+          "sha256": "9626efd5192d58c97252839dc7e8eb6137d897895f74feb5b28141857dbaa2ad"
+        },
+        {
+          "path": "server/checkpoint-pilot.mjs",
+          "sha256": "eb586fab2ca79c6580ed979d6f7bbfcda7f271fb99f6120d542316b6838e0f6e"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "d1979234-b69f-4fe4-845c-84d4c6e9060e",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T10:03:22.679Z",
+          "codexThreadId": "01a1dea9-58ff-7cf3-baad-9542295c609a",
+          "resumable": false,
+          "reason": "user_pause",
+          "stopConfirmed": true
+        },
+        {
+          "id": "0011ff6d-84d4-45fd-adbd-a8e8740ba9ca",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T10:03:22.679Z",
+          "codexThreadId": "01a1dea9-58ff-7cf3-baad-9542295c609a",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        },
+        {
+          "id": "621de155-6fac-4f86-821b-c6bb212ae90d",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T10:08:41.364Z",
+          "codexThreadId": "01a1deae-3794-7071-8ae8-ff83008c253e",
+          "resumable": false,
+          "reason": "connection_lost",
+          "stopConfirmed": false
+        },
+        {
+          "id": "1e48d5bf-c86d-4736-888f-8929bbd0eb5c",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T10:08:41.364Z",
+          "codexThreadId": "01a1deae-3794-7071-8ae8-ff83008c253e",
+          "resumable": false,
+          "reason": "user_pause",
+          "stopConfirmed": true
+        },
+        {
+          "id": "16527dfd-f677-493a-9b9d-fbbcc06fde7c",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T10:08:41.364Z",
+          "codexThreadId": "01a1deae-3794-7071-8ae8-ff83008c253e",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        },
+        {
+          "id": "d52eafa8-03a0-4cb8-9460-42f9b581609e",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T11:31:14.688Z",
+          "codexThreadId": "01a1def9-cab8-7803-a595-4fdc717d9283",
+          "resumable": false,
+          "reason": "user_pause",
+          "stopConfirmed": true
+        },
+        {
+          "id": "dffc9035-c412-4aec-a06a-53d00bb0ac6f",
+          "agentId": "lead",
+          "taskId": "pilot-2026-11-15T11:31:14.688Z",
+          "codexThreadId": "01a1def9-cab8-7803-a595-4fdc717d9283",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": "original_thread",
+      "recoveryError": null,
+      "resultLength": 7082,
+      "mentionedSkills": [
+        "planning-and-task-breakdown",
+        "context-engineering",
+        "code-review-and-quality"
+      ],
+      "resultSha256": "29dae8aaa53f719313ec068dbbf04ba562f735821db18e8ce4b58623a8ae7459",
+      "cliVersion": "codex-cli 0.144.5"
+    }
+  },
+  "pause": {
+    "at": "2026-11-15T16:28:50.224Z",
+    "design": {
+      "connection": "connected",
+      "execution": "paused",
+      "taskId": "pilot-design-51ddada0-91f5-47b4-a784-6f37a4aa4125",
+      "threadId": "01a1e00a-12a4-7100-8e1c-5ae7af46cbd4",
+      "turnId": "01a1e00a-2765-7a72-a781-b242a1e3e880",
+      "skills": [
+        "frontend-design"
+      ],
+      "profile": {
+        "path": ".codex/agents/ui-ux-designer.toml",
+        "sha256": "3add4cc389d966af767795f77b2bb396fa5694e48ec264db9f665fb0dff35f89",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/ui-ux-designer.toml",
+          "sha256": "3add4cc389d966af767795f77b2bb396fa5694e48ec264db9f665fb0dff35f89"
+        },
+        {
+          "path": "src/ui/App.tsx",
+          "sha256": "92da0257574865576bf0323b56a8a4cc9d241a5e4bebacb66ba32c89a6ddeefc"
+        },
+        {
+          "path": "src/ui/Office.tsx",
+          "sha256": "0b9cdab896ae93cc4c50699523818562225d1d5f8b69adb04d59d8cbcdf031af"
+        },
+        {
+          "path": "src/ui/style.css",
+          "sha256": "f89d6c33b026651692bd6d3708855593ce51d32aaf32b1258050ccb32d015127"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "7f9d5bc1-32cd-4706-a6be-726ff28d81a7",
+          "agentId": "design",
+          "taskId": "pilot-design-51ddada0-91f5-47b4-a784-6f37a4aa4125",
+          "codexThreadId": "01a1e00a-12a4-7100-8e1c-5ae7af46cbd4",
+          "resumable": true,
+          "reason": "user_pause",
+          "stopConfirmed": true
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 0
+    },
+    "seo": {
+      "connection": "connected",
+      "execution": "working",
+      "taskId": "pilot-seo-53904bf5-7c8d-417c-b8af-29ddc77bbbee",
+      "threadId": "01a1e00a-1470-7e13-94da-de9064e68499",
+      "turnId": "01a1e00a-294d-71d2-9c84-5c9b4792665a",
+      "skills": [
+        "seo-audit",
+        "schema"
+      ],
+      "profile": {
+        "path": ".codex/agents/seo-specialist.toml",
+        "sha256": "4fc2a1405e20e971597664a753cf819eb7bef8df92b6c086dec39f5f8d716098",
+        "mode": "explicit-developer-instructions"
+      },
+      "sourceFiles": [
+        {
+          "path": "AGENTS.md",
+          "sha256": "3c0a733cec965d916b45206fdd5c2541eb2045488dd9d458b06af66197b76ba1"
+        },
+        {
+          "path": "PROJECT.md",
+          "sha256": "b15f8fa6b489d94c34b1137108d80347d05a0cb9de5b506990c291d1d9ee64c0"
+        },
+        {
+          "path": "ARCHITECTURE.md",
+          "sha256": "4006b38bcef250f9caf9284900b8fb64f7ae1ef0b2a37adbc8a3bf2e67dd9873"
+        },
+        {
+          "path": "docs/TEAM_STRUCTURE.md",
+          "sha256": "7acbac2b58cda6ed4ad2e541f41d861b47abd70df28f064eec9857a3659a0f54"
+        },
+        {
+          "path": "src/agents/registry.json",
+          "sha256": "906bbe5ac7d1e62a59a6492f5239c8e7fc1191f21a5b37e098e39334e21b5fc0"
+        },
+        {
+          "path": "src/domain.ts",
+          "sha256": "a74a3155ce156c901e7d269534a81e021c37ca13432777bd291962834a05817e"
+        },
+        {
+          "path": "package.json",
+          "sha256": "562ac58c717b5cc128cdbc50f2c15b335a28822faba896a24489bce9b95dfec6"
+        },
+        {
+          "path": ".codex/agents/seo-specialist.toml",
+          "sha256": "4fc2a1405e20e971597664a753cf819eb7bef8df92b6c086dec39f5f8d716098"
+        },
+        {
+          "path": "index.html",
+          "sha256": "819c0580e8ddc38eb4e01046a53c4d5976601eb1ad22f519062a7738361b4818"
+        },
+        {
+          "path": "src/ui/App.tsx",
+          "sha256": "92da0257574865576bf0323b56a8a4cc9d241a5e4bebacb66ba32c89a6ddeefc"
+        }
+      ],
+      "checkpointIds": [
+        {
+          "id": "f938fe8d-757d-479f-b3dc-a1cc78e2c042",
+          "agentId": "seo",
+          "taskId": "pilot-seo-53904bf5-7c8d-417c-b8af-29ddc77bbbee",
+          "codexThreadId": "01a1e00a-1470-7e13-94da-de9064e68499",
+          "resumable": false,
+          "reason": "manual_checkpoint",
+          "stopConfirmed": false
+        }
+      ],
+      "resumeMode": null,
+      "recoveryError": null,
+      "resultLength": 0
+    }
+  },
+  "finishedAt": "2026-11-15T16:32:25.015Z",
+  "sourceUnchanged": true,
+  "allEightCompleted": true,
+  "distinctThreads": 8,
+  "allAssignedSkillsMentioned": true,
+  "designerOriginalResume": true,
+  "leadOriginalResume": true,
+  "realUnaffectedByMock": true,
+  "browser": {
+    "eightEmployeePanelsCorrect": true,
+    "realConnections": 8,
+    "activeTurns": 0,
+    "designerPauseResumeObserved": true,
+    "mockQAStartPauseResumeComplete": true,
+    "mobileViewport": 390,
+    "mobileDocumentWidth": 375,
+    "officeEmployeeTargets": 8,
+    "consoleErrors": 0,
+    "consoleWarnings": 0
+  },
+  "tests": {
+    "node": 97,
+    "python": 6,
+    "postReviewTargeted": 11,
+    "roleMetadataAssertions": "all eight roles"
+  },
+  "postRunCorrections": [
+    "Replace stale Lead-only UI/bridge messages with employee-specific wording.",
+    "Checkpoint decision prefix now identifies the actual employee ID and role; historical checkpoints remain readable."
+  ]
+}
