@@ -1,6 +1,6 @@
 export const statuses = ['idle', 'thinking', 'working', 'waiting', 'reviewing', 'testing', 'completed', 'error'] as const;
 export type AgentStatus = typeof statuses[number];
-export const taskStatuses = ['pending', 'in_progress', 'review', 'testing', 'completed', 'failed'] as const;
+export const taskStatuses = ['pending', 'in_progress', 'review', 'testing', 'paused', 'completed', 'failed'] as const;
 export type TaskStatus = typeof taskStatuses[number];
 export type Priority = 'low' | 'normal' | 'high';
 export type InstallationStatus = 'installed' | 'available' | 'verification_required' | 'installation_failed';
@@ -23,9 +23,10 @@ export interface Task {
   id: string; title: string; description: string; status: TaskStatus;
   assignedAgent: string | null; priority: Priority; progress: number; progressIndeterminate?: boolean;
   createdAt: string; startedAt: string | null; completedAt: string | null;
+  pauseReason?: string; checkpointId?: string;
 }
 export interface Project { id: string; name: string; repository: string | null; status: 'demo'; agents: string[] }
-export type EventType = 'task_created' | 'task_assigned' | 'task_started' | 'task_progress' | 'task_review' | 'task_testing' | 'task_completed' | 'task_failed' | 'agent_status_changed' | 'runtime_event';
+export type EventType = 'task_created' | 'task_assigned' | 'task_started' | 'task_progress' | 'task_review' | 'task_testing' | 'task_completed' | 'task_failed' | 'agent_status_changed' | 'runtime_event' | 'task_pause_requested' | 'task_paused' | 'task_paused_limit' | 'checkpoint_created' | 'task_resume_requested' | 'task_resumed' | 'checkpoint_restored' | 'resume_failed';
 export interface ActivityEvent {
   id: string; type: EventType; agentId: string; taskId: string | null;
   message: string; timestamp: string; status: AgentStatus; source: 'mock' | 'codex'; runtimeMethod?: string;

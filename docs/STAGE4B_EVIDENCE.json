@@ -1,0 +1,111 @@
+{
+  "cliVersion": "codex-cli 0.144.5",
+  "scope": "Lead only; seven other employees have no runtime",
+  "persistence": {
+    "real": ".ai-office/recovery.json",
+    "mock": "localStorage ai-office:mock-checkpoints:v1",
+    "databaseAdded": false
+  },
+  "scenarioA": {
+    "liveVerified": true,
+    "pauseReason": "user_pause",
+    "stopConfirmed": true,
+    "completedSteps": 4,
+    "sameTask": true,
+    "sameOriginalThread": true,
+    "newTurn": true,
+    "resumeMode": "original_thread",
+    "terminalStatus": "completed",
+    "threadIdSha256": "ff1565bcaf8d88cd25d277872b9d5dd3ff5151256105334fd89f0df111244765"
+  },
+  "scenarioB": {
+    "liveLimitObserved": false,
+    "verifiedSchemaConditionsSimulated": [
+      "usageLimitExceeded",
+      "sessionBudgetExceeded",
+      "contextWindowExceeded",
+      "http429 in known CodexErrorInfo variants"
+    ],
+    "fixturesPassed": true,
+    "noInactivityOrMessageTextInference": true
+  },
+  "scenarioC": {
+    "liveVerified": true,
+    "pausedAfterDisconnect": true,
+    "reason": "connection_lost",
+    "stopInitiallyUnconfirmed": true,
+    "sameTaskAfterReconnect": true,
+    "sameThreadAfterReconnect": true,
+    "resumeMode": "original_thread"
+  },
+  "scenarioD": {
+    "liveVerified": true,
+    "bridgeRestartedByUser": true,
+    "pausedWithoutAutomaticExecution": true,
+    "sameTaskAfterRestart": true,
+    "sameThreadAfterRestart": true,
+    "newTurn": true,
+    "resumeMode": "original_thread",
+    "terminalStatus": "completed",
+    "threadIdSha256": "cdc315033479291f8d0556d0ce848b7be4b8ebd15b081baa56afacef1da1564c"
+  },
+  "scenarioE": {
+    "liveVerified": true,
+    "completedTaskCount": 2,
+    "resumableCheckpointCount": 0,
+    "realAndMockResumeButtonsDisabledForCompleted": true
+  },
+  "fallback": {
+    "liveVerified": false,
+    "fixtureVerified": true,
+    "method": "checkpoint continuation in a new persistent read-only thread after healthy runtime rejection; never inferred from timeout"
+  },
+  "eventsObserved": {
+    "runtime/connected": 4,
+    "task/submitted": 2,
+    "thread/started": 2,
+    "turn/started": 5,
+    "item/started": 22,
+    "item/completed": 21,
+    "item/agentMessage/delta": 5,
+    "turn/plan/updated": 5,
+    "task_pause_requested": 2,
+    "checkpoint_created": 5,
+    "turn/completed": 4,
+    "task_paused": 3,
+    "task_resume_requested": 3,
+    "checkpoint_restored": 4,
+    "task_resumed": 3,
+    "runtime/disconnected": 3
+  },
+  "eventOrigins": {
+    "bridge": 31,
+    "runtime": 62
+  },
+  "rawRuntimeEventTimestamps": {
+    "firstTaskStarted": "2026-11-15T10:03:22.679Z",
+    "firstTaskCompleted": "2026-11-15T10:06:33.880Z",
+    "restartTaskCompleted": "2026-11-15T10:14:05.181Z"
+  },
+  "sourceIntegrity": {
+    "projectFilesCompared": 202,
+    "unchangedDuringRealScenarios": true,
+    "postPilotChanges": "Mock priority/createdAt restoration and completed-task UI guards were corrected after real scenarios; final regression and browser checks passed."
+  },
+  "browser": {
+    "employees": 8,
+    "mockWorkflowRestoredAtStep": "6/8, 75%, then completed 8/8",
+    "finalMockTask": "same ID, high priority, 25% after reload and resume, then completed",
+    "mobileViewport": "390x844",
+    "documentWidth": 375,
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "finalRealState": "disconnected/completed"
+  },
+  "validation": {
+    "nodeTests": 76,
+    "pythonTests": 6,
+    "build": "passed; 38 modules; JS 281.68 kB, gzip 84.21 kB",
+    "skills": "12/12 pinned installations verified; 8 profiles; 3 uninstalled candidates"
+  }
+}

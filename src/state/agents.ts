@@ -5,7 +5,7 @@ export const statusActivity: Record<AgentStatus, string> = {
   error: 'Требуется внимание', completed: 'Задача завершена',
 };
 export const taskAgentStatus: Record<TaskStatus, AgentStatus> = {
-  pending: 'waiting', in_progress: 'working', review: 'reviewing', testing: 'testing', completed: 'completed', failed: 'error',
+  pending: 'waiting', in_progress: 'working', review: 'reviewing', testing: 'testing', paused: 'waiting', completed: 'completed', failed: 'error',
 };
 export function syncAgent(agent: Agent, task: Task, now: string): Agent {
   const status = taskAgentStatus[task.status];

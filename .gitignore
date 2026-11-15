@@ -5,3 +5,4 @@ work/
 __pycache__/
 *.pyc
 src/agents/installation-state.generated.json
+.ai-office/

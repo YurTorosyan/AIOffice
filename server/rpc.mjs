@@ -39,7 +39,7 @@ export class AppServerRpc {
           if (!request) return;
           clearTimeout(request.timer); this.pending.delete(message.id);
           // Do not forward arbitrary runtime error text, command output or account data to the browser.
-          message.error ? request.reject(new Error(`Codex rejected request (${message.error.code})`)) : request.resolve(message.result);
+          message.error ? request.reject(Object.assign(new Error(`Codex rejected request (${message.error.code})`),{ code:message.error.code })) : request.resolve(message.result);
         }
       } catch { this.fail(new Error('Invalid app-server message')); }
     });

@@ -13,7 +13,7 @@
     "pretest": "node scripts/inspect-community-skills.mjs --write",
     "test": "node --experimental-strip-types --test tests/*.test.ts tests/*.test.mjs && python -m unittest discover -s tests -p test_*.py",
     "validate:agents": "python scripts/validate_agents.py && node scripts/inspect-community-skills.mjs",
-    "bridge": "node server/http.mjs"
+    "bridge": "node --experimental-strip-types server/http.mjs"
   },
   "dependencies": {
     "react": "19.2.8",

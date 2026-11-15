@@ -5,7 +5,7 @@ import { releaseAgent, statusActivity, syncAgent, taskAgentStatus } from '../sta
 import { createOffice } from '../state/office.ts';
 export const transitions: Record<TaskStatus, readonly TaskStatus[]> = {
   pending: ['in_progress', 'failed'], in_progress: ['review', 'testing', 'completed', 'failed'],
-  review: ['in_progress', 'testing', 'completed', 'failed'], testing: ['in_progress', 'review', 'completed', 'failed'], completed: [], failed: [],
+  review: ['in_progress', 'testing', 'completed', 'failed'], testing: ['in_progress', 'review', 'completed', 'failed'], paused: [], completed: [], failed: [],
 };
 export function isActive(task: Task) { return task.status !== 'completed' && task.status !== 'failed'; }
 export class TaskSystem {
@@ -13,6 +13,20 @@ export class TaskSystem {
   readonly events = new EventBus();
   getSnapshot = (): OfficeState => structuredClone(this.state);
   reset() { this.state = createOffice(); }
+  /** Called only with validated recovery data; profile metadata always comes from the current registry. */
+  restoreTask(task: Task) {
+    const previous = this.state.tasks.findIndex(t => t.id === task.id);
+    if (previous < 0) this.state.tasks.push(structuredClone(task)); else this.state.tasks[previous] = structuredClone(task);
+    for (const agent of this.state.agents) {
+      if (agent.id === task.assignedAgent) Object.assign(agent,syncAgent(agent,task,new Date().toISOString()));
+      else if (agent.currentTask === task.id) Object.assign(agent,releaseAgent(agent,new Date().toISOString()));
+    }
+  }
+  recordRecovery(type: EventType,taskId: string,message: string) {
+    const task = this.state.tasks.find(t => t.id === taskId); const agent = this.state.agents.find(a => a.id === (task?.assignedAgent ?? 'lead'))!;
+    const event: ActivityEvent = { id:crypto.randomUUID(),type,taskId,agentId:agent.id,message,timestamp:new Date().toISOString(),status:agent.status,source:'mock' };
+    this.state.activity = [event,...this.state.activity].slice(0,configuration.activityLimit); this.events.publish([event]);
+  }
   dispatch(command: OfficeCommand, now = new Date().toISOString()): string | undefined {
     if (!Number.isFinite(Date.parse(now))) throw new Error('Некорректная дата события');
     const next = this.getSnapshot();
@@ -59,6 +73,7 @@ export class TaskSystem {
       const task = next.tasks.find(t => t.id === command.taskId);
       if (!task) throw new Error('Задача не найдена');
       if (!isActive(task)) throw new Error('Завершённую задачу нельзя изменять');
+      if (task.status === 'paused') throw new Error('Сначала возобновите задачу из checkpoint');
       if (command.type === 'assign') assign(task, command.agentId);
       else if (command.type === 'progress') {
         if (task.status !== 'in_progress') throw new Error('Прогресс доступен только во время выполнения');
@@ -80,7 +95,7 @@ export class TaskSystem {
         if (task.assignedAgent !== target) assign(task, target);
         else updateAgent(syncAgent(agentById(target), task, now), task);
         const eventTypes = { in_progress: 'task_started', review: 'task_review', testing: 'task_testing', completed: 'task_completed', failed: 'task_failed' } as const;
-        emit(eventTypes[command.status as Exclude<TaskStatus, 'pending'>], agentById(target), task, `${eventTypes[command.status as Exclude<TaskStatus, 'pending'>]}: «${task.title}»`);
+        emit(eventTypes[command.status as keyof typeof eventTypes], agentById(target), task, `${eventTypes[command.status as keyof typeof eventTypes]}: «${task.title}»`);
       }
     }
     next.activity = [...events].reverse().concat(next.activity).slice(0, configuration.activityLimit);

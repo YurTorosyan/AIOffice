@@ -19,3 +19,4 @@
 .runtime-panel details{margin-top:10px}.runtime-panel summary{cursor:pointer}.runtime-panel ol{padding-left:20px}
 .runtime-result{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;max-height:360px;overflow:auto;line-height:1.6}
 .progress-track.indeterminate{background:repeating-linear-gradient(110deg,#414b64 0 10px,#2b3040 10px 20px)}
+.checkpoint-panel{border-top:1px solid #ffffff12;margin-top:16px;padding-top:12px;font-size:10px;overflow-wrap:anywhere}.checkpoint-panel h3{display:flex;justify-content:space-between;font-size:12px}.checkpoint-panel h3 small{font-weight:400;color:#9bad87}.checkpoint-actions{display:flex;flex-wrap:wrap;gap:6px}.checkpoint-panel li{margin:5px 0;line-height:1.5}.checkpoint-panel ul{padding-left:17px}.checkpoint-panel details{margin:10px 0}

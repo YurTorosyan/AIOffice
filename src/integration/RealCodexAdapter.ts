@@ -2,21 +2,23 @@ import type { ActivityEvent, AgentStatus, OfficeCommand, OfficeState } from '../
 import { createOffice } from '../state/office.ts';
 import type { CodexAdapter } from './CodexAdapter.ts';
 import { LocalBridgeTransport } from './runtime.ts';
-import type { PilotAction, RuntimeSnapshot, RuntimeTransport } from './runtime.ts';
+import type { PilotAction, PilotOptions, RuntimeSnapshot, RuntimeTransport } from './runtime.ts';
 export const emptyRuntime = (): RuntimeSnapshot => ({ connection: 'disconnected', execution: 'idle', version: null, authenticated: false, threadId: null, turnId: null, skills: [], profile: null, instructionSources: [], contextFiles: [], result: '', plan: [], events: [], error: null, approval: null, startedAt: null, completedAt: null });
-const statusMap: Record<RuntimeSnapshot['execution'], AgentStatus> = { idle: 'idle', starting: 'thinking', working: 'working', waiting: 'waiting', interrupting: 'waiting', completed: 'completed', interrupted: 'idle', error: 'error' };
+const statusMap: Record<RuntimeSnapshot['execution'], AgentStatus> = { idle: 'idle', starting: 'thinking', working: 'working', waiting: 'waiting', interrupting: 'waiting', pausing:'waiting',paused:'waiting',resuming:'thinking',completed: 'completed', interrupted: 'idle', error: 'error' };
 /** The other seven workers stay untouched. A real turn never advances the mock workflow. */
 export function projectRuntime(runtime: RuntimeSnapshot): OfficeState {
   const state = createOffice(), lead = state.agents.find(a => a.id === 'lead')!;
-  const taskId = runtime.startedAt ? `pilot-${runtime.startedAt}` : null;
-  lead.status = runtime.connection === 'error' ? 'error' : statusMap[runtime.execution];
+  const taskId = runtime.taskId ?? (runtime.startedAt ? `pilot-${runtime.startedAt}` : null);
+  lead.status = runtime.execution==='paused'?'waiting':runtime.connection === 'error' ? 'error' : statusMap[runtime.execution];
   lead.currentTask = taskId; lead.startedAt = runtime.startedAt; lead.completedAt = runtime.completedAt;
   lead.lastActivity = runtime.events.at(-1)?.timestamp || null;
   lead.activity = runtime.error || runtime.events.at(-1)?.message || 'Lead Developer · реальный Codex не подключён';
   // Percentage is unknown until Codex confirms completion, never derived from elapsed time or item count.
   lead.progress = runtime.execution === 'completed' ? 100 : 0; lead.progressIndeterminate = !!taskId && runtime.execution !== 'completed';
-  if (taskId) state.tasks.push({ id: taskId, title: 'Read-only план AI Office', description: 'Director → Lead Developer · без изменения файлов и без подключения остальных сотрудников', assignedAgent: 'lead', priority: 'normal', status: runtime.execution === 'completed' ? 'completed' : ['error', 'interrupted'].includes(runtime.execution) ? 'failed' : 'in_progress', progress: lead.progress, progressIndeterminate: lead.progressIndeterminate, createdAt: runtime.startedAt!, startedAt: runtime.startedAt, completedAt: runtime.completedAt });
-  state.activity = runtime.events.slice(-80).reverse().map(e => ({ id: e.id, type: e.method === 'turn/completed' && e.execution === 'completed' ? 'task_completed' : e.method === 'runtime/error' ? 'task_failed' : 'runtime_event', agentId: 'lead', taskId: e.taskStartedAt ? `pilot-${e.taskStartedAt}` : null, message: `${e.method} · ${e.message}`, timestamp: e.timestamp, status: statusMap[e.execution], source: 'codex', runtimeMethod: e.method }));
+  if (taskId) state.tasks.push({ id: taskId, title: 'Read-only план AI Office', description: 'Director → Lead Developer · без изменения файлов и без подключения остальных сотрудников', assignedAgent: 'lead', priority: 'normal', status: runtime.execution==='paused'?'paused':runtime.execution === 'completed' ? 'completed' : ['error', 'interrupted'].includes(runtime.execution) ? 'failed' : 'in_progress', progress: lead.progress, progressIndeterminate: lead.progressIndeterminate, createdAt: runtime.startedAt!, startedAt: runtime.startedAt, completedAt: runtime.completedAt,pauseReason:runtime.pauseReason ?? undefined });
+  for (const saved of runtime.savedTasks ?? []) if (saved.id!==taskId) state.tasks.push({ id:saved.id,title:saved.title,description:saved.description,assignedAgent:saved.agentId,priority:'normal',status:saved.status,progress:saved.status==='completed'?100:0,progressIndeterminate:saved.status!=='completed',createdAt:saved.createdAt,startedAt:saved.createdAt,completedAt:saved.completedAt });
+  const recoveryEvents = ['task_pause_requested','task_paused','task_paused_limit','checkpoint_created','task_resume_requested','task_resumed','checkpoint_restored','resume_failed'] as const;
+  state.activity = runtime.events.slice(-80).reverse().map(e => ({ id: e.id, type: recoveryEvents.includes(e.method as typeof recoveryEvents[number])?e.method as typeof recoveryEvents[number]:e.method === 'turn/completed' && e.execution === 'completed' ? 'task_completed' : e.method === 'runtime/error' && e.execution!=='paused' ? 'task_failed' : 'runtime_event', agentId: 'lead', taskId: e.taskStartedAt ? `pilot-${e.taskStartedAt}` : null, message: `${e.method} · ${e.message}`, timestamp: e.timestamp, status: statusMap[e.execution], source: 'codex', runtimeMethod: e.method }));
   return state;
 }
 export class RealCodexAdapter implements CodexAdapter {
@@ -31,6 +33,8 @@ export class RealCodexAdapter implements CodexAdapter {
   getAgents = () => this.getSnapshot().agents;
   getTasks = () => this.getSnapshot().tasks;
   getEvents = () => this.getSnapshot().activity;
+  getCheckpoints = () => structuredClone(this.runtime.checkpoints ?? []);
+  async controlTask(command: string,taskId?: string) { await this.action('control',{command,taskId}); }
   subscribeToEvents: CodexAdapter['subscribeToEvents'] = listener => { this.listeners.add(listener); return () => this.listeners.delete(listener); };
   subscribeToUpdates = (listener: () => void) => { this.updateListeners.add(listener); return () => this.updateListeners.delete(listener); };
   dispatch(_command: OfficeCommand): string | undefined { throw new Error('В Codex pilot доступно только задание Lead на чтение. Для ручных задач выберите mock.'); }
@@ -42,7 +46,7 @@ export class RealCodexAdapter implements CodexAdapter {
     }
     for (const listener of this.updateListeners) listener();
   }
-  async action(action: PilotAction) { this.apply(await this.transport.action(action)); }
+  async action(action: PilotAction,options?: PilotOptions) { this.apply(await this.transport.action(action,options)); }
   async refresh() {
     try { this.apply(await this.transport.snapshot()); }
     catch { this.apply({ ...this.runtime, connection: 'error', error: 'Локальный мост недоступен. Запустите npm run bridge и переподключитесь.' }); }

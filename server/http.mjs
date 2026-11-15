@@ -3,7 +3,8 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
 import { resolve, extname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LeadPilot } from './pilot.mjs';
+import { CheckpointPilot } from './checkpoint-pilot.mjs';
+import { FileCheckpointStorage } from './checkpoint-store.mjs';
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 export function createBridge({ pilot, root, port = 8787 }) {
   const token = randomBytes(32).toString('hex');
@@ -25,10 +26,13 @@ export function createBridge({ pilot, root, port = 8787 }) {
       try {
         let body = ''; for await (const chunk of request) { body += chunk; if (body.length > 1024) { reply(413, { error: 'Request too large' }); return; } }
         const data = JSON.parse(body);
-        const methods = { connect: () => pilot.connect(), start: () => pilot.start(), interrupt: () => pilot.interrupt(), reject: () => pilot.rejectApproval(), disconnect: () => pilot.disconnect() };
-        if (!data || typeof data !== 'object' || Object.keys(data).length !== 1 || !Object.hasOwn(methods, data.action)) { reply(400, { error: 'Invalid pilot action' }); return; }
+        const methods = { connect: () => pilot.connect(), start: () => pilot.start(), interrupt: () => pilot.interrupt(), reject: () => pilot.rejectApproval(), disconnect: () => pilot.disconnect(), pause:()=>pilot.pause(),resume:()=>pilot.resume(data.taskId),checkpoint:()=>pilot.checkpoint(),control:()=>pilot.control(data.command,data.taskId) };
+        if (!data || typeof data !== 'object' || !Object.hasOwn(methods, data.action) || Object.keys(data).some(k => !['action','taskId','command'].includes(k)) || (data.taskId !== undefined && (typeof data.taskId !== 'string' || data.taskId.length > 160 || !['resume','control'].includes(data.action))) || (data.command !== undefined && (typeof data.command !== 'string' || data.command.length > 100 || data.action !== 'control')) || (data.action==='control' && typeof data.command!=='string')) { reply(400, { error: 'Invalid pilot action' }); return; }
         await methods[data.action](); reply(200, pilot.snapshot());
-      } catch { reply(409, { error: 'Pilot action failed; inspect connection status', snapshot: pilot.snapshot() }); }
+      } catch (error) {
+        const publicErrors = ['Выберите задачу: доступно несколько контрольных точек','Нет задачи для возобновления','Используйте: Пауза, Продолжим работу, Показать checkpoint, Где остановились','A task is already running','No running task to pause'];
+        reply(409, { error: publicErrors.includes(error.message)?error.message:'Pilot action failed; inspect connection status', snapshot: pilot.snapshot() });
+      }
       return;
     }
     if (request.method !== 'GET' || path.startsWith('/api/')) { reply(404, { error: 'Not found' }); return; }
@@ -45,8 +49,11 @@ export function createBridge({ pilot, root, port = 8787 }) {
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const root = fileURLToPath(new URL('../', import.meta.url));
-  const bridge = createBridge({ root, pilot: new LeadPilot({ root }) });
-  await bridge.listen(); console.log('AI Office bridge: http://127.0.0.1:8787 (mock default; Lead read-only pilot on request)');
-  const stop = () => bridge.close().then(() => process.exit());
+  const storage=new FileCheckpointStorage(root);const unlock=storage.acquireLock();
+  const bridge = createBridge({ root, pilot: new CheckpointPilot({ root,storage }) });
+  bridge.server.once('error',()=>{unlock();process.exitCode=1;});
+  process.on('exit',unlock);
+  await bridge.listen(); console.log('AI Office bridge: http://127.0.0.1:8787 (mock default; Lead read-only checkpoint/resume pilot)');
+  const stop = () => bridge.close().then(() => {unlock();process.exit();});
   process.on('SIGINT', stop); process.on('SIGTERM', stop);
 }

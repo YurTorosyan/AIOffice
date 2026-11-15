@@ -7,6 +7,11 @@ export class MockTeamWorkflow {
   private state: WorkflowState = { status: 'ready', step: 0, total: 8, label: 'Готов к запуску', error: null };
   constructor(system: TaskSystem) { this.system = system; }
   getSnapshot(): WorkflowState { return { ...this.state }; }
+  getRecovery() { return { taskId:this.taskId,step:this.state.step }; }
+  restore(taskId: string,step: number) {
+    if (!Number.isInteger(step) || step < 0 || step >= 8) throw new Error('Invalid mock checkpoint step');
+    this.taskId = taskId; this.state = { status:'paused',step,total:8,label:'Checkpoint восстановлен · mock',error:null };
+  }
   start() {
     if (['running', 'paused'].includes(this.state.status)) throw new Error('Workflow уже запущен');
     if (this.system.getSnapshot().tasks.some(t => ['frontend', 'qa', 'review', 'lead'].includes(t.assignedAgent ?? '') && !['completed', 'failed'].includes(t.status))) throw new Error('Освободите участников workflow или сбросьте демонстрацию');

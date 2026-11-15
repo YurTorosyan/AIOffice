@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { OfficeCommand } from '../domain.ts';
 import { MockCodexAdapter } from '../integration/MockCodexAdapter.ts';
 import { RealCodexAdapter } from '../integration/RealCodexAdapter.ts';
-import type { PilotAction } from '../integration/runtime.ts';
+import type { PilotAction, PilotOptions } from '../integration/runtime.ts';
 /** React observes the adapter; commands and workflow rules live outside React. */
 export function useOffice() {
   const mock = useMemo(() => new MockCodexAdapter(), []);
@@ -12,10 +12,11 @@ export function useOffice() {
   const [state, setState] = useState(() => adapter.getSnapshot());
   const [workflow, setWorkflow] = useState(() => mock.getWorkflow());
   const [runtime, setRuntime] = useState(() => real.getRuntime());
+  const [checkpoints,setCheckpoints] = useState(()=>adapter.getCheckpoints());
   const [busy, setBusy] = useState(false);
   const [running, setRunning] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const refresh = () => { setState(adapter.getSnapshot()); setWorkflow(mock.getWorkflow()); setRuntime(real.getRuntime()); };
+  const refresh = () => { setState(adapter.getSnapshot()); setWorkflow(mock.getWorkflow()); setRuntime(real.getRuntime()); setCheckpoints(adapter.getCheckpoints()); };
   useEffect(() => {
     let mounted = true;
     const onUpdate = () => queueMicrotask(() => { if (mounted) refresh(); });
@@ -28,13 +29,14 @@ export function useOffice() {
     try { setError(null); const result = fn(); refresh(); return result; }
     catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); refresh(); }
   };
-  const pilotAction = async (command: PilotAction) => {
+  const pilotAction = async (command: PilotAction,options?:PilotOptions) => {
     setBusy(true); setError(null);
-    try { await real.action(command); }
+    try { await real.action(command,options); }
     catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
     finally { setBusy(false); refresh(); }
   };
-  return { state, workflow, running, error, mode, runtime, busy, pilotAction,
+  const controlTask=async(command:string,taskId?:string)=>{setBusy(true);setError(null);try{await adapter.controlTask(command,taskId);}catch(cause){setError(cause instanceof Error?cause.message:String(cause));}finally{setBusy(false);refresh();}};
+  return { state, workflow, running, error:error??(mode==='mock'?mock.getRecoveryError():null), mode, runtime, busy, pilotAction,checkpoints,controlTask,
     changeMode: async () => {
       setBusy(true); setError(null);
       try { if (mode === 'codex' && (runtime.connection === 'connected' || ['starting','working','waiting','interrupting'].includes(runtime.execution))) await real.action('disconnect'); setMode(mode === 'mock' ? 'codex' : 'mock'); }
