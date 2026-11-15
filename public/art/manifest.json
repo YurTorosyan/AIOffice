@@ -1,0 +1,30 @@
+{
+  "created": "2026-11-15",
+  "method": "Built-in image generation from Director-approved QST concept and Lead sample; original raster artwork in self-contained SVG transport wrappers.",
+  "assets": {
+    "room": {
+      "path": "/art/room.svg",
+      "width": 1586,
+      "height": 992,
+      "pngBytes": 2826330,
+      "pngSha256": "648f10a4eac3b0f7a450a402b87c0316d864ac0bd0b74c4dfdaa3528a87f57e4",
+      "colorType": 2
+    },
+    "workstation": {
+      "path": "/art/workstation.svg",
+      "width": 1254,
+      "height": 1254,
+      "pngBytes": 1510644,
+      "pngSha256": "536494d22bf830dadcac4a6e44c294b69efa1cd37337ed80bad3532357ae1d19",
+      "colorType": 6
+    },
+    "employees": {
+      "path": "/art/employees.svg",
+      "width": 1536,
+      "height": 1024,
+      "pngBytes": 2890680,
+      "pngSha256": "b806650c104d6e6ef1128601b8cb352849f5f8a937711525f1ced7aad80993a1",
+      "colorType": 6
+    }
+  }
+}

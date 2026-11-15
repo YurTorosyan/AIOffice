@@ -28,3 +28,30 @@ aside{min-width:0;background:#171927;padding:9px 8px}.agent-panel{background:#1b
 @media(max-width:540px){.topbar{padding:12px;gap:13px}.brand{gap:14px;font-size:21px}.brand small{font-size:8px}.qst-logo{font-size:40px}.header-tools{order:3;width:100%;justify-content:space-between;gap:10px;font-size:13px}.project-select{order:2;flex-basis:100%;border-radius:8px;padding:2px 8px}.project-select select{font-size:12px}.header-tools>time,.team-count,.theme-control{padding-right:12px}.header-popover>div{right:-2px;width:250px}.header-popover:not(.notifications)>div{right:-40px}.panel-toolbar{padding:0 12px;gap:8px;flex-wrap:wrap}.tabs{gap:15px}.mode-label{margin-left:auto}.simulation{width:100%;justify-content:flex-end;padding:0 0 8px}.scene-footer{font-size:8px;padding:9px 12px;letter-spacing:.3px}.scene-coordinate{display:none}.workflow-bar{padding:12px}.workflow-bar span{flex-basis:100%;font-size:11px}.agent-panel{display:block}.agent-profile{padding:16px;gap:20px}.agent-profile h2{font-size:17px}.portrait{width:105px;height:120px}.task-detail{padding:20px}.team-activity{display:block}.activity-heading{flex-direction:row;flex-wrap:wrap;align-items:center;border-right:0;border-bottom:1px solid #393d54;padding:12px;gap:12px}.activity-heading>span{margin-left:auto}.team-activity>.event-list{padding:10px 12px;max-height:190px}.event p{display:block;margin:4px 0 0}.system-status{font-size:11px;gap:8px}.system-status small{font-size:8px}.task-list{padding:18px;min-height:330px}.task-list button{gap:12px}.task-list button>span:last-child{max-width:100px;font-size:10px}.runtime-controls{gap:7px}.runtime-controls strong{flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .skill-preview{padding:18px 16px;border-top:1px solid #393b53}.skill-preview>small{font-size:9px;letter-spacing:1px;color:#bdc9e8}.skill-preview>div{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.skill-preview span{font-size:10px;line-height:1.4;padding:5px 9px;border:1px solid #444b69;border-radius:14px;background:#2d3550;color:#dae2fa}.skills-drawer>summary{padding-top:12px;padding-bottom:12px;color:#adbddd;font-size:11px}@media(min-width:541px) and (max-width:950px){.skill-preview{grid-column:1;grid-row:2;align-self:start}.skills-drawer{grid-column:1;grid-row:3}.agent-panel>#employee-content{grid-row:2/4}}
+/* Illustrated raster layers replace the schematic office; state and control contracts are unchanged. */
+.illustrated-office{background:#30283c;isolation:isolate;min-width:900px}
+.illustrated-office image{image-rendering:auto;pointer-events:none}
+.illustrated-office .character{overflow:hidden}
+.illustrated-office .workstation .selection{filter:drop-shadow(0 0 4px #43c9f955)}
+.illustrated-office .workstation:focus-visible .selection{stroke:#fff4cf;stroke-width:3}
+.illustrated-office .character .person{animation:painted-breathe 3.4s ease-in-out infinite}
+.illustrated-office .status-Completed .person{animation:painted-celebrate .65s ease-in-out 3}
+.illustrated-office .status-Error .person{animation:painted-shake .35s steps(2,end) 3}
+.illustrated-office .status-Thinking .person{animation:painted-think 4s ease-in-out infinite;transform-origin:190px 400px}
+.illustrated-office .status-Working .hands{animation:painted-type .4s steps(2,end) infinite}
+.illustrated-office .status-Testing .hands{animation:painted-type .65s steps(2,end) infinite}
+.portrait{background:radial-gradient(ellipse at 50% 55%,#4b4460,#20253b 75%);height:124px;width:100px;border-radius:6px;border-color:#52607e;border-left-color:#2dd0fa}
+.portrait svg{width:100%;height:100%;transform:none;flex-shrink:0;overflow:hidden}
+.portrait .person{animation:painted-breathe 3.4s ease-in-out infinite}
+.desk-progress-indeterminate{animation:desk-scan 2s ease-in-out infinite}
+@keyframes painted-breathe{50%{transform:translateY(-2px)}}
+@keyframes painted-type{50%{transform:translateY(-4px)}}
+@keyframes painted-celebrate{50%{transform:translateY(-10px)}}
+@keyframes painted-shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes painted-think{50%{transform:translateY(-2px) rotate(-.6deg)}}
+@keyframes desk-scan{50%{transform:translateX(116px)}}
+.still .character *,.paused .character *{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.character *,.desk-progress-indeterminate{animation:none!important}}
+.illustrated-office .selection,.illustrated-office .bubble{pointer-events:none}
+.workstation-target{cursor:pointer;outline:none}
+.workstation:has(.workstation-target:focus-visible) .selection{opacity:1;stroke:#fff4cf;stroke-width:3}

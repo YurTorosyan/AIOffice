@@ -40,11 +40,12 @@ test('all workstations preserve click, Enter and Space selection without changin
  }
  assert.equal(JSON.stringify(agents),before);
 });
-test('panorama contains accessible Armenian landmarks in native SVG, without a raster backdrop',()=>{
+test('approved illustrated layers retain Armenian landmarks and use local self-contained raster artwork',()=>{
  const html=renderToStaticMarkup(createElement(moduleExports.Office,props));
  for(const landmark of ['Большой и Малый Арарат','Мать Армения на возвышенности парка Победы','Каскад, Опера и башня площади Республики'])assert.ok(html.includes(landmark));
- assert.ok(html.includes('clip-path="url(#window-clip)"'));
- assert.doesNotMatch(html,/<image|<foreignObject|data:image|\.png/i);
+ assert.ok(html.includes('/art/room.svg'));assert.ok(html.includes('/art/workstation.svg'));assert.ok(html.includes('/art/employees.svg'));
+ assert.doesNotMatch(html,/<foreignObject|https?:/i);
+ for(const name of ['room','workstation','employees']){const asset=readFileSync(new URL(`../public/art/${name}.svg`,import.meta.url),'utf8');assert.ok(asset.includes('data:image/png;base64,'));assert.doesNotMatch(asset,/<script|https?:\/\/(?!www.w3.org)/i);}
 });
 test('all status animations and task labels project supplied state, including safe escaping',()=>{
  for(const status of statuses){
@@ -54,4 +55,9 @@ test('all status animations and task labels project supplied state, including sa
  }
  const html=renderToStaticMarkup(createElement(moduleExports.Office,{...props,agents:agents.map((a,i)=>i===0?{...a,currentTask:'task-1'}:a),tasks:{'task-1':'<script>private task</script>'}}));
  assert.ok(html.includes('&lt;script&gt;private task&lt;/script&gt;'));assert.doesNotMatch(html,/<script>/);
+});
+
+test('all eight employee portraits use distinct stable atlas cells',()=>{
+ const cells=agents.map(agent=>renderToStaticMarkup(createElement(moduleExports.Character,{agent})).match(/data-art-cell="(\d+)"/)?.[1]);
+ assert.deepEqual(cells,['0','1','2','3','4','5','6','7']);
 });
