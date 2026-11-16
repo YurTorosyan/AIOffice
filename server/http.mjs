@@ -1,3 +1,4 @@
+import {createVerifiedQAExecutor} from './qa-executor.mjs';
 import { createServer } from 'node:http';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { readFileSync, statSync } from 'node:fs';
@@ -75,7 +76,8 @@ export function createBridge({ pilot, root, port = 8787, orchestration }) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const storage=new FileCheckpointStorage(root);const unlock=storage.acquireLock();
-  const pilot=new TeamRuntime({root,storage});const orchestration=createOrchestration(root,pilot);
+  const confinedExecutor=await createVerifiedQAExecutor();
+  const pilot=new TeamRuntime({root,storage,confinedExecutor});const orchestration=createOrchestration(root,pilot);
   const bridge = createBridge({ root, pilot,orchestration });
   bridge.server.once('error',()=>{unlock();process.exitCode=1;});
   process.on('exit',unlock);

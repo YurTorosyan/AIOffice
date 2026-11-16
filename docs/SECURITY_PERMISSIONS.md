@@ -1,5 +1,7 @@
 # Stage 7 — Security & Permission System
 
+**QA completion update:** [QA isolation](QA_ISOLATION.md) supersedes the original terminal-runner limitation below. The bridge now verifies a pinned, local Docker snapshot executor and permits only exact approved QA Node tests when verification passes. Dependencies, general shell, Git and network executors remain disabled. Older limitations below record the initial release.
+
 Eight existing employees and the illustrated office are preserved. Codex stays read-only, with shell, apps, plugins, hooks, multi-agent and web tools disabled. Permissions do not grant Codex direct OS tools.
 
 ## Enforcement

@@ -1,5 +1,7 @@
 # Stage 7 — Security & Permission System
 
+**QA completion:** the remaining test-runner gap is now addressed by the pinned Docker snapshot executor described in `docs/QA_ISOLATION.md`. Actual isolated PASS/FAIL, approval replay, timeout/cleanup and host-source preservation were verified without new Codex jobs. See `docs/QA_ISOLATION_EVIDENCE.json`. The historical initial-release limitations below are superseded only for QA Node tests; general terminal/dependency/network/Git execution remains blocked. Updated production activation still requires a bridge reload.
+
 Implemented a conservative permission broker for the existing eight employees. Office graphics, employee IDs/roles, installed Skills and historical checkpoints/results are preserved. Stage 6 was committed and pushed first as `f3884df5625e0585a6977a033a52f71204edde8f` (`feat: implement team workflow`). No Stage 8 work was started.
 
 ## Delivered

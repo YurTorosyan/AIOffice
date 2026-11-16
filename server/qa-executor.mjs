@@ -1,0 +1,45 @@
+import {spawn} from 'node:child_process';
+import {randomUUID} from 'node:crypto';
+import {join} from 'node:path';
+import image from './qa-image.json' with {type:'json'};
+import {canonicalResourceSyntax,secretResource} from '../src/security/policy.ts';
+import {safeText} from '../src/checkpoints/model.ts';
+// Fixed local engine. Environment DOCKER_HOST/CONTEXT cannot redirect project data to a remote daemon.
+const host=process.platform==='win32'?'npipe:////./pipe/dockerDesktopLinuxEngine':'unix:///var/run/docker.sock';
+const binary=process.platform==='win32'?join(process.env.ProgramFiles??'C:/Program Files','Docker/Docker/resources/bin/docker.exe'):'docker';
+const environment=()=>Object.fromEntries(['SystemRoot','WINDIR','PATH','PATHEXT','TEMP','TMP','USERPROFILE','HOME','APPDATA','LOCALAPPDATA'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]));
+export function docker(args,{input='',timeoutMs=10000,maxOutput=65536}={}){
+ return new Promise(resolve=>{let output='',bytes=0,limited=false,timedOut=false,settled=false;const child=spawn(binary,['--host',host,...args],{shell:false,windowsHide:true,env:environment(),stdio:['pipe','pipe','pipe']});
+  const done=code=>{if(settled)return;settled=true;clearTimeout(timer);resolve({code,output:safeText(output),limited,timedOut});};
+  const timer=setTimeout(()=>{timedOut=true;child.kill();done(null);},timeoutMs);
+  const data=b=>{bytes+=b.length;if(bytes>maxOutput){limited=true;child.kill();done(null);return;}output+=b.toString('utf8');};child.stdout.on('data',data);child.stderr.on('data',data);child.on('error',()=>done(null));child.on('close',done);child.stdin.on('error',()=>{});child.stdin.end(input);
+ });
+}
+// Trusted bootstrap only. Employee code is data on stdin, never interpolated into a shell or --eval.
+const bootstrap=`import fs from 'node:fs';import path from 'node:path';import {spawnSync} from 'node:child_process';
+const data=JSON.parse(fs.readFileSync(0,'utf8'));
+for(const file of data.sources){const full=path.resolve('/work',file.path);if(!full.startsWith('/work/'))throw new Error('Invalid snapshot path');fs.mkdirSync(path.dirname(full),{recursive:true});fs.writeFileSync(full,file.text,{flag:'wx'});}
+fs.writeFileSync('/work/package.json',JSON.stringify({type:'module'}),{flag:'wx'});
+const result=spawnSync('/usr/local/bin/node',['--experimental-strip-types','--test',...data.files],{cwd:'/work',env:{PATH:'/usr/local/bin:/usr/bin:/bin',HOME:'/tmp',TMPDIR:'/tmp'},stdio:'inherit',timeout:25000});process.exit(result.status??125);`;
+export function containerArgs(name){if(!/^ai-office-qa-[a-f0-9-]{36}$/.test(name))throw new Error('Invalid container identity');if(!/^node@sha256:[a-f0-9]{64}$/.test(image.image))throw new Error('Unpinned test image');return ['run','--rm','--pull=never','--name',name,'--label','ai-office.owner=qa','--network=none','--read-only','--cap-drop=ALL','--security-opt=no-new-privileges','--user=1000:1000','--pids-limit=64','--memory=256m','--memory-swap=256m','--cpus=1','--ulimit','nofile=256:256','--ulimit','fsize=16777216:16777216','--tmpfs','/work:rw,nosuid,nodev,size=16m,mode=1777','--tmpfs','/tmp:rw,nosuid,nodev,noexec,size=16m,mode=1777','--shm-size=8m','--ipc=private','--workdir=/work','--log-driver=none','--init','-i','--entrypoint=/usr/local/bin/node',image.image,'--input-type=module','--eval',bootstrap];}
+function payload(files,sources){if(!Array.isArray(files)||!files.length||files.length>16||!Array.isArray(sources)||!sources.length||sources.length>16)throw new Error('Invalid test snapshot');const paths=new Set();let size=0;
+ for(const source of sources){canonicalResourceSyntax(source.path);if(!/^(?:src|tests)\/.+\.(?:ts|tsx|js|mjs|css|json)$/.test(source.path)||secretResource(source.path)||paths.has(source.path)||typeof source.text!=='string'||safeText(source.text)!==source.text)throw new Error('Invalid/sensitive test source');paths.add(source.path);size+=Buffer.byteLength(source.text);}
+ for(const file of files)if(!/^tests\/[a-zA-Z0-9_./-]+\.test\.(?:ts|mjs|js)$/.test(file)||!paths.has(file))throw new Error('Unscoped test file');if(size>200000)throw new Error('Test snapshot too large');return JSON.stringify({files,sources:sources.map(({path,text})=>({path,text}))});
+}
+const probe=`import {test} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import net from 'node:net';
+test('isolation: non-root, no capabilities, no privilege elevation',()=>{assert.equal(process.getuid(),1000);const status=fs.readFileSync('/proc/self/status','utf8');assert.match(status,/CapEff:\\s+0+\\n/);assert.match(status,/NoNewPrivs:\\s+1/);});
+test('isolation: host filesystem, socket and environment absent; root read-only',()=>{assert.equal(fs.existsSync('/var/run/docker.sock'),false);assert.equal(fs.existsSync('/host'),false);assert.equal(process.env.OPENAI_API_KEY,undefined);assert.equal(process.env.AI_OFFICE_QA_PROBE_SECRET,undefined);assert.throws(()=>fs.writeFileSync('/etc/ai-office-probe','x'));fs.writeFileSync('/work/scratch','isolated');});
+test('isolation: network egress denied',async()=>{await new Promise((resolve,reject)=>{const socket=net.connect({host:'1.1.1.1',port:443});socket.setTimeout(1200);socket.on('connect',()=>{socket.destroy();reject(new Error('Unexpected network access'));});socket.on('error',()=>{socket.destroy();resolve();});socket.on('timeout',()=>{socket.destroy();reject(new Error('Network restriction not established'));});});});`;
+export class DockerTestExecutor {
+ constructor({command=docker,timeoutMs=30000}={}){this.command=command;this.timeoutMs=timeoutMs;this.ready=false;this.reason='Isolation not verified';this.verifiedAt=null;this.busy=false;}
+ get isolation(){return this.ready?'verified':'unavailable';}
+ status(){return {available:this.ready,kind:'docker-snapshot',image:image.image,nodeVersion:image.nodeVersion,verifiedAt:this.verifiedAt,reason:this.reason};}
+ async verify(){this.ready=false;try{const info=await this.command(['info','--format','{{json .}}']);if(info.code!==0)throw new Error('Local Docker engine unavailable');const config=JSON.parse(info.output);if(config.OSType!=='linux'||!config.MemoryLimit||!config.PidsLimit||!config.SecurityOptions?.some(s=>s.includes('seccomp')))throw new Error('Required Linux container isolation unavailable');const inspected=await this.command(['image','inspect',image.image,'--format','{{json .}}']);if(inspected.code!==0)throw new Error('Pinned QA image missing; no automatic download');const img=JSON.parse(inspected.output);if(img.Os!=='linux'||!img.RepoDigests?.includes(image.image))throw new Error('Wrong QA image');const result=await this.execute(['tests/isolation.test.mjs'],[{path:'tests/isolation.test.mjs',text:probe}]);if(result.code!==0)throw new Error('Container isolation self-check failed');this.ready=true;this.reason=null;this.verifiedAt=new Date().toISOString();}catch(e){this.reason=e.message;this.ready=false;}return this.status();}
+ async execute(files,sources){const input=payload(files,sources),name='ai-office-qa-'+randomUUID();let result;try{result=await this.command(containerArgs(name),{input,timeoutMs:this.timeoutMs});}finally{
+   // --rm handles normal exit; force-remove only this UUID on timeout/output overflow/client failure.
+   const cleanup=await this.command(['rm','--force',name]);if(cleanup.code!==0&&!/No such container/i.test(cleanup.output)){this.ready=false;this.reason='Container cleanup not confirmed';throw new Error(this.reason);}
+  }return result;
+ }
+ async run({profile,files,sources,revision}){const command='node --experimental-strip-types --test '+files.join(' '),blocked=output=>[{command,status:'BLOCKED',exitCode:null,output,revision,source:'runner'}];if(!this.ready||this.busy||profile!=='node_tests')return blocked('Verified QA executor unavailable or busy');this.busy=true;try{const r=await this.execute(files,sources);if(r.timedOut||r.limited||r.code===null||r.code===125||r.code===126||r.code===127)return blocked(r.timedOut?'Isolated test timeout':r.limited?'Isolated output limit':'Isolated process unavailable');return [{command,status:r.code===0?'PASS':'FAIL',exitCode:r.code,output:safeText(r.output).slice(-5000),revision,source:'runner'}];}catch{return blocked('Isolated execution failed closed');}finally{this.busy=false;}}
+}
+export async function createVerifiedQAExecutor(){const executor=new DockerTestExecutor();await executor.verify();return executor;}

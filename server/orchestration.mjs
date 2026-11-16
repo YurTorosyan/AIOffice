@@ -34,7 +34,7 @@ export class RealExecutionPort {
  async prepareRetry(t){const p=this.team.members.get(t.agentId);if(p.state.taskId!==t.executionId||p.book.tasks.find(x=>x.id===t.executionId)?.status!=='failed'||p.state.execution!=='error')throw new Error('Failure not confirmed');Object.assign(p.state,{execution:'idle',taskId:null,error:null});}
 }
 export function createOrchestration(root,team,storage=new WorkflowFileStorage(root)){
- const engine=new Orchestrator(new RealExecutionPort(team,new TeamActions(root,{permissions:team.permissions})),storage);
+ const engine=new Orchestrator(new RealExecutionPort(team,new TeamActions(root,{permissions:team.permissions,confinedExecutor:team.testExecutor})),storage);
  let busy=false;const timer=setInterval(async()=>{if(busy||engine.recoveryError)return;busy=true;try{await engine.resumeEligible();await engine.tick();}catch{/* Engine records storage errors; no blind execution retry. */}finally{busy=false;}},500);timer.unref();
  return {engine,permissions:team.permissions,close:()=>clearInterval(timer)};
 }

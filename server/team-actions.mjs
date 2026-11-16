@@ -37,14 +37,15 @@ export class TeamActions {
   }else if(a.action==='run_tests'){
    // A crashed test is not replayed silently: a new approval is required after Director inspection.
    if(j?.status==='testing')throw new Error('Interrupted approved test; Director must inspect it before a new request');
-   j={fingerprint,status:'testing'};save();const revision=this.revision(t.teamSpec.scope);const tests=await this.run(t.teamSpec.scope,revision);if(t.teamSpec.scope.some(p=>/\.(?:tsx|css)$/.test(p))||/browser|браузер/i.test(w.rootTask)){tests.push({command:'Browser acceptance verification',status:'BLOCKED',exitCode:null,output:'Browser acceptance requires actual browser evidence; Node tests cannot establish a UI PASS. No automated browser executor is configured.',revision,source:'runner'});}if(this.revision(t.teamSpec.scope)!==revision)throw new Error('Files changed during tests');j.receipt={filesChanged:[],tests,revision};
+   j={fingerprint,status:'testing'};save();const revision=this.revision(t.teamSpec.scope);const tests=await this.run(t.teamSpec.scope,revision,ctx);if(t.teamSpec.scope.some(p=>/\.(?:tsx|css)$/.test(p))||/browser|браузер/i.test(w.rootTask)){tests.push({command:'Browser acceptance verification',status:'BLOCKED',exitCode:null,output:'Browser acceptance requires actual browser evidence; Node tests cannot establish a UI PASS. No automated browser executor is configured.',revision,source:'runner'});}if(this.revision(t.teamSpec.scope)!==revision)throw new Error('Files changed during tests');j.receipt={filesChanged:[],tests,revision};
   }else throw new Error('Unknown approval action');
   j.status='completed';save();for(const r of requests)this.permissions.event('action_executed',r,'Exact approved operation completed');return j.receipt;
  }
- async runTests(scope,revision){
+ async runTests(scope,revision,ctx){
   const files=scope.filter(path=>/^tests\/[a-zA-Z0-9_./-]+\.test\.(?:ts|mjs|js)$/.test(path)),command='node --experimental-strip-types --test '+files.join(' ');
   if(!this.confinedExecutor||this.confinedExecutor.isolation!=='verified'||typeof this.confinedExecutor.run!=='function')return [{command,status:'BLOCKED',exitCode:null,output:'No verified isolated test executor. Unrestricted host execution is disabled by Stage 7.',revision,source:'runner'}];
   if(!files.length||files.some(p=>!existsSync(this.checked(p))))return [{command,status:'BLOCKED',exitCode:null,output:'No approved existing test files',revision,source:'runner'}];
-  return this.confinedExecutor.run({profile:'node_tests',files,revision,root:this.root});
+  if(!ctx||ctx.agentId!=='qa')return [{command,status:'BLOCKED',exitCode:null,output:'Owned QA task context required',revision,source:'runner'}];
+  const sources=scope.map(path=>this.permissions.readFile(ctx,path));return this.confinedExecutor.run({profile:'node_tests',files,sources,revision});
  }
 }

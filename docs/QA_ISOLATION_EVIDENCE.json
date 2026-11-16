@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-11-16T19:09:45.791Z",
+  "executor": {
+    "available": true,
+    "kind": "docker-snapshot",
+    "image": "node@sha256:6f7b03f7c2c8e2e784dcf9295400527b9b1270fd37b7e9a7285cf83b6951452d",
+    "nodeVersion": "v24.18.0",
+    "verifiedAt": "2026-11-16T19:09:39.961Z",
+    "reason": null
+  },
+  "isolationSelfCheck": "PASS",
+  "exactDirectorApproval": "PASS",
+  "actualNodeTest": "PASS",
+  "testFailure": "PASS",
+  "timeoutAndCleanup": "PASS",
+  "hostSourceUnchanged": "PASS",
+  "codexJobsStarted": 0
+}

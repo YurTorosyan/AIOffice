@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {createVerifiedQAExecutor,docker} from '../server/qa-executor.mjs';
+import {PermissionAuthority,MemoryPermissionStorage} from '../server/permissions.mjs';
+import {TeamActions} from '../server/team-actions.mjs';
+const executor=await createVerifiedQAExecutor();assert.equal(executor.isolation,'verified',executor.reason);
+mkdirSync('work/qa-isolation',{recursive:true});const root=mkdtempSync(resolve('work/qa-isolation/project-'));mkdirSync(resolve(root,'src'));mkdirSync(resolve(root,'tests'));
+const source="export const answer = 42;\n",testCode="import {test} from 'node:test';import assert from 'node:assert/strict';import {answer} from '../src/value.ts';test('actual snapshot import',()=>assert.equal(answer,42));";
+writeFileSync(resolve(root,'src/value.ts'),source);writeFileSync(resolve(root,'tests/value.test.mjs'),testCode);
+const permissions=new PermissionAuthority(root,{storage:new MemoryPermissionStorage(),executable:r=>r.action==='file.read'||r.action==='terminal.safe'&&r.agentId==='qa'&&r.command?.profile==='node_tests'&&executor.isolation==='verified'}),actions=new TeamActions(root,{permissions,confinedExecutor:executor});
+const w={id:'qa-verification',status:'running'},t={id:'qa',agentId:'qa',status:'paused',teamSpec:{scope:['src/value.ts','tests/value.test.mjs']}},a={id:'qa-test-approval',taskId:'qa',employeeId:'qa',action:'run_tests',status:'pending',patches:[],previous:{},commands:['node --experimental-strip-types --test tests/value.test.mjs']};
+a.security=actions.prepare(w,t,a);assert.equal(a.security.decision,'approval_required');const receipt=await actions.approve(w,t,a);assert.equal(receipt.tests[0].status,'PASS',receipt.tests[0].output);assert.deepEqual(await actions.approve(w,t,a),receipt);assert.equal(readFileSync(resolve(root,'src/value.ts'),'utf8'),source);assert(permissions.snapshot().records.some(r=>r.status==='consumed'));
+const fail=await executor.run({profile:'node_tests',files:['tests/fail.test.mjs'],sources:[{path:'tests/fail.test.mjs',text:"import {test} from 'node:test';test('real failure',()=>{throw new Error('expected');});"}],revision:'failure-proof'});assert.equal(fail[0].status,'FAIL');
+executor.timeoutMs=1500;const timeout=await executor.run({profile:'node_tests',files:['tests/timeout.test.mjs'],sources:[{path:'tests/timeout.test.mjs',text:'while(true){}'}],revision:'timeout-proof'});assert.equal(timeout[0].status,'BLOCKED');assert.match(timeout[0].output,/timeout/i);
+const leftovers=await docker(['ps','--all','--filter','label=ai-office.owner=qa','--format','{{.Names}}']);assert.equal(leftovers.code,0);assert.equal(leftovers.output.trim(),'');
+console.log(JSON.stringify({checkedAt:new Date().toISOString(),executor:executor.status(),isolationSelfCheck:'PASS',exactDirectorApproval:'PASS',actualNodeTest:'PASS',testFailure:'PASS',timeoutAndCleanup:'PASS',hostSourceUnchanged:'PASS',codexJobsStarted:0},null,2));

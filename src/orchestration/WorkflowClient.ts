@@ -9,7 +9,7 @@ export type WorkflowSnapshot=ReturnType<Orchestrator['snapshot']>;
 /** UI transport/controller only. The scheduler and both execution ports own the business rules. */
 export class WorkflowClient {
  private engine:Orchestrator;private port:MockExecutionPort;private token:string|null=null;
- security:PermissionBook&{available:boolean;error:string|null}={...emptyPermissions(),available:false,error:null};
+ security:PermissionBook&{available:boolean;error:string|null;executors?:{qaTests?:{available:boolean;reason:string|null;verifiedAt?:string;kind?:string}}}={...emptyPermissions(),available:false,error:null};
  readonly policies=rolePolicies;
  real:WorkflowSnapshot={...emptyWorkflows('codex'),recoveryError:null};
  constructor(adapter:MockCodexAdapter){this.adapter=adapter;this.port=new MockExecutionPort(adapter);this.engine=new Orchestrator(this.port,new BrowserWorkflowStorage());}
