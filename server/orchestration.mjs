@@ -1,3 +1,5 @@
+import {teamOutputSchema} from './team-output.mjs';
+import {TeamActions} from './team-actions.mjs';
 import { readFileSync,writeFileSync,existsSync,lstatSync,mkdirSync,renameSync,unlinkSync,openSync,fsyncSync,closeSync,realpathSync } from 'node:fs';
 import {resolve,relative} from 'node:path';
 import {randomUUID} from 'node:crypto';
@@ -11,22 +13,26 @@ export class WorkflowFileStorage {
  save(book){const safe=validateWorkflowBook(book,'codex');this.check();mkdirSync(this.dir,{recursive:true,mode:0o700});this.check();const bytes=JSON.stringify(safe);if(bytes.length>8_000_000)throw new Error('Workflow file too large');const temp=resolve(this.dir,`workflows-${randomUUID()}.tmp`);writeFileSync(temp,bytes,{flag:'wx',mode:0o600});const fd=openSync(temp,'r+');try{fsyncSync(fd);}finally{closeSync(fd);}try{for(let n=0;;n++){try{renameSync(temp,this.file);break;}catch(e){if(n===4||!['EPERM','EACCES','EBUSY','EEXIST'].includes(e.code))throw e;Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,15*(n+1));}}}finally{if(existsSync(temp))unlinkSync(temp);}}
 }
 export class RealExecutionPort {
- source='codex';constructor(team){this.team=team;this.maxActive=team.maxActive;}
+ source='codex';constructor(team,actions){this.team=team;this.maxActive=team.maxActive;this.actions=actions;}
  availability(){return Object.fromEntries([...this.team.members].map(([id,p])=>[id,{connected:p.state.connection==='connected',execution:p.state.execution,currentTask:p.state.taskId,skills:p.state.skills,recoveryError:p.state.recoveryError}]));}
- async start(t,context,id){await this.team.startWork(t.agentId,{id,title:t.title,prompt:taskPrompt(t,context)});}
+ contextProvider(t){const original=this.team.members.get(t.agentId).context;if(!t.teamSpec)return original;if(!this.actions)throw new Error('Scoped project actions unavailable');return ()=>{const extra=this.actions.snapshots(t.teamSpec.scope),paths=new Set(extra.map(f=>f.path));return [...original().filter(f=>!paths.has(f.path)),...extra];};}
+ async start(t,context,id){if(t.teamSpec&&this.actions){const revision=this.actions.revision(t.teamSpec.scope),tests=[...t.teamSpec.testEvidence,...(context.team?.handoffs.flatMap(h=>h.testResults)??[])];if(tests.some(e=>e.source==='runner'&&e.revision!==revision))throw new Error('Test evidence is stale; do not proceed');}await this.team.startWork(t.agentId,{id,title:t.title,prompt:taskPrompt(t,context),context:this.contextProvider(t),outputSchema:teamOutputSchema(t)});}
+ validateResult(t){if(!t.teamSpec||!this.actions)return;const revision=this.actions.revision(t.teamSpec.scope),tests=[...t.teamSpec.testEvidence,...(t.inputContext?.team?.handoffs.flatMap(h=>h.testResults)??[])];if(tests.some(e=>e.source==='runner'&&e.revision!==revision))throw new Error('Files changed during execution; gate evidence is stale');}
+ preview(t){return this.actions.preview(t);}
+ approve(w,t,a){if(!this.actions)throw new Error('Project actions unavailable');return this.actions.approve(w,t,a);}
  read(t){const p=this.team.members.get(t.agentId),s=p.state;
   if(s.taskId!==t.executionId){const saved=p.book.tasks.find(x=>x.id===t.executionId),cp=p.book.checkpoints.filter(c=>c.taskId===t.executionId).at(-1);return {id:t.executionId,status:saved?.status==='completed'&&cp?.lastKnownState.workNotes.length?'completed':'missing',result:cp?.lastKnownState.workNotes.at(-1),kind:'permanent',error:'Owned execution no longer selected; inspect its saved checkpoint/result'};}
   const cp=s.checkpoints?.filter(c=>c.taskId===t.executionId).at(-1);
   return {id:t.executionId,status:s.approval?'approval':s.execution==='completed'?'completed':s.execution==='paused'?'paused':s.execution==='error'?'failed':['starting','resuming'].includes(s.execution)?'starting':['working','waiting','pausing','interrupting'].includes(s.execution)?'running':'missing',result:s.result,error:s.error??undefined,kind:s.pauseReason==='limit_reached'?'usage_limit':s.pauseReason==='connection_lost'?'disconnect':s.execution==='error'?'recoverable':'pause',checkpointId:cp?.id??null};
  }
  pause(t){return this.team.action('pause',{agentId:t.agentId});}
- resume(t){return this.team.action('resume',{agentId:t.agentId,taskId:t.executionId});}
+ async resume(t){const p=this.team.members.get(t.agentId),original=p.context,originalSchema=p.outputSchema;p.context=this.contextProvider(t);p.outputSchema=teamOutputSchema(t);try{return await this.team.action('resume',{agentId:t.agentId,taskId:t.executionId});}finally{p.context=original;p.outputSchema=originalSchema;}}
  async cancel(t){const p=this.team.members.get(t.agentId);if(p.state.taskId!==t.executionId)return;if(p.state.approval)p.rejectApproval();if(['working','waiting'].includes(p.state.execution))await this.pause(t);if(p.state.execution==='paused'){const cp=p.book.checkpoints.filter(c=>c.taskId===t.executionId).at(-1);if(!cp?.lastKnownState.stopConfirmed)throw new Error('Stop not confirmed');const saved=p.book.tasks.find(x=>x.id===t.executionId);saved.status='failed';saved.completedAt=new Date().toISOString();p.closeCheckpoints(saved.id,'invalid');Object.assign(p.state,{execution:'idle',taskId:null,approval:null});p.event('task_cancelled','Director cancelled orchestrated work; checkpoint retained, not resumable');}else if(p.state.execution==='error'&&p.book.tasks.find(x=>x.id===t.executionId)?.status==='failed'){Object.assign(p.state,{execution:'idle',taskId:null,error:null});p.event('task_cancelled','Director closed failed orchestrated execution');}}
  async resolveApproval(t){const p=this.team.members.get(t.agentId);if(p.state.approval)p.rejectApproval();if(p.state.execution==='working')await p.pause();}
  async prepareRetry(t){const p=this.team.members.get(t.agentId);if(p.state.taskId!==t.executionId||p.book.tasks.find(x=>x.id===t.executionId)?.status!=='failed'||p.state.execution!=='error')throw new Error('Failure not confirmed');Object.assign(p.state,{execution:'idle',taskId:null,error:null});}
 }
 export function createOrchestration(root,team,storage=new WorkflowFileStorage(root)){
- const engine=new Orchestrator(new RealExecutionPort(team),storage);
+ const engine=new Orchestrator(new RealExecutionPort(team,new TeamActions(root)),storage);
  let busy=false;const timer=setInterval(async()=>{if(busy||engine.recoveryError)return;busy=true;try{await engine.resumeEligible();await engine.tick();}catch{/* Engine records storage errors; no blind execution retry. */}finally{busy=false;}},500);timer.unref();
  return {engine,close:()=>clearInterval(timer)};
 }

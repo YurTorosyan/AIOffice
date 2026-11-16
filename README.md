@@ -1,4 +1,6 @@
-# AI Office · Stage 5
+# AI Office · Stage 6
+
+Stage 6: включите Full Team Workflow под офисом. Изменения и запуск Node tests требуют подтверждения конкретного действия. [Документация](docs/TEAM_WORKFLOW.md).
 
 Stage 5 добавляет командный оркестратор: раскройте «Team workflow» под офисом. Сначала выберите Mock или Codex и подключите сотрудников. Задания остаются read-only; [инструкция и ограничения](docs/ORCHESTRATOR.md).
 

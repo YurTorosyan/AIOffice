@@ -27,8 +27,8 @@ export function createBridge({ pilot, root, port = 8787, orchestration }) {
       if(provided.length!==token.length||!timingSafeEqual(provided,Buffer.from(token))){reply(403,{error:'Invalid session'});return;}
       if(request.headers['content-type']!=='application/json'){reply(415,{error:'JSON required'});return;}
       try{let body='';for await(const chunk of request){body+=chunk;if(body.length>8192){reply(413,{error:'Request too large'});return;}}
-       const data=JSON.parse(body);if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).some(k=>!['action','workflowId','rootTask','taskId'].includes(k))||!['create','pause','resume','cancel','retry','reject_approval'].includes(data.action)||typeof data.workflowId!=='string'||(data.taskId!==undefined&&typeof data.taskId!=='string')||(data.action==='create'?(typeof data.rootTask!=='string'||data.taskId!==undefined):data.rootTask!==undefined))throw new Error('Invalid workflow command');
-       if(data.action==='create')await orchestration.engine.create(data.rootTask,data.workflowId);else await orchestration.engine.command(data.workflowId,data.action,data.taskId);
+       const data=JSON.parse(body);if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).some(k=>!['action','workflowId','rootTask','taskId','team','maxCycles'].includes(k))||!['create','pause','resume','cancel','retry','reject_approval','approve_action','reject_action','revalidate_result'].includes(data.action)||typeof data.workflowId!=='string'||(data.taskId!==undefined&&typeof data.taskId!=='string')||(data.action==='create'?(typeof data.rootTask!=='string'||data.taskId!==undefined):data.rootTask!==undefined)||((data.team!==undefined||data.maxCycles!==undefined)&&data.action!=='create')||(data.team!==undefined&&typeof data.team!=='boolean')||(data.maxCycles!==undefined&&(!Number.isInteger(data.maxCycles)||data.maxCycles<0||data.maxCycles>3)))throw new Error('Invalid workflow command');
+       if(data.action==='create')await orchestration.engine.create(data.rootTask,data.workflowId,...(data.team?[{team:true,maxCycles:data.maxCycles}]:[]));else await orchestration.engine.command(data.workflowId,data.action,data.taskId);
        reply(200,orchestration.engine.snapshot());
       }catch(error){reply(409,{error:'Workflow command rejected. Inspect workflow state, dependencies and checkpoints.',snapshot:orchestration.engine.snapshot()});}return;
     }
@@ -71,7 +71,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const bridge = createBridge({ root, pilot,orchestration });
   bridge.server.once('error',()=>{unlock();process.exitCode=1;});
   process.on('exit',unlock);
-  await bridge.listen(); console.log('AI Office bridge: http://127.0.0.1:8787 (Stage 5 orchestrator; mock default; eight isolated read-only employees)');
+  await bridge.listen(); console.log('AI Office bridge: http://127.0.0.1:8787 (Stage 6 team workflow; mock default; eight isolated read-only employees)');
   const stop = () => bridge.close().then(() => {unlock();process.exit();});
   process.on('SIGINT', stop); process.on('SIGTERM', stop);
 }

@@ -28,11 +28,11 @@ export class TeamRuntime {
   }finally{if(starts)this.reserved.delete(agentId);}
  }
  reserve(agentId){const owners=new Set([...this.reserved,...[...this.members].filter(([,p])=>active(p.state)).map(([id])=>id)]);if(owners.has(agentId)||owners.size>=this.maxActive){this.teamError=`Заняты слоты выполнения (${this.maxActive}). Дождитесь завершения или приостановите задание.`;throw new Error('Execution capacity reached');}this.reserved.add(agentId);}
- async startWork(agentId,{id,title,prompt}){
+ async startWork(agentId,{id,title,prompt,context,outputSchema}){
   employeeDefinition(agentId);if(!/^wf-[a-zA-Z0-9_.:-]{1,156}$/.test(id)||typeof title!=='string'||title.length>160||typeof prompt!=='string'||prompt.length>10000)throw new Error('Invalid orchestrated work');
   const p=this.members.get(agentId);if(p.book.tasks.some(t=>t.id===id))throw new Error('Execution ID already exists');this.reserve(agentId);
-  const previous={prompt:p.prompt,taskTitle:p.taskTitle,taskIdentifier:p.taskIdentifier};
-  try{Object.assign(p,{prompt,taskTitle:title,taskIdentifier:id});await p.start();}finally{Object.assign(p,previous);this.reserved.delete(agentId);}
+  const previous={prompt:p.prompt,taskTitle:p.taskTitle,taskIdentifier:p.taskIdentifier,context:p.context,outputSchema:p.outputSchema};
+  try{Object.assign(p,{prompt,taskTitle:title,taskIdentifier:id,outputSchema,...(context?{context}:{})});await p.start();}finally{Object.assign(p,previous);this.reserved.delete(agentId);}
  }
  disconnect(){for(const pilot of this.members.values())pilot.disconnect();}
 }

@@ -1,3 +1,7 @@
+# Stage 6 — текущая архитектура
+
+Существующий Orchestrator расширен необязательным team state, gate policy, handoffs, approvals и bounded remediation. Реальный порт сохраняет Codex read-only; отдельный TeamActions выполняет только точные одобренные file proposals и фиксированные Node tests с durable receipts. Stage 5 workflows читаются без миграции и не запускаются повторно. См. docs/TEAM_WORKFLOW.md. Ниже история.
+
 # Stage 5 — текущая архитектура
 
 WorkflowPanel → WorkflowClient → Orchestrator → ExecutionPort. RealExecutionPort использует прежний TeamRuntime / CheckpointPilot / AppServerRpc; MockExecutionPort использует существующий MockCodexAdapter и Stage 4B storage. План Lead проходит проверку DAG и ролей; отдельный atomic workflows.json хранит граф, входы, результаты, события и execution IDs. Исторические ограничения ниже относятся к прежним этапам. См. docs/ORCHESTRATOR.md.

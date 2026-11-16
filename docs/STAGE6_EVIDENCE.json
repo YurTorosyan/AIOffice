@@ -1,0 +1,454 @@
+{
+  "workflowId": "fa179d5b-c5ab-45c7-8cfc-b6f9a21cd180",
+  "status": "completed",
+  "createdAt": "2026-11-16T05:19:44.743Z",
+  "completedAt": "2026-11-16T05:34:39.284Z",
+  "employees": [
+    "backend",
+    "lead",
+    "qa",
+    "review"
+  ],
+  "files": [
+    {
+      "path": "src/team-pilot/clamp.ts",
+      "sha256": "57382de988b1cb60ffb050bbd733b9abfccc4f6967c89a4d702728593c04cb7f"
+    },
+    {
+      "path": "tests/team-pilot-clamp.test.ts",
+      "sha256": "90627a74c055ff088e077c30933946d51fce095e6ae528a05971a41f7cdf862e"
+    }
+  ],
+  "approvals": [
+    {
+      "id": "3bb29466-15ab-4a96-9e29-373f758f12b1",
+      "employeeId": "backend",
+      "taskId": "implement",
+      "action": "apply_changes",
+      "status": "approved",
+      "resolvedAt": "2026-11-16T05:32:33.486Z",
+      "revision": "b9058f69365a23e8f336253784c87ffe7b344dcd9f09a9f8dab083a89ad60ddf",
+      "commands": []
+    },
+    {
+      "id": "3273181a-548a-4be0-8ca5-25981797c5f7",
+      "employeeId": "qa",
+      "taskId": "gate-qa-0",
+      "action": "run_tests",
+      "status": "approved",
+      "resolvedAt": "2026-11-16T05:33:10.058Z",
+      "revision": "b9058f69365a23e8f336253784c87ffe7b344dcd9f09a9f8dab083a89ad60ddf",
+      "commands": [
+        "node --experimental-strip-types --test tests/team-pilot-clamp.test.ts"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "command": "node --experimental-strip-types --test tests/team-pilot-clamp.test.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "✔ clamp preserves values within the inclusive range (3.6952ms)\n✔ clamp returns the nearest bound outside the range (0.7143ms)\n✔ clamp rejects every non-finite argument (2.488ms)\n✔ clamp rejects a minimum greater than the maximum (1.0464ms)\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 546.6575\n",
+      "revision": "b9058f69365a23e8f336253784c87ffe7b344dcd9f09a9f8dab083a89ad60ddf",
+      "source": "runner"
+    }
+  ],
+  "qa": "PASS",
+  "review": "APPROVED",
+  "lead": "PASS",
+  "tasks": [
+    {
+      "id": "plan",
+      "agentId": "lead",
+      "status": "completed",
+      "attempts": 1,
+      "executionId": "wf-fa179d5b-c5ab-45c7-8cfc-b6f9a21cd180-plan-1",
+      "checkpointId": "09b14fe4-570a-41da-8c59-403184630f61",
+      "startedAt": "2026-11-16T05:19:45.200Z",
+      "completedAt": "2026-11-16T05:20:06.598Z",
+      "verdict": null
+    },
+    {
+      "id": "implement",
+      "agentId": "backend",
+      "status": "completed",
+      "attempts": 1,
+      "executionId": "wf-fa179d5b-c5ab-45c7-8cfc-b6f9a21cd180-implement-1",
+      "checkpointId": "57f5cc8e-eedb-457e-8a31-29e90bfa8c17",
+      "startedAt": "2026-11-16T05:20:06.619Z",
+      "completedAt": "2026-11-16T05:32:33.486Z",
+      "verdict": "PASS"
+    },
+    {
+      "id": "gate-qa-0",
+      "agentId": "qa",
+      "status": "completed",
+      "attempts": 1,
+      "executionId": "wf-fa179d5b-c5ab-45c7-8cfc-b6f9a21cd180-gate-qa-0-1",
+      "checkpointId": "85e635e4-7514-47a1-bd08-47c2ef82f49d",
+      "startedAt": "2026-11-16T05:33:10.088Z",
+      "completedAt": "2026-11-16T05:33:39.618Z",
+      "verdict": "PASS"
+    },
+    {
+      "id": "gate-security-0",
+      "agentId": "security",
+      "status": "cancelled",
+      "attempts": 0,
+      "executionId": null,
+      "checkpointId": null,
+      "startedAt": null,
+      "completedAt": null,
+      "verdict": null
+    },
+    {
+      "id": "gate-seo-0",
+      "agentId": "seo",
+      "status": "cancelled",
+      "attempts": 0,
+      "executionId": null,
+      "checkpointId": null,
+      "startedAt": null,
+      "completedAt": null,
+      "verdict": null
+    },
+    {
+      "id": "gate-review-0",
+      "agentId": "review",
+      "status": "completed",
+      "attempts": 1,
+      "executionId": "wf-fa179d5b-c5ab-45c7-8cfc-b6f9a21cd180-gate-review-0-1",
+      "checkpointId": "f26ddb04-ea6e-42d7-99bc-a441e3b5a2da",
+      "startedAt": "2026-11-16T05:33:39.635Z",
+      "completedAt": "2026-11-16T05:34:09.183Z",
+      "verdict": "APPROVED"
+    },
+    {
+      "id": "gate-integration-0",
+      "agentId": "lead",
+      "status": "completed",
+      "attempts": 1,
+      "executionId": "wf-fa179d5b-c5ab-45c7-8cfc-b6f9a21cd180-gate-integration-0-1",
+      "checkpointId": "62867408-b5d2-4d33-8865-5e39dfd7baee",
+      "startedAt": "2026-11-16T05:34:09.212Z",
+      "completedAt": "2026-11-16T05:34:39.240Z",
+      "verdict": "PASS"
+    }
+  ],
+  "handOffCount": 4,
+  "events": [
+    {
+      "type": "workflow_created",
+      "taskId": null,
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:19:44.743Z"
+    },
+    {
+      "type": "dependency_satisfied",
+      "taskId": "plan",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:19:45.199Z"
+    },
+    {
+      "type": "planning_started",
+      "taskId": "plan",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:19:45.210Z"
+    },
+    {
+      "type": "task_started",
+      "taskId": "plan",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:19:56.434Z"
+    },
+    {
+      "type": "plan_generated",
+      "taskId": null,
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "employee_selected",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "task_assigned",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "employee_selected",
+      "taskId": "gate-qa-0",
+      "agentId": "qa",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "task_assigned",
+      "taskId": "gate-qa-0",
+      "agentId": "qa",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "employee_selected",
+      "taskId": "gate-security-0",
+      "agentId": "security",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "task_assigned",
+      "taskId": "gate-security-0",
+      "agentId": "security",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "employee_selected",
+      "taskId": "gate-seo-0",
+      "agentId": "seo",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "task_assigned",
+      "taskId": "gate-seo-0",
+      "agentId": "seo",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "employee_selected",
+      "taskId": "gate-review-0",
+      "agentId": "review",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "task_assigned",
+      "taskId": "gate-review-0",
+      "agentId": "review",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "employee_selected",
+      "taskId": "gate-integration-0",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:20:06.597Z"
+    },
+    {
+      "type": "task_assigned",
+      "taskId": "gate-integration-0",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:20:06.598Z"
+    },
+    {
+      "type": "task_completed",
+      "taskId": "plan",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:20:06.598Z"
+    },
+    {
+      "type": "dependency_satisfied",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:20:06.618Z"
+    },
+    {
+      "type": "task_execution_requested",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:20:06.657Z"
+    },
+    {
+      "type": "task_started",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:20:18.233Z"
+    },
+    {
+      "type": "task_failed",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:20:49.192Z"
+    },
+    {
+      "type": "workflow_paused",
+      "taskId": null,
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:20:49.216Z"
+    },
+    {
+      "type": "optional_gates_refined",
+      "taskId": null,
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:31:49.034Z"
+    },
+    {
+      "type": "result_revalidation_requested",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:32:33.384Z"
+    },
+    {
+      "type": "proposal_created",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:32:33.390Z"
+    },
+    {
+      "type": "approval_requested",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:32:33.393Z"
+    },
+    {
+      "type": "task_completed",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:32:33.486Z"
+    },
+    {
+      "type": "approval_approved",
+      "taskId": "implement",
+      "agentId": "backend",
+      "timestamp": "2026-11-16T05:32:33.486Z"
+    },
+    {
+      "type": "workflow_resumed",
+      "taskId": null,
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:32:33.526Z"
+    },
+    {
+      "type": "dependency_satisfied",
+      "taskId": "gate-qa-0",
+      "agentId": "qa",
+      "timestamp": "2026-11-16T05:32:33.677Z"
+    },
+    {
+      "type": "approval_requested",
+      "taskId": "gate-qa-0",
+      "agentId": "qa",
+      "timestamp": "2026-11-16T05:32:33.678Z"
+    },
+    {
+      "type": "approval_approved",
+      "taskId": "gate-qa-0",
+      "agentId": "qa",
+      "timestamp": "2026-11-16T05:33:10.058Z"
+    },
+    {
+      "type": "handoff_created",
+      "taskId": "gate-qa-0",
+      "agentId": "qa",
+      "timestamp": "2026-11-16T05:33:10.088Z"
+    },
+    {
+      "type": "qa_started",
+      "taskId": "gate-qa-0",
+      "agentId": "qa",
+      "timestamp": "2026-11-16T05:33:10.129Z"
+    },
+    {
+      "type": "task_started",
+      "taskId": "gate-qa-0",
+      "agentId": "qa",
+      "timestamp": "2026-11-16T05:33:21.916Z"
+    },
+    {
+      "type": "task_completed",
+      "taskId": "gate-qa-0",
+      "agentId": "qa",
+      "timestamp": "2026-11-16T05:33:39.618Z"
+    },
+    {
+      "type": "dependency_satisfied",
+      "taskId": "gate-review-0",
+      "agentId": "review",
+      "timestamp": "2026-11-16T05:33:39.634Z"
+    },
+    {
+      "type": "handoff_created",
+      "taskId": "gate-review-0",
+      "agentId": "review",
+      "timestamp": "2026-11-16T05:33:39.635Z"
+    },
+    {
+      "type": "review_started",
+      "taskId": "gate-review-0",
+      "agentId": "review",
+      "timestamp": "2026-11-16T05:33:39.655Z"
+    },
+    {
+      "type": "task_started",
+      "taskId": "gate-review-0",
+      "agentId": "review",
+      "timestamp": "2026-11-16T05:33:50.869Z"
+    },
+    {
+      "type": "task_completed",
+      "taskId": "gate-review-0",
+      "agentId": "review",
+      "timestamp": "2026-11-16T05:34:09.183Z"
+    },
+    {
+      "type": "dependency_satisfied",
+      "taskId": "gate-integration-0",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:34:09.211Z"
+    },
+    {
+      "type": "handoff_created",
+      "taskId": "gate-integration-0",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:34:09.211Z"
+    },
+    {
+      "type": "handoff_created",
+      "taskId": "gate-integration-0",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:34:09.212Z"
+    },
+    {
+      "type": "task_execution_requested",
+      "taskId": "gate-integration-0",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:34:09.239Z"
+    },
+    {
+      "type": "task_started",
+      "taskId": "gate-integration-0",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:34:21.431Z"
+    },
+    {
+      "type": "task_completed",
+      "taskId": "gate-integration-0",
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:34:39.240Z"
+    },
+    {
+      "type": "workflow_completed",
+      "taskId": null,
+      "agentId": "lead",
+      "timestamp": "2026-11-16T05:34:39.284Z"
+    }
+  ],
+  "activeEmployees": [],
+  "connectedEmployeesAtExecution": 8,
+  "finalConnectedEmployees": 0,
+  "latestHandoffFixLoadedInExistingBridge": false,
+  "restartAttempt": {
+    "userRequested": true,
+    "employeesDisconnectedSafely": true,
+    "processStop": "Windows Access is denied",
+    "bridgeStillRunning": true
+  },
+  "postRunCorrection": {
+    "issue": "Lead historical note incorrectly says file approval is outstanding; both approvals and applied file hashes are verified.",
+    "originalModelNote": [
+      "Director approval is still required before the bridge may apply the exact two new-file patches."
+    ],
+    "fix": "Added explicit gate verdicts and transitive bridge approval/file receipts to controlled handoffs, with regression test; original model result preserved. No additional model turns.",
+    "correctedLeadContextContainsApprovedApplyReceipt": true
+  },
+  "stage5Preserved": true
+}

@@ -108,7 +108,7 @@ export class LeadPilot {
         if (thread.sandbox?.type !== 'readOnly' || thread.sandbox.networkAccess === true || thread.approvalPolicy !== 'on-request' || thread.approvalsReviewer !== 'user') throw new Error('Codex did not confirm the required read-only policy');
         this.state.threadId = thread.thread.id; this.state.instructionSources = thread.instructionSources || [];
         this.event('thread/started', `Read-only thread confirmed; ${this.role} profile supplied as developer instructions`);
-        const turn = await this.rpc.request('turn/start', { threadId: this.state.threadId,
+        const turn = await this.rpc.request('turn/start', { ...(this.outputSchema?{outputSchema:this.outputSchema}:{}),threadId: this.state.threadId,
           input: [{ type: 'text', text: this.lead.skills.map(s=>`$${s.name}`).join(' ') + '\n' + this.prompt + '\n\nThe bridge has already read the authorized project files below. Use these complete, hashed repository snapshots instead of running file-reading commands; this makes the pilot work when the nested Windows shell sandbox is unavailable. Do not invoke shell or filesystem tools. Explicitly inspect the attached employee TOML profile and follow its developer_instructions. Skill inputs follow this message.\nREPOSITORY_SNAPSHOTS_JSON\n' + JSON.stringify(context) }, ...this.lead.skills.map(s => ({ type: 'skill', ...s }))],
           sandboxPolicy: { type: 'readOnly', networkAccess: false }, approvalPolicy: 'on-request', approvalsReviewer: 'user' });
         this.state.turnId ??= turn.turn.id;
