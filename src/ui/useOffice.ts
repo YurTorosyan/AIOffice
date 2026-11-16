@@ -42,7 +42,8 @@ export function useOffice() {
   };
   const controlTask=async(command:string,taskId?:string)=>{setBusy(true);setError(null);try{await adapter.controlTask(command,taskId);}catch(cause){setError(cause instanceof Error?cause.message:String(cause));}finally{setBusy(false);refresh();}};
   const workflowActivity=orchestration.events.map(e=>({id:e.id,type:'runtime_event' as const,agentId:e.agentId,taskId:e.taskId,message:`${e.type} · ${e.message}`,timestamp:e.timestamp,status:e.type.includes('failed')?'error' as const:e.type.includes('completed')?'completed' as const:'waiting' as const,source:e.source,runtimeMethod:e.type}));
-  const combinedState={...state,activity:[...state.activity,...workflowActivity].sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).slice(0,80)};
+  const securityActivity=(mode==='codex'?orchestrationClient.security.events:[]).map(e=>({id:e.id,type:'runtime_event' as const,agentId:e.agentId,taskId:e.taskId,message:`Security · ${e.type} · ${e.action} · ${e.reason}`,timestamp:e.timestamp,status:e.type.includes('denied')||e.type.includes('failed')?'error' as const:'waiting' as const,source:'codex' as const,runtimeMethod:e.type}));
+  const combinedState={...state,activity:[...state.activity,...workflowActivity,...securityActivity].sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).slice(0,80)};
   return { state:combinedState, orchestration,orchestrationClient,refreshOrchestration, workflow, running, error:error??(mode==='mock'?mock.getRecoveryError():null), mode, runtime, busy, pilotAction,checkpoints,controlTask,
     changeMode: async () => {
       setBusy(true); setError(null);

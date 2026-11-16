@@ -1,3 +1,4 @@
+import {SecurityPanel} from './SecurityPanel.tsx';
 import { useEffect, useState } from 'react';
 import { metrics } from '../state/office.ts';
 import { useOffice } from './useOffice.ts';
@@ -50,6 +51,7 @@ export function App() {
      {runtime.teamError&&<p className="command-error" role="alert">{runtime.teamError}</p>}
      <details className="employee-control-drawer" open={mode==='codex'}><summary>{mode==='mock'?'Mock-сессии сотрудников':'Codex · управление выбранным сотрудником'}</summary><RuntimePanel runtime={selectedRuntime} busy={busy||(mode==='mock'&&['running','paused'].includes(workflow.status))} action={pilotAction} agentId={selected} role={agent.role} source={mode}/></details>
      <details className="office-controls"><summary>Task Panel · задачи и контрольные точки <span>↗</span></summary><TaskPanel checkpoints={checkpoints} control={controlTask} busy={busy} source={mode} state={state} locked={locked} dispatch={dispatch}/></details>
+     <SecurityPanel client={orchestrationClient} mode={mode} employeeId={selected}/>
      <WorkflowPanel client={orchestrationClient} mode={mode} snapshot={orchestration} onUpdate={refreshOrchestration}/>
      <details className="status-key"><summary>Статусы сотрудников</summary><div className="legend">{statuses.map(s=><span key={s}><i style={{background:statusColors[displayStatus[s]]}}/>{displayStatus[s]}</span>)}</div></details>
     </section>

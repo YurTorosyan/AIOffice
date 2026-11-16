@@ -7,9 +7,11 @@ import { TeamRuntime } from './team.mjs';
 import { employeeIds } from './employee-config.mjs';
 import { FileCheckpointStorage } from './checkpoint-store.mjs';
 import { createOrchestration } from './orchestration.mjs';
+import {SecurityController} from './security.mjs';
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 export function createBridge({ pilot, root, port = 8787, orchestration }) {
   const token = randomBytes(32).toString('hex');
+  const security=orchestration?.permissions?new SecurityController(orchestration.engine,orchestration.permissions):null;
   const server = createServer(async (request, response) => {
     response.setHeader('Cache-Control', 'no-store'); response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'self'");
@@ -22,6 +24,12 @@ export function createBridge({ pilot, root, port = 8787, orchestration }) {
     if (request.method === 'GET' && path === '/api/codex/session') { reply(200, { token }); return; }
     if (request.method === 'GET' && path === '/api/codex/snapshot') { reply(200, pilot.snapshot()); return; }
     if (orchestration && request.method==='GET' && path==='/api/workflows/snapshot'){reply(200,orchestration.engine.snapshot());return;}
+    if(security&&request.method==='GET'&&path==='/api/security/snapshot'){reply(200,security.snapshot());return;}
+    if(security&&request.method==='POST'&&path==='/api/security/request'){
+      const provided=Buffer.from(String(request.headers['x-ai-office-token']||''));if(provided.length!==token.length||!timingSafeEqual(provided,Buffer.from(token))){reply(403,{error:'Invalid session'});return;}
+      if(request.headers['content-type']!=='application/json'){reply(415,{error:'JSON required'});return;}
+      try{let body='';for await(const chunk of request){body+=chunk;if(body.length>4096){reply(413,{error:'Request too large'});return;}}const result=await security.request(JSON.parse(body));reply(200,result);}catch{reply(409,{error:'Permission request denied; inspect the security audit.'});}return;
+    }
     if (orchestration && request.method==='POST' && path==='/api/workflows/action'){
       const provided=Buffer.from(String(request.headers['x-ai-office-token']||''));
       if(provided.length!==token.length||!timingSafeEqual(provided,Buffer.from(token))){reply(403,{error:'Invalid session'});return;}
@@ -71,7 +79,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const bridge = createBridge({ root, pilot,orchestration });
   bridge.server.once('error',()=>{unlock();process.exitCode=1;});
   process.on('exit',unlock);
-  await bridge.listen(); console.log('AI Office bridge: http://127.0.0.1:8787 (Stage 6 team workflow; mock default; eight isolated read-only employees)');
+  await bridge.listen(); console.log('AI Office bridge: http://127.0.0.1:8787 (Stage 7 permissions; mock default; eight isolated read-only employees)');
   const stop = () => bridge.close().then(() => {unlock();process.exit();});
   process.on('SIGINT', stop); process.on('SIGTERM', stop);
 }

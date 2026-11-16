@@ -1,5 +1,7 @@
 # Stage 6 — Full Team Workflow
 
+Stage 7 update: see [Security & Permissions](SECURITY_PERMISSIONS.md). The old host Node runner described below is historical: unrestricted test execution is now blocked until a verified isolated executor is configured. Existing completed receipts remain unchanged. New startup line: `Stage 7 permissions`.
+
 Развитие существующего Orchestrator, не новая система и не девятый работник. Восемь ID/ролей, Skills, офис, анимации, Real/Mock и Stage 4B/5 сохранены. Старые workflows version 1 читаются без миграции; Stage 6 добавляет необязательный `team`.
 
 ## Запуск и полномочия

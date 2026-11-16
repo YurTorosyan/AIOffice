@@ -8,7 +8,8 @@ export function executable(env = process.env, platform = process.platform) {
     ? join(env.LOCALAPPDATA || '', 'Programs/OpenAI/Codex/bin/codex.exe') : 'codex');
 }
 export function runtimeEnvironment(env = process.env) {
-  return { ...env, ...(env.CODEX_HOME ? {} : env.USERPROFILE ? { CODEX_HOME: join(env.USERPROFILE, '.codex') } : {}) };
+  const clean={};for(const key of ['SystemRoot','WINDIR','COMSPEC','PATH','PATHEXT','TEMP','TMP','USERPROFILE','LOCALAPPDATA','APPDATA','HOMEDRIVE','HOMEPATH','CODEX_HOME'])if(env[key])clean[key]=env[key];
+  if(!clean.CODEX_HOME&&clean.USERPROFILE)clean.CODEX_HOME=join(clean.USERPROFILE,'.codex');return clean;
 }
 export async function detectCli(bin = executable(), env = runtimeEnvironment(), run = execute) {
   try {

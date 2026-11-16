@@ -1,3 +1,5 @@
+import {emptyPermissions,rolePolicies} from '../security/policy.ts';
+import type {PermissionBook} from '../security/policy.ts';
 import { Orchestrator } from './Orchestrator.ts';
 import { BrowserWorkflowStorage, MockExecutionPort } from './MockExecutionPort.ts';
 import type { MockScenario } from './MockExecutionPort.ts';
@@ -7,6 +9,8 @@ export type WorkflowSnapshot=ReturnType<Orchestrator['snapshot']>;
 /** UI transport/controller only. The scheduler and both execution ports own the business rules. */
 export class WorkflowClient {
  private engine:Orchestrator;private port:MockExecutionPort;private token:string|null=null;
+ security:PermissionBook&{available:boolean;error:string|null}={...emptyPermissions(),available:false,error:null};
+ readonly policies=rolePolicies;
  real:WorkflowSnapshot={...emptyWorkflows('codex'),recoveryError:null};
  constructor(adapter:MockCodexAdapter){this.adapter=adapter;this.port=new MockExecutionPort(adapter);this.engine=new Orchestrator(this.port,new BrowserWorkflowStorage());}
  private adapter:MockCodexAdapter;
@@ -14,6 +18,7 @@ export class WorkflowClient {
  async refresh(mode:'mock'|'codex'){
   if(mode==='mock'){await this.engine.resumeEligible();await this.engine.tick();return;}
   const r=await fetch('/api/workflows/snapshot');if(!r.ok)throw new Error('Обновлённый мост оркестратора недоступен.');this.real=await r.json();
+  const security=await fetch('/api/security/snapshot');if(security.ok)this.security=await security.json();else this.security={...emptyPermissions(),available:false,error:'Мост ещё не загрузил Stage 7.'};
  }
  async command(mode:'mock'|'codex',action:'create'|'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action',workflowId:string,rootTask?:string,taskId?:string,scenario:MockScenario='parallel',team=false,maxCycles=2){
   if(mode==='mock'){
