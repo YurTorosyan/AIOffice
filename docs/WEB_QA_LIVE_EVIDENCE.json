@@ -1,0 +1,47 @@
+{
+  "projectId": "19afa022-a796-464a-aba8-9f532e360094",
+  "workflowId": "03070e2c-7264-4e51-bf9f-e3eab9f18478",
+  "workspace": "C:\\Projects\\Sample",
+  "workflowStatus": "paused",
+  "checks": [
+    {
+      "command": "vitest run --config [trusted React/jsdom profile] tests/App.test.tsx tests/coffee-house-styles.test.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "run=8350bf95-d450-43d8-a6fa-642233db92bf; image=sha256:bbeaf99ca1ef4e388c14e4c97494951c3fdfbe0a004a6ec9eca5609a0527d2ea; input=ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.1.0 \u001b[39m\u001b[90m/work\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[30m\u001b[45m node-contracts \u001b[49m\u001b[39m tests/coffee-house-styles.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 31\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m \u001b[30m\u001b[43m react-dom \u001b[49m\u001b[39m tests/App.test.tsx \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 827\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[32m✓\u001b[39m Coffee House landing page \u001b[2m(3)\u001b[22m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m renders the brand, introduction, and accessible navigation\u001b[33m 612\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m7 passed\u001b[39m\u001b[22m\u001b[90m (7)\u001b[39m\n\u001b[2m   Start at \u001b[22m 22:43:38\n\u001b[2m   Duration \u001b[22m 5.12s\u001b[2m (environment 51%, tests 21%, setup 14%, transform 10%, import 2%, worker 2%)\u001b[22m\n\n\u001b[2m    Isolate \u001b[22m \u001b[33m2 workers spawned\u001b[39m\u001b[2m · ~1.47s startup each (spawn + environment, per file)\u001b[22m\n\u001b[2m            \u001b[22m \u001b[2mat least ~1.47s faster with \u001b[22m\u001b[33misolate: false\u001b[39m\u001b[2m — reuses workers across files instead of one per file\u001b[22m\n\n",
+      "revision": "ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3",
+      "source": "runner"
+    },
+    {
+      "command": "tsc --noEmit [trusted React profile] && vite build [trusted profile]",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "run=8350bf95-d450-43d8-a6fa-642233db92bf; image=sha256:bbeaf99ca1ef4e388c14e4c97494951c3fdfbe0a004a6ec9eca5609a0527d2ea; input=ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3\nvite v8.1.5 building client environment for production...\n\u001b[2K\rtransforming...✓ 16 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.36 kB │ gzip:  0.26 kB\ndist/assets/index-BXiJML9d.css    4.83 kB │ gzip:  1.68 kB\ndist/assets/index-DA-LLCvi.js   194.43 kB │ gzip: 61.25 kB\n\n✓ built in 745ms\n\nbuild assets sha256=bc2057101646c03a6ad82233848f63b8c82199a4dd6a1b00f2cae3ce3d4adceb",
+      "revision": "ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3",
+      "source": "runner"
+    },
+    {
+      "command": "Playwright Chromium (sandboxed): Coffee House acceptance at 1440px and 390px",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "run=8350bf95-d450-43d8-a6fa-642233db92bf; image=sha256:bbeaf99ca1ef4e388c14e4c97494951c3fdfbe0a004a6ec9eca5609a0527d2ea; input=ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3\nPASS 1440px: Coffee House, four named drinks, semantic sections/navigation, no horizontal overflow; screenshot sha256=b08a0a9a4bf5e4450c672cf674ee103e007fc6fcee1d3146c5aa50e0c8422ee2\nPASS 390px: Coffee House, four named drinks, semantic sections/navigation, no horizontal overflow; screenshot sha256=7e78a0edb4043a74a0a3c92701e0a98b0daab4deadccc48b7089ec05e780bf27\nPASS zero page/console errors; external requests blocked; desktop/mobile checks only (not a full accessibility audit)\n",
+      "revision": "ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3",
+      "source": "runner"
+    }
+  ],
+  "qaStatus": "ready",
+  "securityRecheck": {
+    "id": "gate-security-0-evidence-1",
+    "status": "pending",
+    "executionId": null
+  },
+  "originalTaskResultsAndExecutionsPreserved": true,
+  "sourceHashesPreserved": {
+    "src/App.tsx": "0f025006d155af7752177d56ea63df59caa15ffbe866c5cca17f70acf62a140a",
+    "tests/App.test.tsx": "30f47fdb4dacb45ccb0cf9caa8fdc96190687c43c1d4ddd24fe76f4e70ab3e4e",
+    "src/styles/coffee-house.css": "5ee4864fab6b2794b71d6a76825177789004205016bf734050eb0a8645423cc8",
+    "tests/coffee-house-styles.test.ts": "b5e2ced919c33d6ea97c024f1b40b782ed254a142a0165ffa43f4fc64bf944e2"
+  },
+  "implementationApplicationCount": 1,
+  "realCodexJobsLaunched": 0
+}
