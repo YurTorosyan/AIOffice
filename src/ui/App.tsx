@@ -1,3 +1,4 @@
+import {ResourcePanel} from './ResourcePanel.tsx';
 import {configuration} from '../config.ts';
 import {ProjectsClient} from '../projects/ProjectsClient.ts';
 import type {ProjectSnapshot,ProjectCommand} from '../projects/ProjectsClient.ts';
@@ -31,7 +32,7 @@ export function App(){
 function OfficeApplication({client,catalog,scopeMode,projectBusy,projectError,onModeChange,onProjectCommand,onProjectsRefresh,guardRef}:OfficeProps) {
  const selectedProject=catalog.projects.find(p=>p.id===catalog.activeProjectId),context=catalog.activeContext??(selectedProject?projectContext(selectedProject,scopeMode):{projectId:'unselected-project',projectName:'Проект не выбран',workspaceRoot:'mock://unselected',repository:noRepository('mock://unselected'),currentBranch:null,defaultBranch:null,activeTaskId:null,relevantSkills:[],securityPolicy:'stage7-v2-project-scopes',runtimeMode:scopeMode}),available=!!catalog.activeContext&&!catalog.error&&selectedProject?.status==='ACTIVE';
 
- const {state:officeState,prepareProjectSwitch,workflow,running,error,dispatch,startWorkflow,toggle,reset,mode,runtime,busy,pilotAction,changeMode,checkpoints,controlTask,orchestration,orchestrationClient,refreshOrchestration}=useOffice({context,mode:scopeMode,onModeChange,available,selected:!!selectedProject});
+ const {state:officeState,prepareProjectSwitch,workflow,running,error,dispatch,startWorkflow,toggle,reset,mode,runtime,busy,pilotAction,changeMode,checkpoints,controlTask,orchestration,orchestrationClient,refreshOrchestration}=useOffice({context,mode:scopeMode,onModeChange,available,selected:!!selectedProject,projectSwitching:scopeMode==='codex'&&projectBusy});
  useEffect(()=>{guardRef.current=prepareProjectSwitch;return()=>{guardRef.current=null;};},[prepareProjectSwitch,guardRef]);
  const projectEvents=catalog.events.filter(e=>e.projectId===catalog.activeProjectId).map(e=>({id:e.id,projectId:e.projectId,branch:e.branch,type:'runtime_event' as const,agentId:'lead',taskId:null,message:e.message+' · '+e.type,timestamp:e.timestamp,status:/invalid|denied|unavailable|failed/.test(e.type)?'error' as const:'waiting' as const,source:e.source,runtimeMethod:e.type}));
  const state={...officeState,projects:catalog.projects,activity:[...officeState.activity,...projectEvents].filter(e=>(e.projectId??'office-demo')===catalog.activeProjectId).sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).slice(0,80)};
@@ -69,6 +70,7 @@ function OfficeApplication({client,catalog,scopeMode,projectBusy,projectError,on
      <details className="employee-control-drawer" open={mode==='codex'}><summary>{mode==='mock'?'Mock-сессии сотрудников':'Codex · управление выбранным сотрудником'}</summary><RuntimePanel projectAvailable={available} runtime={selectedRuntime} busy={busy||(mode==='mock'&&['running','paused'].includes(workflow.status))} action={pilotAction} agentId={selected} role={agent.role} source={mode}/></details>
      <details className="office-controls"><summary>Task Panel · задачи и контрольные точки <span>↗</span></summary><TaskPanel checkpoints={checkpoints} control={controlTask} busy={busy} source={mode} state={state} locked={locked} dispatch={dispatch}/></details>
      <ProjectPanel client={client} snapshot={catalog} mode={mode} onCommand={onProjectCommand} onUpdate={onProjectsRefresh}/>
+     <ResourcePanel resources={orchestration.workflows.length?orchestration.resources??runtime.resources:runtime.resources} mode={mode}/>
      <SecurityPanel client={orchestrationClient} mode={mode} employeeId={selected}/>
      <WorkflowPanel client={orchestrationClient} mode={mode} snapshot={orchestration} onUpdate={refreshOrchestration}/>
      <details className="status-key"><summary>Статусы сотрудников</summary><div className="legend">{statuses.map(s=><span key={s}><i style={{background:statusColors[displayStatus[s]]}}/>{displayStatus[s]}</span>)}</div></details>

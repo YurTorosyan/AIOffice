@@ -53,7 +53,7 @@ test('read-only context is a fixed list of complete hashed project files includi
 test('connection authenticates and confirms actual discovery, disconnect closes own process', async () => {
   const { pilot, rpc } = fixture(); await pilot.connect();
   assert.equal(pilot.snapshot().connection, 'connected'); assert.equal(pilot.snapshot().authenticated, true);
-  assert.deepEqual(pilot.snapshot().skills, leadSkills); assert.deepEqual(rpc.requests.map(r => r.method), ['account/read', 'skills/list']);
+  assert.deepEqual(pilot.snapshot().skills, leadSkills); assert.deepEqual(rpc.requests.map(r => r.method), ['account/read', 'skills/list', 'model/list']);
   pilot.disconnect(); assert.equal(rpc.closed, true); assert.equal(pilot.snapshot().connection, 'disconnected');
 });
 test('unavailable runtime, startup failure and missing auth fail closed', async () => {

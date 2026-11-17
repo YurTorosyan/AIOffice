@@ -14,16 +14,18 @@ export class WorkflowClient {
  readonly policies=rolePolicies;
  real:WorkflowSnapshot={projectId:'office-demo',...emptyWorkflows('codex'),recoveryError:null};
  constructor(adapter:MockCodexAdapter,context?:ProjectContext,persist=true){this.projectId=context?.projectId??'office-demo';this.real.projectId=this.projectId;this.adapter=adapter;this.port=new MockExecutionPort(adapter);this.engine=new Orchestrator(this.port,persist&&context?.runtimeMode!=='codex'?new BrowserWorkflowStorage(context?.projectId):new MemoryWorkflowStorage('mock'),context);}
- private projectId='office-demo';
+ private projectId='office-demo';private suspended=false;private refreshController:AbortController|null=null;
+ suspend(){this.suspended=true;this.refreshController?.abort();}
+ activate(){this.suspended=false;}
  private adapter:MockCodexAdapter;
  updateProjectContext(context:ProjectContext){if(context.projectId!==this.projectId)throw new Error('Workflow context mismatch');this.engine.updateProjectContext(context);}
  async pauseForSwitch(){for(const w of this.engine.snapshot().workflows.filter(w=>w.status==='running'))await this.engine.command(w.id,'pause');}
 
  snapshot(mode:'mock'|'codex'){return mode==='mock'?this.engine.snapshot():structuredClone(this.real);}
- async refresh(mode:'mock'|'codex'){
+ async refresh(mode:'mock'|'codex'){if(this.suspended)return;
   if(mode==='mock'){await this.engine.resumeEligible();await this.engine.tick();return;}
-  const r=await fetch('/api/workflows/snapshot?projectId='+encodeURIComponent(this.projectId));if(!r.ok)throw new Error('Обновлённый мост оркестратора недоступен.');const snapshot=await r.json();if((snapshot.projectId??'office-demo')!==this.projectId)throw new Error('Workflow project mismatch');this.real=snapshot;
-  const security=await fetch('/api/security/snapshot?projectId='+encodeURIComponent(this.projectId));if(security.ok)this.security=await security.json();else this.security={...emptyPermissions(),available:false,error:'Мост ещё не загрузил Stage 7.'};
+  this.refreshController=new AbortController();const signal=this.refreshController.signal;const r=await fetch('/api/workflows/snapshot?projectId='+encodeURIComponent(this.projectId),{signal});if(!r.ok)throw new Error('Обновлённый мост оркестратора недоступен.');const snapshot=await r.json();if((snapshot.projectId??'office-demo')!==this.projectId)throw new Error('Workflow project mismatch');this.real=snapshot;
+  const security=await fetch('/api/security/snapshot?projectId='+encodeURIComponent(this.projectId),{signal});if(security.ok)this.security=await security.json();else this.security={...emptyPermissions(),available:false,error:'Мост ещё не загрузил Stage 7.'};
  }
  async command(mode:'mock'|'codex',action:'create'|'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action',workflowId:string,rootTask?:string,taskId?:string,scenario:MockScenario='parallel',team=false,maxCycles=2){
   if(mode==='mock'){

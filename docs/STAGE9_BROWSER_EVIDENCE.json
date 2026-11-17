@@ -1,0 +1,18 @@
+{
+  "stage": 9,
+  "browser": "isolated headless installed Chrome via Playwright 1.65.1",
+  "codexJobs": 0,
+  "checks": [
+    "office and exactly eight animal employees",
+    "real local Git status/branch and repository management, zero Codex jobs",
+    "real project switch to non-Git workspace disables Git",
+    "simple task chooses Mock low reasoning and only relevant Skill",
+    "two independent tasks run while dependent frontend waits; never eight simultaneous tasks",
+    "escalation changes next continuation configuration, preserves completed planning",
+    "simulated limit -> checkpoint -> pause -> same-task resume without repeating completed planning",
+    "project task/resource isolation and selected-project persistence",
+    "no fabricated provider quota and no browser console/page errors"
+  ],
+  "consoleErrors": [],
+  "productionDataModified": false
+}

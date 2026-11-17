@@ -1,3 +1,6 @@
+import {ResourceOrchestrator,mockModels} from '../resources/ResourceOrchestrator.ts';
+import type {ResourceTask} from '../resources/policy.ts';
+import {capabilities} from '../orchestration/model.ts';
 import {MockTaskStorage} from '../tasks/browser.ts';
 import type {ProjectContext} from '../projects/model.ts';
 import type {PilotAction,PilotOptions,RuntimeSnapshot,RuntimeEvent} from './runtime.ts';
@@ -9,7 +12,7 @@ import type { CodexAdapter } from './CodexAdapter.ts';
 import { TaskSystem } from '../tasks/TaskSystem.ts';
 import { MockTeamWorkflow } from './MockTeamWorkflow.ts';
 export class MockCodexAdapter implements CodexAdapter {
-  readonly source = 'mock' as const;
+  readonly source = 'mock' as const;readonly resources:ResourceOrchestrator;
   readonly projectId:string;projectContext?:ProjectContext;
   private system = new TaskSystem();
   private connectedEmployees=new Set<string>();
@@ -18,11 +21,12 @@ export class MockCodexAdapter implements CodexAdapter {
   private taskStorage:MockTaskStorage;
   private storage: CheckpointStorage; private book: RecoveryBook = emptyBook('mock'); private recoveryError: string | null = null;
   constructor(storage?:CheckpointStorage,context?:ProjectContext,persistTasks=true) {
-    this.taskStorage=new MockTaskStorage(context?.projectId??'office-demo',persistTasks);this.projectId=context?.projectId??'office-demo';this.projectContext=context;this.system=new TaskSystem(this.projectId,context?.currentBranch??null);this.workflow=new MockTeamWorkflow(this.system);this.storage=storage??(typeof window==='undefined'?new MemoryCheckpointStorage():new BrowserCheckpointStorage(this.projectId));
+    this.resources=new ResourceOrchestrator(context?.projectId??'office-demo',context?.workspaceRoot??'legacy://office-demo');
+    this.taskStorage=new MockTaskStorage(context?.projectId??'office-demo',persistTasks);this.projectId=context?.projectId??'office-demo';this.projectContext=context;this.system=new TaskSystem(this.projectId,context?.currentBranch??null);this.workflow=new MockTeamWorkflow(this.system);for(const a of this.system.getSnapshot().agents)this.resources.capabilities(a.id,mockModels(),a.skills.filter(s=>s.installationStatus==='installed').map(s=>s.skillId));this.storage=storage??(typeof window==='undefined'?new MemoryCheckpointStorage():new BrowserCheckpointStorage(this.projectId));
     try {
       const savedState=this.taskStorage.load();if(savedState){for(const task of [...savedState.tasks].sort((a,b)=>Number(!['completed','failed'].includes(a.status))-Number(!['completed','failed'].includes(b.status))))this.system.restoreTask(task);this.system.restoreActivity(savedState.activity);}
       this.book = validateBook(this.storage.load(),'mock');if([...this.book.tasks,...this.book.checkpoints].some(r=>r.projectId!==this.projectId||'workspaceRoot' in r&&r.workspaceRoot&&r.workspaceRoot!==this.projectContext?.workspaceRoot))throw new Error('Mock project mismatch');
-      for(const task of this.book.tasks.filter(t=>['paused','in_progress'].includes(t.status))){const cp=[...this.book.checkpoints].reverse().find(c=>c.taskId===task.id);if(!cp)throw new Error('Missing mock recovery context');if(!cp.resumable){cp.resumable=true;cp.status='resumable';cp.reason='connection_lost';cp.lastKnownState.stopConfirmed=true;task.status='paused';}this.restore(cp);}
+      for(const task of this.book.tasks.filter(t=>['paused','in_progress'].includes(t.status))){const cp=[...this.book.checkpoints].reverse().find(c=>c.taskId===task.id);if(!cp)throw new Error('Missing mock recovery context');if(!cp.resumable){cp.resumable=true;cp.status='resumable';cp.reason='connection_lost';cp.lastKnownState.stopConfirmed=true;task.status='paused';}this.restore(cp);if(cp.resource)this.resources.restore(this.resourceInput(cp.taskId,cp.agentId,cp.lastKnownState.taskPriority??'normal'),cp.resource,cp.reason==='limit_reached');}
       for(const task of this.getTasks().filter(t=>['in_progress','review','testing'].includes(t.status)&&!this.book.tasks.some(saved=>saved.id===t.id)))this.pauseTask(task.id,'connection_lost');
       if(this.book.tasks.length)this.save();
     }
@@ -32,13 +36,14 @@ export class MockCodexAdapter implements CodexAdapter {
   updateProjectContext(context:ProjectContext){if(context.projectId!==this.projectId||this.projectContext&&context.workspaceRoot!==this.projectContext.workspaceRoot)throw new Error('Mock context mismatch');this.projectContext=context;this.system.branch=context.currentBranch;}
   getCheckpoints = () => structuredClone(this.book.checkpoints);
   /** Orchestrator uses the same task state and Stage 4B storage, with a traceable execution ID. */
-  startOrchestrated(agentId:string,id:string,title:string,description:string,workflowId?:string) {
+  startOrchestrated(agentId:string,id:string,title:string,description:string,workflowId?:string,resourceTask?:ResourceTask) {
     if(!/^[a-zA-Z0-9_.:-]{1,160}$/.test(id)||!this.getAgents().some(a=>a.id===agentId)||this.getTasks().some(t=>t.id===id||t.assignedAgent===agentId&&!['completed','failed'].includes(t.status)))throw new Error('Mock employee unavailable or duplicate execution');
     if(['running','paused'].includes(this.workflow.getSnapshot().status))throw new Error('Legacy mock workflow active');
-    const now=new Date().toISOString();this.connectedEmployees.add(agentId);
+    const now=new Date().toISOString();const input=resourceTask??this.resourceInput(id,agentId,'normal');this.resources.plan(input);this.resources.reserve(id);this.connectedEmployees.add(agentId);
     this.system.restoreTask({projectId:this.projectId,branch:this.projectContext?.currentBranch??null,updatedAt:now,workflowId,id,title:safeText(title),description:safeText(description),assignedAgent:agentId,status:'in_progress',priority:'normal',progress:0,createdAt:now,startedAt:now,completedAt:null});
     this.log('task_created',id,'Orchestrator assigned read-only mock analysis');this.log('task_started',id,'Mock execution started');this.checkpoint('manual_checkpoint',id);
   }
+  private resourceInput(taskId:string,agentId:string,priority:'low'|'normal'|'high'):ResourceTask{const role=Object.entries(capabilities).find(([,v])=>v.agentId===agentId)!;return {projectId:this.projectId,workspaceRoot:this.projectContext?.workspaceRoot??'legacy://office-demo',taskId,agentId,taskType:role[0],priority,files:[],requiredSkills:[role[1].skill],dependencies:[],readOnly:true};}
   getRecoveryError = () => this.recoveryError;
   private save() { this.storage.save(this.book); }
   private log(type: EventType,taskId: string,text: string) { this.system.recordRecovery(type,taskId,`mock · ${text}`); }
@@ -58,7 +63,7 @@ export class MockCodexAdapter implements CodexAdapter {
     const row = { id:task.id,title:safeText(task.title),description,agentId,projectId:this.projectId,status:task.status==='paused'?'paused' as const:'in_progress' as const,createdAt:task.createdAt,completedAt:null };
     if (record) Object.assign(record,row); else this.book.tasks.push(row);
     const workflow = this.workflow.getRecovery(); const step = workflow.taskId === task.id ? workflow.step : null;
-    const cp: TaskCheckpoint = { id:crypto.randomUUID(),taskId:task.id,agentId,projectId:this.projectId,workspaceRoot:this.projectContext?.workspaceRoot,...(this.projectContext?{branch:this.projectContext.currentBranch}:{}),source:'mock',reason,status:task.status==='paused'?'resumable':'paused',
+    const resource=this.resources.decision(task.id);const cp: TaskCheckpoint = { ...(resource?{resource}:{}), id:crypto.randomUUID(),taskId:task.id,agentId,projectId:this.projectId,workspaceRoot:this.projectContext?.workspaceRoot,...(this.projectContext?{branch:this.projectContext.currentBranch}:{}),source:'mock',reason,status:task.status==='paused'?'resumable':'paused',
       taskTitle:row.title,taskDescription:description,taskStatus:task.status,completedWork:step!==null?[`Mock workflow: подтверждено ${step} из 8 шагов`]:[`Подтверждённый прогресс mock: ${task.progress}%`],
       remainingWork:[step!==null?`Продолжить mock workflow с шага ${step+1}`:'Продолжить незавершённую mock задачу'],importantDecisions:['Mock only; no Codex runtime or verified real limit is represented.'],relevantFiles:[],
       lastKnownState:{ execution:task.status,connection:'mock',turnId:null,startedAt:task.startedAt ?? task.createdAt,plan:[],workNotes:[],stopConfirmed:task.status==='paused',taskStatus:before,progress:task.progress,workflowStep:step,limitCode:null,taskPriority:task.priority },
@@ -69,6 +74,7 @@ export class MockCodexAdapter implements CodexAdapter {
     const tasks = this.getTasks().filter(t => !['completed','failed','paused'].includes(t.status) && (!taskId || taskId===t.id));
     if (tasks.length !== 1) throw new Error('Выберите выполняемую задачу');
     const task = tasks[0]; this.stop(); this.log('task_pause_requested',task.id,'Пауза запрошена');
+    if(reason==='limit_reached')this.resources.reportFailure(task.id,'RESOURCE_LIMIT');this.resources.settle(task.id,'paused');this.resources.event({taskId:task.id,agentId:task.assignedAgent??'lead'},'checkpoint.created','Mock checkpoint saved; no provider usage');
     const before = task.status; this.system.restoreTask({ ...task,assignedAgent:task.assignedAgent ?? 'lead',status:'paused',pauseReason:reason });
     const cp = this.checkpoint(reason,task.id); const saved = this.book.checkpoints.find(c => c.id===cp.id)!; saved.lastKnownState.taskStatus = before;
     this.system.restoreTask({ ...this.getTasks().find(t => t.id===task.id)!,checkpointId:cp.id }); this.save(); this.log(reason==='limit_reached'?'task_paused_limit':'task_paused',task.id,`Задача приостановлена: ${reason}`);
@@ -79,6 +85,7 @@ export class MockCodexAdapter implements CodexAdapter {
     const existing = this.getTasks().find(t => t.id === cp.taskId);
     if (existing && ['completed','failed'].includes(existing.status)) throw new Error('Задача уже закрыта');
     if (!existing) this.restore(cp);
+    if(!this.resources.decision(cp.taskId))this.resources.plan({...this.resourceInput(cp.taskId,cp.agentId,cp.lastKnownState.taskPriority??'normal'),failureCount:cp.resource?.escalation?this.resources.config.escalationThreshold:0});this.resources.resume(cp.taskId);
     this.log('task_resume_requested',cp.taskId,'Возобновление запрошено');
     const task = this.getTasks().find(t => t.id===cp.taskId)!;
     this.system.restoreTask({ ...task,status:cp.lastKnownState.taskStatus as TaskStatus,pauseReason:undefined });
@@ -101,7 +108,7 @@ export class MockCodexAdapter implements CodexAdapter {
       const runtime:RuntimeSnapshot={projectId:this.projectId,projectContext:this.projectContext,source:'mock',agentId:agent.id,role:agent.role,connection:this.connectedEmployees.has(agent.id)?'connected':'disconnected',execution,version:'Mock · no Codex process',authenticated:false,threadId,turnId:null,skills:agent.skills.filter(s=>s.installationStatus==='installed').map(s=>s.skillId),profile:null,instructionSources:[],contextFiles:[],result:execution==='completed'?'Mock: симуляция завершена; реальный Codex не запускался.':'',plan:[],events,error:execution==='error'?'Mock: ошибка симуляции':null,approval:null,startedAt:task?.startedAt??null,completedAt:task?.completedAt??null,taskId:task?.id??null,pauseReason:task?.pauseReason,checkpoints:this.getCheckpoints().filter(c=>c.agentId===agent.id),savedTasks:this.book.tasks.filter(t=>t.agentId===agent.id),recoveryError:this.recoveryError};
       return [agent.id,runtime];
     }));
-    return {...members.lead,members,maxActive:8,activeEmployees:Object.entries(members).filter(([,r])=>r.execution==='working').map(([id])=>id)};
+    return {...members.lead,resources:this.resources.snapshot(),members,maxActive:2,activeEmployees:Object.entries(members).filter(([,r])=>r.execution==='working').map(([id])=>id)};
   };
   async action(action:PilotAction,{agentId='lead',taskId,command,projectId}:PilotOptions={}) {if(projectId&&projectId!==this.projectId)throw new Error('Mock project mismatch');
     if(action==='connect_all'){for(const agent of this.getAgents())this.connectedEmployees.add(agent.id);return;}
@@ -138,12 +145,13 @@ export class MockCodexAdapter implements CodexAdapter {
   getSnapshot = () => this.system.getSnapshot();
   getAgents = () => this.getSnapshot().agents;
   getTasks = () => this.getSnapshot().tasks;
-  getEvents = () => this.getSnapshot().activity;
+  getEvents = () => [...this.getSnapshot().activity,...this.resources.snapshot().events.map(e=>({...e,type:'runtime_event' as const,source:'mock' as const,status:'waiting' as const}))].sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).slice(0,80);
   subscribeToEvents: CodexAdapter['subscribeToEvents'] = listener => this.system.events.subscribe(listener);
   dispatch = (command: OfficeCommand) => {
     if (['running', 'paused'].includes(this.workflow.getSnapshot().status)) throw new Error('Дождитесь завершения workflow или сбросьте его');
     const safe = command.type==='create'?{ ...command,title:safeText(command.title),description:safeText(command.description) }:command;
-    const result = this.system.dispatch(safe); this.finishRecovery(); return result;
+    if(command.type==='transition'&&command.status==='in_progress'){const task=this.getTasks().find(t=>t.id===command.taskId);if(task){this.resources.plan(this.resourceInput(task.id,command.agentId??task.assignedAgent??'lead',task.priority));this.resources.reserve(task.id);}}
+    const result = this.system.dispatch(safe);if(command.type==='transition'&&['completed','failed'].includes(command.status))this.resources.settle(command.taskId,command.status==='completed'?'completed':'failed','CODE_FAILURE'); this.finishRecovery(); return result;
   };
   getWorkflow = () => this.workflow.getSnapshot();
   startWorkflow() { this.workflow.start(); }

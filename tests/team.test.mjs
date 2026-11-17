@@ -1,3 +1,4 @@
+import {capabilities} from '../src/orchestration/model.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {resolve} from 'node:path';
@@ -32,7 +33,7 @@ test('every role starts its own thread with exact profile, explicit skill inputs
  const f=fixture();await f.team.action('connect_all');const threads=[];
  for(const e of employees){await f.team.action('start',{agentId:e.id});const rpc=f.rpcs.get(e.id),thread=rpc.requests.find(r=>r.method==='thread/start').params,turn=rpc.requests.find(r=>r.method==='turn/start').params;
   assert.ok(thread.developerInstructions.startsWith(loadEmployee(root,e.id).instructions));assert.match(thread.developerInstructions,new RegExp(`employee ${e.id}`));assert.equal(thread.sandbox,'read-only');assert.equal(thread.approvalPolicy,'on-request');assert.equal(thread.approvalsReviewer,'user');assert.equal(thread.ephemeral,false);assert.equal(thread.config['features.shell_tool'],false);assert.equal(thread.config['features.multi_agent'],false);assert.equal(thread.config.web_search,'disabled');
-  assert.deepEqual(turn.input.filter(i=>i.type==='skill').map(s=>s.name),e.skills);assert.ok(!turn.input[0].text.split('REPOSITORY_SNAPSHOTS_JSON')[0].includes('attached Lead TOML')); for(const name of e.skills)assert.ok(turn.input[0].text.includes(`$${name}`));
+  const primary=Object.values(capabilities).find(c=>c.agentId===e.id).skill;assert.deepEqual(turn.input.filter(i=>i.type==='skill').map(s=>s.name),[primary]);assert.ok(!turn.input[0].text.split('REPOSITORY_SNAPSHOTS_JSON')[0].includes('attached Lead TOML')); assert.ok(turn.input[0].text.includes(`$${primary}`));for(const name of e.skills.filter(n=>n!==primary))assert.ok(!turn.input.some(i=>i.type==='skill'&&i.name===name));
   assert.deepEqual(turn.sandboxPolicy,{type:'readOnly',networkAccess:false});assert.equal(turn.threadId,`thread-${e.id}`);threads.push(turn.threadId);
   const snapshots=f.team.snapshot().members[e.id].contextFiles.map(p=>p.path);assert.ok(snapshots.includes(`.codex/agents/${e.profile}.toml`));assert.ok(!snapshots.some(p=>/auth\.json|\.env|recovery\.json/.test(p)));
   const checkpoint=f.team.snapshot().members[e.id].checkpoints.at(-1);assert.ok(checkpoint.importantDecisions[0].includes(`Employee ${e.id} (${e.role}) only`));assert.ok(!checkpoint.importantDecisions[0].includes('Lead only'));
@@ -61,7 +62,7 @@ test('cross-employee resume/control and shared thread ownership are rejected bef
  const f=fixture();await f.team.action('connect_all');await f.team.action('start',{agentId:'backend'});await f.team.action('pause',{agentId:'backend'});f.complete('backend','interrupted');const taskId=f.team.snapshot().members.backend.taskId;
  await assert.rejects(f.team.action('resume',{agentId:'qa',taskId}),/another employee/);await assert.rejects(f.team.action('control',{agentId:'qa',taskId,command:'resume'}),/another employee/);
  assert.equal(f.rpcs.get('qa').requests.filter(r=>r.method==='turn/start').length,0);
- const bad=structuredClone(f.storage.load()),task=structuredClone(bad.tasks[0]),cp=structuredClone(bad.checkpoints[0]);task.id='foreign-task';task.agentId='qa';cp.id='foreign-cp';cp.taskId=task.id;cp.agentId='qa';bad.tasks.push(task);bad.checkpoints.push(cp);assert.throws(()=>validateBook(bad,'codex'),/shared/);
+ const bad=structuredClone(f.storage.load()),task=structuredClone(bad.tasks[0]),cp=structuredClone(bad.checkpoints[0]);task.id='foreign-task';task.agentId='qa';cp.id='foreign-cp';cp.taskId=task.id;cp.agentId='qa';if(cp.resource){cp.resource.agentId='qa';cp.resource.taskId=task.id;}bad.tasks.push(task);bad.checkpoints.push(cp);assert.throws(()=>validateBook(bad,'codex'),/shared/);
  const scoped=new EmployeeCheckpointStorage(f.storage,'qa');assert.throws(()=>scoped.save(f.storage.load()),/owner/);
 });
 test('verified limits, disconnect recovery and denial-only approval handling remain isolated for each employee',async()=>{

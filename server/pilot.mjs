@@ -1,3 +1,4 @@
+import {modelCatalog} from '../src/resources/policy.ts';
 import { readFileSync, realpathSync } from 'node:fs';
 import { resolve, relative, isAbsolute } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -52,7 +53,7 @@ export class LeadPilot {
     this.busy = true;
     try { return await fn(); } finally { this.busy = false; }
   }
-  error(message) {
+  error(message) {this.resourceMonitor?.('resource/error',{});
     this.state.error = message; this.state.connection = 'error';
     if (['starting', 'working', 'waiting', 'interrupting'].includes(this.state.execution)) {
       this.state.execution = 'error'; this.state.completedAt = new Date().toISOString();
@@ -81,6 +82,7 @@ export class LeadPilot {
         for (const skill of this.lead.skills) {
           if (!skills.some(s => s.name === skill.name && s.enabled && realpathSync(s.path) === skill.path)) throw new Error('Codex did not discover the verified assigned Skills');
         }
+        try{let cursor=null,rows=[];const seen=new Set();for(let n=0;n<3;n++){const page=await rpc.request('model/list',{includeHidden:false,limit:100,...(cursor?{cursor}:{})});if(!Array.isArray(page.data))throw new Error('Model catalog unavailable');rows.push(...page.data);if(!page.nextCursor)break;if(seen.has(page.nextCursor))throw new Error('Invalid catalog cursor');seen.add(page.nextCursor);cursor=page.nextCursor;}this.state.modelCatalog=modelCatalog(rows);}catch{this.state.modelCatalog=[];}
         this.state.skills = this.lead.skills.map(s => s.name);
         this.state.profile = { path: this.profilePath, sha256: this.lead.profileHash, mode: 'explicit-developer-instructions' };
         this.state.connection = 'connected'; this.event('runtime/connected', `${this.role}: Codex authenticated; ${this.lead.skills.length} assigned Skills discovered`);
@@ -98,7 +100,8 @@ export class LeadPilot {
       const context = this.context(this.root);
       this.state.contextFiles = context.map(({ path, sha256 }) => ({ path, sha256 }));
       this.state.profile = { path: this.profilePath, sha256: this.lead.profileHash, mode: 'explicit-developer-instructions' };
-      this.state.execution = 'starting'; this.state.result = ''; this.lastMessage = ''; this.state.plan = []; this.state.error = null;
+      this.prepareResources?.(context);
+      this.state.failureClass=null;this.state.execution = 'starting'; this.state.result = ''; this.lastMessage = ''; this.state.plan = []; this.state.error = null;
       this.state.threadId = null; this.state.turnId = null; this.state.startedAt = new Date().toISOString(); this.state.completedAt = null;
       this.event('task/submitted', `Director submitted a read-only task to ${this.role}`);
       try {
@@ -108,16 +111,18 @@ export class LeadPilot {
         if (thread.sandbox?.type !== 'readOnly' || thread.sandbox.networkAccess === true || thread.approvalPolicy !== 'on-request' || thread.approvalsReviewer !== 'user') throw new Error('Codex did not confirm the required read-only policy');
         this.state.threadId = thread.thread.id; this.state.instructionSources = thread.instructionSources || [];
         this.event('thread/started', `Read-only thread confirmed; ${this.role} profile supplied as developer instructions`);
-        const turn = await this.rpc.request('turn/start', { ...(this.outputSchema?{outputSchema:this.outputSchema}:{}),threadId: this.state.threadId,
+        const turn = await this.rpc.request('turn/start', { ...this.resourceSelection(),...(this.outputSchema?{outputSchema:this.outputSchema}:{}),threadId: this.state.threadId,
           input: [{ type: 'text', text: this.lead.skills.map(s=>`$${s.name}`).join(' ') + '\n' + this.prompt + '\n\nThe bridge has already read the authorized project files below. Use these complete, hashed repository snapshots instead of running file-reading commands; this makes the pilot work when the nested Windows shell sandbox is unavailable. Do not invoke shell or filesystem tools. Explicitly inspect the attached employee TOML profile and follow its developer_instructions. Skill inputs follow this message.\nREPOSITORY_SNAPSHOTS_JSON\n' + JSON.stringify(context) }, ...this.lead.skills.map(s => ({ type: 'skill', ...s }))],
           sandboxPolicy: { type: 'readOnly', networkAccess: false }, approvalPolicy: 'on-request', approvalsReviewer: 'user' });
         this.state.turnId ??= turn.turn.id;
       } catch (error) { this.error(error.message); const rpc = this.rpc; this.rpc = null; rpc?.close(); throw error; }
     });
   }
+  resourceSelection(){const d=this.state.resourceDecision;return {...(d?.selectedModel?{model:d.selectedModel}:{}),...(d?.selectedReasoning?{effort:d.selectedReasoning}:{})};}
   notification({ method, params: p = {} }) {
     if (!this.state.threadId || p.threadId !== this.state.threadId) return;
     if (p.turnId && this.state.turnId && p.turnId !== this.state.turnId) return;
+    this.resourceMonitor?.(method,p);
     if (method === 'turn/started') {
       this.state.turnId = p.turn.id; this.state.execution = 'working'; this.event(method, `${this.role} started the real task`);
     } else if (method === 'turn/plan/updated') {

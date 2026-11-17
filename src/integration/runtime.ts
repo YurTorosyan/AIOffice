@@ -1,6 +1,6 @@
 /** AI Office public bridge contract, NOT the Codex wire protocol. No credentials/raw RPC cross this boundary. */
 export interface RuntimeEvent { projectId?:string;branch?:string|null; id: string; method: string; message: string; timestamp: string; source: 'codex'|'mock'; taskId?:string|null; agentId?:string; origin?:'runtime'|'bridge';threadId: string | null; turnId: string | null; execution: RuntimeSnapshot['execution']; taskStartedAt: string | null }
-export interface RuntimeSnapshot { projectId?:string;projectContext?:import('../projects/model.ts').ProjectContext;
+export interface RuntimeSnapshot {resources?:ReturnType<import('../resources/ResourceOrchestrator.ts').ResourceOrchestrator['snapshot']>;resourceDecision?:import('../resources/policy.ts').ResourceDecision; projectId?:string;projectContext?:import('../projects/model.ts').ProjectContext;
   source?:'mock'|'codex'; agentId?:string; role?:string; members?:Record<string,RuntimeSnapshot>; maxActive?:number; activeEmployees?:string[]; teamError?:string|null;
   connection: 'disconnected' | 'connecting' | 'connected' | 'error';
   execution: 'idle' | 'starting' | 'working' | 'waiting' | 'interrupting' | 'pausing' | 'paused' | 'resuming' | 'completed' | 'interrupted' | 'error';
@@ -13,13 +13,14 @@ export interface RuntimeSnapshot { projectId?:string;projectContext?:import('../
 }
 export type PilotAction = 'connect' | 'start' | 'interrupt' | 'reject' | 'disconnect' | 'pause' | 'resume' | 'checkpoint' | 'control' | 'connect_all' | 'disconnect_all' | 'mock_step' | 'mock_error' | 'mock_limit';
 export interface PilotOptions { projectId?:string; agentId?:string; taskId?: string; command?: string }
-export interface RuntimeTransport { snapshot(): Promise<RuntimeSnapshot>; action(action: PilotAction, options?: PilotOptions): Promise<RuntimeSnapshot> }
+export interface RuntimeTransport {abortPolling?():void; snapshot(): Promise<RuntimeSnapshot>; action(action: PilotAction, options?: PilotOptions): Promise<RuntimeSnapshot> }
 export class LocalBridgeTransport implements RuntimeTransport {
-  private token: string | null = null;
+  private token: string | null = null;private snapshotController:AbortController|null=null;
+  abortPolling(){this.snapshotController?.abort();}
   private request: typeof fetch;private projectId:string;
   constructor(request: typeof fetch = (...args) => fetch(...args),projectId='office-demo') { this.request = request;this.projectId=projectId; }
   async snapshot() {
-    const response = await this.request('/api/codex/snapshot?projectId='+encodeURIComponent(this.projectId));
+    this.snapshotController=new AbortController();const response = await this.request('/api/codex/snapshot?projectId='+encodeURIComponent(this.projectId),{signal:this.snapshotController.signal});
     if (!response.ok) throw new Error('Локальный мост недоступен. Запустите npm run bridge.');
     return await response.json() as RuntimeSnapshot;
   }

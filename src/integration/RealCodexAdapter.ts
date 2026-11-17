@@ -60,12 +60,12 @@ export class RealCodexAdapter implements CodexAdapter {
   async action(action: PilotAction,options?: PilotOptions) { this.apply(await this.transport.action(action,options)); }
   async refresh() {
     try { this.apply(await this.transport.snapshot()); }
-    catch { this.apply({ ...this.runtime, ...(this.runtime.members?{members:Object.fromEntries(Object.entries(this.runtime.members).map(([id,r])=>[id,{...r,connection:'error' as const,error:'Локальный мост недоступен; состояние требует переподключения.'}]))}:{}), connection: 'error', error: 'Локальный мост недоступен. Запустите npm run bridge и переподключитесь.' }); }
+    catch(error) { if(error instanceof Error&&error.name==='AbortError')return;this.apply({ ...this.runtime, ...(this.runtime.members?{members:Object.fromEntries(Object.entries(this.runtime.members).map(([id,r])=>[id,{...r,connection:'error' as const,error:'Локальный мост недоступен; состояние требует переподключения.'}]))}:{}), connection: 'error', error: 'Локальный мост недоступен. Запустите npm run bridge и переподключитесь.' }); }
   }
   observe() {
     this.stopObserving(); this.observing = true; const generation = ++this.generation;
     const poll = async () => { await this.refresh(); if (this.observing && generation === this.generation) this.polling = setTimeout(poll, 800); };
     void poll();
   }
-  stopObserving() { this.observing = false; ++this.generation; clearTimeout(this.polling); }
+  stopObserving() { this.transport.abortPolling?.();this.observing = false; ++this.generation; clearTimeout(this.polling); }
 }

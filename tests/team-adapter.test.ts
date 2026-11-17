@@ -16,12 +16,12 @@ test('team event notifications are delivered once and transport loss marks every
  let fail=false;const snapshot:RuntimeSnapshot={...emptyRuntime(),members:{qa:member}};const adapter=new RealCodexAdapter({snapshot:async()=>{if(fail)throw new Error('offline');return snapshot;},action:async()=>snapshot});
  const events:string[]=[];adapter.subscribeToEvents(e=>events.push(e.id));await adapter.refresh();await adapter.refresh();assert.deepEqual(events,['qa-event']);fail=true;await adapter.refresh();assert.equal(adapter.getRuntime().members?.qa.connection,'error');
 });
-test('mock connects and runs eight independent sessions, preserves every employee checkpoint after restart',async()=>{
+test('mock connects eight sessions and runs them under the conservative resource budget, preserves every employee checkpoint after restart',async()=>{
  const storage=new MemoryCheckpointStorage(),mock=new MockCodexAdapter(storage);await mock.action('connect_all');
- for(const agent of mock.getAgents())await mock.action('start',{agentId:agent.id});
+ for(const agent of mock.getAgents()){await mock.action('start',{agentId:agent.id});await mock.action('pause',{agentId:agent.id});}await mock.action('resume',{agentId:'frontend'});await mock.action('resume',{agentId:'backend'});
  const runtime=mock.getRuntime();assert.equal(Object.values(runtime.members!).filter(r=>r.connection==='connected').length,8);assert.equal(new Set(Object.values(runtime.members!).map(r=>r.threadId)).size,8);assert.equal(mock.getTasks().length,8);assert.ok(mock.getEvents().every(e=>e.source==='mock'));
  const frontend=mock.getAgents().find(a=>a.id==='frontend')!;await mock.action('mock_step',{agentId:'frontend'});await mock.action('pause',{agentId:'frontend'});assert.equal(mock.getRuntime().members?.backend.execution,'working');assert.equal(mock.getTasks().find(t=>t.id===frontend.currentTask)?.progress,25);
- for(const a of mock.getAgents().filter(a=>a.id!=='frontend'))await mock.action('pause',{agentId:a.id});
+ for(const a of mock.getAgents().filter(a=>mock.getRuntime().members?.[a.id].execution==='working'))await mock.action('pause',{agentId:a.id});
  const restored=new MockCodexAdapter(storage);assert.equal(restored.getTasks().filter(t=>t.status==='paused').length,8);
  await assert.rejects(restored.action('resume',{agentId:'backend',taskId:frontend.currentTask!}),/another employee/);await restored.action('resume',{agentId:'frontend'});assert.equal(restored.getRuntime().members?.frontend.execution,'working');assert.equal(restored.getRuntime().members?.backend.execution,'paused');assert.equal(restored.getTasks().find(t=>t.id===frontend.currentTask)?.progress,25);
  await restored.action('mock_error',{agentId:'frontend'});assert.equal(restored.getRuntime().members?.frontend.execution,'error');restored.stop();mock.stop();

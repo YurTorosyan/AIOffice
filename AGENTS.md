@@ -1,3 +1,7 @@
+# Текущий Stage 9 — Intelligent Model & Resource Orchestrator
+
+Director разрешил этап 9 поверх этапов 1–8: отдельная детерминированная resource policy, только объявленные runtime модели/effort, неизвестные cost/quota не выдумывать, conservative concurrency, relevant installed Skills, bounded retry/escalation с checkpoints. Сохранить 8 работников, графику, Stage 7/8 границы. Новые реальные задания Codex во время проверки НЕ запускать; Mock и RPC fixtures. После тестов/build/browser/commit остановиться. Исторический запрет Stage 9 ниже отменён только этим разрешением.
+
 # Текущий Stage 8 — Project & Repository Management
 
 Director явно разрешил этап 8 после завершения изолированного QA. Сохранять офис, 8 сотрудников, Skills, Stage 4B–7 и реальные интеграции. Проекты/репозитории, задачи, workflow, checkpoints, разрешения и runtime должны быть разделены по projectId и каноническому workspace. Все операции через центральные права Stage 7; Git только структурированные команды, изменения после точного подтверждения. Импорт read-only; никаких неявных переключений проекта или ветки. НОВЫЕ ЗАДАНИЯ CODEX НЕ ЗАПУСКАТЬ до отдельного разрешения Director. Проверять интеграцию через RPC fixtures и безопасные локальные тесты. После полного набора тестов/build/browser и коммита остановиться; Stage 9 не начинать.
