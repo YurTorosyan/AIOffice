@@ -1,0 +1,16 @@
+{
+  "mode": "isolated Mock office and staged production proposal preview",
+  "realCodexJobs": 0,
+  "officeEmployees": 8,
+  "renewalPreservesOriginalProposal": true,
+  "renewalDoesNotApproveOrApply": true,
+  "coffeeHouseBuildPreview": true,
+  "menuDrinks": 4,
+  "desktopViewport": 1440,
+  "mobileViewport": 390,
+  "mobileOverflow": false,
+  "navigationWorks": true,
+  "pageErrors": [],
+  "vitestTestsExecuted": false,
+  "liveFilesApplied": false
+}

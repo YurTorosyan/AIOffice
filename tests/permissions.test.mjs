@@ -10,6 +10,17 @@ const ctx={workflowId:'flow',taskId:'task',agentId:'backend',files:['src/value.t
 const request=(action='file.modify',resources=['src/value.ts'],extra={})=>({id:'one',workflowId:'flow',taskId:'task',agentId:'backend',action,resources,reason:'Exact task operation',...extra});
 function fixture(options={}){mkdirSync('work/security-tests',{recursive:true});const root=mkdtempSync(resolve('work/security-tests/project-'));mkdirSync(resolve(root,'src'));mkdirSync(resolve(root,'tests'));return {root,p:new PermissionAuthority(root,{storage:new MemoryPermissionStorage(),...options})};}
 test('exactly eight least-privilege policies and all required action categories exist',()=>{assert.equal(Object.keys(rolePolicies).length,8);for(const prefix of ['file','directory','git','terminal','dependency','network','config','secret'])assert(permissionActions.some(a=>a.startsWith(prefix+'.')));});
+
+test('scoped parent directories require approval without granting sibling or foreign-role writes',()=>{
+ const c={...ctx,agentId:'frontend',files:['src/styles/site.css','tests/App.test.tsx']};
+ const r=(path,action='directory.create')=>request(action,[path],{agentId:'frontend'});
+ for(const path of ['src','src/styles','tests'])assert.equal(evaluatePolicy(c,r(path)).decision,'approval_required',path);
+ for(const path of ['public','server','.git','src/other'])assert.equal(evaluatePolicy(c,r(path)).decision,'denied',path);
+ assert.equal(evaluatePolicy(c,r('src/unplanned.ts','file.create')).decision,'denied');
+ const design={...c,agentId:'design',files:['src/backend/api.ts']};assert.equal(evaluatePolicy(design,request('directory.create',['src'],{agentId:'design'})).decision,'denied');
+ const nested={...design,files:['src/components/Card.tsx']};assert.equal(evaluatePolicy(nested,request('directory.create',['src'],{agentId:'design'})).decision,'approval_required');
+ assert.equal(evaluatePolicy({...c,files:['src/security/policy.ts'],projectId:'office-demo'},r('src/security')).decision,'denied');
+});
 test('role AND exact task scope are required; completed scope and foreign ownership deny',()=>{assert.equal(evaluatePolicy(ctx,request('file.read')).decision,'allowed');for(const changed of [{...ctx,active:false},{...ctx,taskId:'other'},{...ctx,agentId:'review'},{...ctx,files:[]}])assert.equal(evaluatePolicy(changed,request()).decision,'denied');assert.equal(evaluatePolicy({...ctx,agentId:'backend',files:['src/ui/View.tsx']},request('file.modify',['src/ui/View.tsx'])).decision,'denied');});
 test('all roles deny secrets and control plane changes, including case aliases',()=>{for(const agentId of Object.keys(rolePolicies))for(const path of ['.env','.env.local','.ssh/id_rsa','auth.json','src/security/policy.ts','server/http.mjs']){const c={...ctx,agentId,files:[path]},r=request('file.modify',[path],{agentId});assert.equal(evaluatePolicy(c,r).decision,'denied');}const {p}=fixture();assert.equal(p.evaluate({...ctx,files:['SRC/Security/policy.ts']},request('file.modify',['SRC/Security/policy.ts'])).decision,'denied');});
 test('canonical boundary rejects traversal, absolute paths, ADS, reserved names and alternate representations',()=>{const {root}=fixture(),b=new WorkspaceBoundary(root);for(const path of ['../x','src/../x','C:/secret','/tmp/x','src\\x','src//x','src/x:stream','src/%2e%2e/x','src/x.','src/NUL.ts','src/CON','src/a\u0000b'])assert.throws(()=>b.path(path),undefined,path);assert.equal(b.path('src/value.ts').absolute,resolve(root,'src/value.ts'));});

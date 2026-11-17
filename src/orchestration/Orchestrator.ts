@@ -123,10 +123,18 @@ export class Orchestrator {
    this.save();
   }
  });}
- command(workflowId:string,action:'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'revalidate_result',taskId?:string):Promise<void>{return this.serial(async()=>{
+ command(workflowId:string,action:'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'refresh_action'|'revalidate_result',taskId?:string):Promise<void>{return this.serial(async()=>{
   const w=this.get(workflowId);if(action==='resume'&&specificationBlockers(w).some(source=>w.tasks.some(t=>t.teamSpec?.kind==='resolution'&&t.teamSpec.remediationFor.includes(source.id)&&t.status==='completed'&&!specificationAddressed(w,source))))throw new Error('Lead blocker remains unresolved; Director decision or replanning required');if(['completed','cancelled'].includes(w.status))throw new Error('Workflow is closed');
-  if(['resume','retry','approve_action','revalidate_result'].includes(action)&&!this.branchMatches(w))throw new Error('Workflow branch changed; return explicitly to the original branch');
-  const t=taskId?w.tasks.find(t=>t.id===taskId):undefined;if(taskId){identifier(taskId);if(!t&&!['approve_action','reject_action'].includes(action))throw new Error('Unknown workflow task');}
+  if(['resume','retry','approve_action','refresh_action','revalidate_result'].includes(action)&&!this.branchMatches(w))throw new Error('Workflow branch changed; return explicitly to the original branch');
+  const t=taskId?w.tasks.find(t=>t.id===taskId):undefined;if(taskId){identifier(taskId);if(!t&&!['approve_action','reject_action','refresh_action'].includes(action))throw new Error('Unknown workflow task');}
+  if(action==='refresh_action'){
+   const old=w.team?.approvals.find(a=>a.id===taskId&&a.status==='pending');if(!old||!old.security||old.security.decision!=='denied'&&Date.parse(old.security.expiresAt)>Date.now())throw new Error('Only denied or expired pending approvals can be refreshed');
+   if(w.team!.approvals.length>=150)throw new Error('Approval history limit reached');const target=w.tasks.find(t=>t.id===old.taskId)!;
+   if(old.action==='apply_changes'&&(JSON.stringify(old.patches)!==JSON.stringify(target.result?.team?.patches)||JSON.stringify(old.previous)!==JSON.stringify(this.port.preview?.(target)??old.previous)))throw new Error('Original proposal changed; do not refresh stale approval');
+   this.port.rejectAction?.(w,target,old);old.status='rejected';old.resolvedAt=this.now();
+   try{this.approval(w,target,old.action);}catch(e){old.status='pending';old.resolvedAt=null;throw e;}
+   this.event(w,'approval_refreshed',target,'Previous denied/expired approval retained; unchanged proposal requires a new exact Director confirmation');this.save();return;
+  }
   if(action==='revalidate_result'){if(!t||!w.team||t.status!=='failed'||!t.error?.message.startsWith('Result rejected:')||this.port.read(t).status!=='completed')throw new Error('No rejected completed result to revalidate');t.status='running';t.error=null;this.event(w,'result_revalidation_requested',t,'Revalidate saved model result; no new Codex execution');await this.observe(w);this.save();return;}
   if(action==='approve_action'||action==='reject_action'){
    const approval=w.team?.approvals.find(a=>a.id===taskId&&a.status==='pending');if(!approval)throw new Error('Unknown or already resolved approval');const target=w.tasks.find(t=>t.id===approval.taskId)!;

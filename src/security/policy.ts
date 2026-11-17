@@ -14,7 +14,7 @@ export const securityEmployees=['lead','design','frontend','backend','seo','secu
 export type SecurityEmployee=typeof securityEmployees[number];
 export type Risk='safe'|'sensitive'|'dangerous';
 export type Decision='allowed'|'denied'|'approval_required';
-export const permissionPolicyVersion='stage7-v2-project-scopes';
+export const permissionPolicyVersion='stage7-v3-scoped-parent-directories';
 export interface CommandSpec { profile:'node_tests'|'git_status'|'git_diff'|'git_log'|'npm_script'|'dependency_install'|'dependency_remove'|'dependency_update'; files?:string[]; script?:'test'|'build'|'lint'; packageName?:string; version?:string }
 export interface PermissionContext {projectId?:string;workflowId:string;taskId:string;agentId:string;files:string[];baselineFiles?:string[];hosts?:string[];active:boolean;}
 export interface ActionRequest {projectId?:string;repository?:Record<string,unknown>;id:string;workflowId:string;taskId:string;agentId:string;action:PermissionAction;resources:string[];reason:string;command?:CommandSpec;}
@@ -63,7 +63,9 @@ export function evaluatePolicy(ctx:PermissionContext,request:ActionRequest):Poli
  for(const resource of request.resources){try{canonicalResourceSyntax(resource);}catch{return deny('Unsafe canonical path');}if(secretResource(resource))return deny('Secret resource is forbidden');
   const baseline=read&&ctx.baselineFiles?.includes(resource),scoped=ctx.files.includes(resource)||['directory.create','directory.read'].includes(request.action)&&ctx.files.some(f=>f.startsWith(resource+'/'));
   if(!baseline&&!scoped)return deny('Resource outside exact task scope');
-  if(!baseline&&!(read?role.read:role.write).some(prefix=>resource.startsWith(prefix)))return deny('Resource outside role capabilities');
+  const prefixes=read?role.read:role.write;
+  const scopedParent=['directory.create','directory.read'].includes(request.action)&&prefixes.some(prefix=>prefix.startsWith(resource+'/')&&ctx.files.some(file=>file.startsWith(prefix)&&file.startsWith(resource+'/')));
+  if(!baseline&&!prefixes.some(prefix=>resource.startsWith(prefix))&&!scopedParent)return deny('Resource outside role capabilities');
   if(!read&&(/^(?:\.git|\.codex|\.agents|\.ai-office|node_modules)(?:\/|$)/i.test(resource)||(ctx.projectId??'office-demo')==='office-demo'&&protectedWrite(resource)))return deny('Security control plane is protected');
   if(!read&&ctx.agentId==='backend'&&/^(?:src\/(?:ui|components|frontend|design)\/|public\/)/.test(resource))return deny('Frontend resource is outside backend role');
   if(!read&&ctx.agentId==='frontend'&&/^(?:server\/|src\/(?:backend|api)\/)/.test(resource))return deny('Backend resource is outside frontend role');
