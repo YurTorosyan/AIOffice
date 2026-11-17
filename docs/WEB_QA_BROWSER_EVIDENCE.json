@@ -1,0 +1,11 @@
+{
+  "mode": "isolated Mock UI",
+  "realCodexJobs": 0,
+  "employees": 8,
+  "vitestBuildBrowserReceiptsVisible": true,
+  "oldBlockedResultPreserved": true,
+  "newSecurityRecheckPending": true,
+  "implementationNotReplayed": true,
+  "noAutomaticApproval": true,
+  "pageErrors": []
+}

@@ -1,3 +1,4 @@
+import {applyPendingProjectRelocation} from './project-relocation.mjs';
 import {resolveControl} from '../src/checkpoints/model.ts';
 import {ProjectManager} from './projects.mjs';
 import {emptyRuntime} from '../src/integration/RealCodexAdapter.ts';
@@ -50,7 +51,7 @@ export function createBridge({ pilot:defaultPilot, root, port = 8787, orchestrat
       if(provided.length!==token.length||!timingSafeEqual(provided,Buffer.from(token))){reply(403,{error:'Invalid session'});return;}
       if(request.headers['content-type']!=='application/json'){reply(415,{error:'JSON required'});return;}
       try{let body='';for await(const chunk of request){body+=chunk;if(body.length>8192){reply(413,{error:'Request too large'});return;}}
-       const data=JSON.parse(body);if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).some(k=>!['action','workflowId','rootTask','taskId','team','maxCycles','projectId'].includes(k))||!['create','pause','resume','cancel','retry','reject_approval','approve_action','reject_action','refresh_action','revalidate_result'].includes(data.action)||typeof data.workflowId!=='string'||(data.taskId!==undefined&&typeof data.taskId!=='string')||(data.action==='create'?(typeof data.rootTask!=='string'||data.taskId!==undefined):data.rootTask!==undefined)||((data.team!==undefined||data.maxCycles!==undefined)&&data.action!=='create')||(data.team!==undefined&&typeof data.team!=='boolean')||(data.maxCycles!==undefined&&(!Number.isInteger(data.maxCycles)||data.maxCycles<0||data.maxCycles>3)))throw new Error('Invalid workflow command');
+       const data=JSON.parse(body);if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).some(k=>!['action','workflowId','rootTask','taskId','team','maxCycles','projectId'].includes(k))||!['create','pause','resume','cancel','retry','reject_approval','approve_action','reject_action','refresh_action','recheck_gate','revalidate_result'].includes(data.action)||typeof data.workflowId!=='string'||(data.taskId!==undefined&&typeof data.taskId!=='string')||(data.action==='create'?(typeof data.rootTask!=='string'||data.taskId!==undefined):data.rootTask!==undefined)||((data.team!==undefined||data.maxCycles!==undefined)&&data.action!=='create')||(data.team!==undefined&&typeof data.team!=='boolean')||(data.maxCycles!==undefined&&(!Number.isInteger(data.maxCycles)||data.maxCycles<0||data.maxCycles>3)))throw new Error('Invalid workflow command');
        await runOwned(data.projectId,()=>data.action==='create'?orchestration.engine.create(data.rootTask,data.workflowId,...(data.team?[{team:true,maxCycles:data.maxCycles}]:[])):orchestration.engine.command(data.workflowId,data.action,data.taskId),['pause','cancel','reject_action','reject_approval'].includes(data.action));
        reply(200,orchestration.engine.snapshot());
       }catch(error){reply(409,{error:'Workflow command rejected. Inspect workflow state, dependencies and checkpoints.',snapshot:orchestration.engine.snapshot()});}return;
@@ -90,6 +91,7 @@ export function createBridge({ pilot:defaultPilot, root, port = 8787, orchestrat
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const storage=new FileCheckpointStorage(root);const unlock=storage.acquireLock();
+  applyPendingProjectRelocation(root);
   const confinedExecutor=await createVerifiedQAExecutor();
   const projects=new ProjectManager(root,{confinedExecutor});await projects.initialize();
   const bridge = createBridge({root,projects});

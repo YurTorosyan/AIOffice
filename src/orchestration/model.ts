@@ -41,6 +41,8 @@ export interface ExecutionPort {
  prepareRetry(task:WorkflowTask):Promise<void>;
  validateResult?(task:WorkflowTask):void;
  preview?(task:WorkflowTask):Record<string,string|null>;
+ approvalCommands?(task:WorkflowTask):string[];
+ canRecheckGate?(workflow:Workflow,task:WorkflowTask):boolean;
  prepareApproval?(workflow:Workflow,task:WorkflowTask,approval:Approval):Approval['security'];
  rejectAction?(workflow:Workflow,task:WorkflowTask,approval:Approval):void;
  approve?(workflow:Workflow,task:WorkflowTask,approval:Approval):Promise<{filesChanged:string[];tests:TestEvidence[];revision:string|null}>;

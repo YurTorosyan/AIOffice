@@ -8,9 +8,9 @@ import {safeText} from '../src/checkpoints/model.ts';
 const host=process.platform==='win32'?'npipe:////./pipe/dockerDesktopLinuxEngine':'unix:///var/run/docker.sock';
 const binary=process.platform==='win32'?join(process.env.ProgramFiles??'C:/Program Files','Docker/Docker/resources/bin/docker.exe'):'docker';
 const environment=()=>Object.fromEntries(['SystemRoot','WINDIR','PATH','PATHEXT','TEMP','TMP','USERPROFILE','HOME','APPDATA','LOCALAPPDATA'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]));
-export function docker(args,{input='',timeoutMs=10000,maxOutput=65536}={}){
+export function docker(args,{input='',timeoutMs=10000,maxOutput=65536,redact=true}={}){
  return new Promise(resolve=>{let output='',bytes=0,limited=false,timedOut=false,settled=false;const child=spawn(binary,['--host',host,...args],{shell:false,windowsHide:true,env:environment(),stdio:['pipe','pipe','pipe']});
-  const done=code=>{if(settled)return;settled=true;clearTimeout(timer);resolve({code,output:safeText(output),limited,timedOut});};
+  const done=code=>{if(settled)return;settled=true;clearTimeout(timer);resolve({code,output:redact?safeText(output):output,limited,timedOut});};
   const timer=setTimeout(()=>{timedOut=true;child.kill();done(null);},timeoutMs);
   const data=b=>{bytes+=b.length;if(bytes>maxOutput){limited=true;child.kill();done(null);return;}output+=b.toString('utf8');};child.stdout.on('data',data);child.stderr.on('data',data);child.on('error',()=>done(null));child.on('close',done);child.stdin.on('error',()=>{});child.stdin.end(input);
  });
@@ -42,4 +42,5 @@ export class DockerTestExecutor {
  }
  async run({profile,files,sources,revision}){const command='node --experimental-strip-types --test '+files.join(' '),blocked=output=>[{command,status:'BLOCKED',exitCode:null,output,revision,source:'runner'}];if(!this.ready||this.busy||profile!=='node_tests')return blocked('Verified QA executor unavailable or busy');this.busy=true;try{const r=await this.execute(files,sources);if(r.timedOut||r.limited||r.code===null||r.code===125||r.code===126||r.code===127)return blocked(r.timedOut?'Isolated test timeout':r.limited?'Isolated output limit':'Isolated process unavailable');return [{command,status:r.code===0?'PASS':'FAIL',exitCode:r.code,output:safeText(r.output).slice(-5000),revision,source:'runner'}];}catch{return blocked('Isolated execution failed closed');}finally{this.busy=false;}}
 }
-export async function createVerifiedQAExecutor(){const executor=new DockerTestExecutor();await executor.verify();return executor;}
+export const qaSupports=(executor,profile)=>Boolean(executor?.supports?.(profile)??(profile==='node_tests'&&executor?.isolation==='verified'));
+export async function createVerifiedQAExecutor(){const {WebQAExecutor}=await import('./qa-web.mjs');const node=new DockerTestExecutor(),web=new WebQAExecutor();await Promise.all([node.verify(),web.verify()]);return {get isolation(){return node.ready||web.ready?'verified':'unavailable';},supports:profile=>profile==='node_tests'?node.ready:profile==='web_checks'&&web.ready,status:()=>({...node.status(),available:node.ready||web.ready,web:web.status()}),run:args=>args.profile==='web_checks'?web.run(args):node.run(args)};}

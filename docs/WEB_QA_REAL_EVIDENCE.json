@@ -1,0 +1,38 @@
+{
+  "status": {
+    "available": true,
+    "kind": "docker-web-snapshot",
+    "profile": "coffee-house-react-v1",
+    "image": "sha256:bbeaf99ca1ef4e388c14e4c97494951c3fdfbe0a004a6ec9eca5609a0527d2ea",
+    "verifiedAt": "2026-11-17T22:34:42.540Z",
+    "reason": null
+  },
+  "revision": "ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3",
+  "sourceRevision": "89c0bf88f5fcf2a9dfccad104ca07a051ec3fa3ec08dd3657e8004aa126ad7a4",
+  "records": [
+    {
+      "command": "vitest run --config [trusted React/jsdom profile] tests/App.test.tsx tests/coffee-house-styles.test.ts",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "run=094d636d-980a-4fec-971d-b1de285b6823; image=sha256:bbeaf99ca1ef4e388c14e4c97494951c3fdfbe0a004a6ec9eca5609a0527d2ea; input=ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.1.0 \u001b[39m\u001b[90m/work\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[30m\u001b[45m node-contracts \u001b[49m\u001b[39m tests/coffee-house-styles.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 20\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m \u001b[30m\u001b[43m react-dom \u001b[49m\u001b[39m tests/App.test.tsx \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 482\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m7 passed\u001b[39m\u001b[22m\u001b[90m (7)\u001b[39m\n\u001b[2m   Start at \u001b[22m 22:34:44\n\u001b[2m   Duration \u001b[22m 3.50s\u001b[2m (environment 55%, tests 18%, setup 14%, transform 9%, import 2%, worker 2%)\u001b[22m\n\n\u001b[2m    Isolate \u001b[22m \u001b[33m2 workers spawned\u001b[39m\u001b[2m · ~1.07s startup each (spawn + environment, per file)\u001b[22m\n\u001b[2m            \u001b[22m \u001b[2mat least ~1.07s faster with \u001b[22m\u001b[33misolate: false\u001b[39m\u001b[2m — reuses workers across files instead of one per file\u001b[22m\n\n",
+      "revision": "ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3",
+      "source": "runner"
+    },
+    {
+      "command": "tsc --noEmit [trusted React profile] && vite build [trusted profile]",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "run=094d636d-980a-4fec-971d-b1de285b6823; image=sha256:bbeaf99ca1ef4e388c14e4c97494951c3fdfbe0a004a6ec9eca5609a0527d2ea; input=ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3\nvite v8.1.5 building client environment for production...\n\u001b[2K\rtransforming...✓ 16 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.36 kB │ gzip:  0.26 kB\ndist/assets/index-BXiJML9d.css    4.83 kB │ gzip:  1.68 kB\ndist/assets/index-DA-LLCvi.js   194.43 kB │ gzip: 61.25 kB\n\n✓ built in 509ms\n\nbuild assets sha256=bc2057101646c03a6ad82233848f63b8c82199a4dd6a1b00f2cae3ce3d4adceb",
+      "revision": "ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3",
+      "source": "runner"
+    },
+    {
+      "command": "Playwright Chromium (sandboxed): Coffee House acceptance at 1440px and 390px",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "run=094d636d-980a-4fec-971d-b1de285b6823; image=sha256:bbeaf99ca1ef4e388c14e4c97494951c3fdfbe0a004a6ec9eca5609a0527d2ea; input=ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3\nPASS 1440px: Coffee House, four named drinks, semantic sections/navigation, no horizontal overflow; screenshot sha256=b08a0a9a4bf5e4450c672cf674ee103e007fc6fcee1d3146c5aa50e0c8422ee2\nPASS 390px: Coffee House, four named drinks, semantic sections/navigation, no horizontal overflow; screenshot sha256=b30d5e97b96936d3c6f4e810b89ffc364cbf3833024168bb90dc4c419dd43b32\nPASS zero page/console errors; external requests blocked; desktop/mobile checks only (not a full accessibility audit)\n",
+      "revision": "ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3",
+      "source": "runner"
+    }
+  ]
+}

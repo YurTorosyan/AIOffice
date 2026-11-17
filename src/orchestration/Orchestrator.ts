@@ -44,7 +44,7 @@ export class Orchestrator {
  }
  private approval(w:Workflow,t:WorkflowTask,action:Approval['action']){
   if(w.team!.approvals.some(a=>a.taskId===t.id&&a.status==='pending'))return;
-  w.team!.approvals.push({id:crypto.randomUUID(),taskId:t.id,employeeId:t.agentId,action,reason:action==='apply_changes'?'Применить показанные изменения в текущем проекте после проверки diff':'Запустить показанные Node-тесты в текущем проекте. Сначала проверьте согласованный код.',status:'pending',requestedAt:this.now(),resolvedAt:null,patches:action==='apply_changes'?structuredClone(t.result!.team!.patches):[],previous:action==='apply_changes'?(this.port.preview?.(t)??Object.fromEntries(t.result!.team!.patches.map(p=>[p.path,null]))):{},commands:action==='run_tests'?[`node --experimental-strip-types --test ${t.teamSpec!.scope.filter(p=>p.startsWith('tests/')).join(' ')||'(no test files: BLOCKED)'}`]:[],revision:null});
+  w.team!.approvals.push({id:crypto.randomUUID(),taskId:t.id,employeeId:t.agentId,action,reason:action==='apply_changes'?'Применить показанные изменения в текущем проекте после проверки diff':'Запустить показанные изолированные проверки в текущем проекте. Сначала проверьте согласованный код.',status:'pending',requestedAt:this.now(),resolvedAt:null,patches:action==='apply_changes'?structuredClone(t.result!.team!.patches):[],previous:action==='apply_changes'?(this.port.preview?.(t)??Object.fromEntries(t.result!.team!.patches.map(p=>[p.path,null]))):{},commands:action==='run_tests'?(this.port.approvalCommands?.(t)??[`node --experimental-strip-types --test ${t.teamSpec!.scope.filter(p=>p.startsWith('tests/')).join(' ')||'(no test files: BLOCKED)'}`]):[],revision:null});
   const approval=w.team!.approvals.at(-1)!;approval.security=this.port.prepareApproval?.(w,t,approval);
   t.status='paused';this.event(w,'approval_requested',t,`${action}: explicit Director approval required`);
  }
@@ -123,9 +123,9 @@ export class Orchestrator {
    this.save();
   }
  });}
- command(workflowId:string,action:'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'refresh_action'|'revalidate_result',taskId?:string):Promise<void>{return this.serial(async()=>{
+ command(workflowId:string,action:'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'refresh_action'|'recheck_gate'|'revalidate_result',taskId?:string):Promise<void>{return this.serial(async()=>{
   const w=this.get(workflowId);if(action==='resume'&&specificationBlockers(w).some(source=>w.tasks.some(t=>t.teamSpec?.kind==='resolution'&&t.teamSpec.remediationFor.includes(source.id)&&t.status==='completed'&&!specificationAddressed(w,source))))throw new Error('Lead blocker remains unresolved; Director decision or replanning required');if(['completed','cancelled'].includes(w.status))throw new Error('Workflow is closed');
-  if(['resume','retry','approve_action','refresh_action','revalidate_result'].includes(action)&&!this.branchMatches(w))throw new Error('Workflow branch changed; return explicitly to the original branch');
+  if(['resume','retry','approve_action','refresh_action','recheck_gate','revalidate_result'].includes(action)&&!this.branchMatches(w))throw new Error('Workflow branch changed; return explicitly to the original branch');
   const t=taskId?w.tasks.find(t=>t.id===taskId):undefined;if(taskId){identifier(taskId);if(!t&&!['approve_action','reject_action','refresh_action'].includes(action))throw new Error('Unknown workflow task');}
   if(action==='refresh_action'){
    const old=w.team?.approvals.find(a=>a.id===taskId&&a.status==='pending');if(!old||!old.security||old.security.decision!=='denied'&&Date.parse(old.security.expiresAt)>Date.now())throw new Error('Only denied or expired pending approvals can be refreshed');
@@ -134,6 +134,14 @@ export class Orchestrator {
    this.port.rejectAction?.(w,target,old);old.status='rejected';old.resolvedAt=this.now();
    try{this.approval(w,target,old.action);}catch(e){old.status='pending';old.resolvedAt=null;throw e;}
    this.event(w,'approval_refreshed',target,'Previous denied/expired approval retained; unchanged proposal requires a new exact Director confirmation');this.save();return;
+  }
+  if(action==='recheck_gate'){
+   if(!t||!w.team||!['security','review','integration'].includes(t.teamSpec?.kind??'')||w.team.gates[t.teamSpec!.kind]!==t.id||t.status!=='completed'||t.result?.team?.verdict!=='BLOCKED'||t.result.team.findings.length)throw new Error('Only the current evidence-blocked gate without findings can be rechecked');
+   const qa=w.tasks.find(t=>t.id===w.team!.gates.qa);if(!qa?.teamSpec?.testEvidence.length||qa.teamSpec.testEvidence.some(e=>e.status!=='PASS')||!(this.port.source==='mock'||this.port.canRecheckGate?.(w,t)))throw new Error('Fresh approved verification receipts required');
+   const count=w.tasks.filter(t=>/-evidence-\d+$/.test(t.id)).length;if(count>=Math.min(3,w.team.maxCycles+1)||w.tasks.length>=80)throw new Error('Evidence recheck limit reached');
+   const next=gateTask(t.id+'-evidence-'+(count+1),t.type,t.teamSpec!.kind,[...new Set([...t.dependencies,qa.id,t.id])],t.teamSpec!.scope,w.team.round);next.teamSpec.remediationFor=[t.id];next.description='Re-evaluate the original gate with fresh attributed verification receipts. Original BLOCKED result is preserved; do not request implementation or reapplication without concrete findings.';w.tasks.push(this.task(next));w.team.gates[t.teamSpec!.kind]=next.id;
+   for(const other of w.tasks)if(other.id!==next.id&&['pending','ready'].includes(other.status)&&!other.executionId)other.dependencies=other.dependencies.map(id=>id===t.id?next.id:id);
+   w.status='paused';w.error=null;this.event(w,'gate_evidence_recheck_prepared',t,'Fresh evidence recheck prepared; original result preserved; explicit resume required');this.save();return;
   }
   if(action==='revalidate_result'){if(!t||!w.team||t.status!=='failed'||!t.error?.message.startsWith('Result rejected:')||this.port.read(t).status!=='completed')throw new Error('No rejected completed result to revalidate');t.status='running';t.error=null;this.event(w,'result_revalidation_requested',t,'Revalidate saved model result; no new Codex execution');await this.observe(w);this.save();return;}
   if(action==='approve_action'||action==='reject_action'){
