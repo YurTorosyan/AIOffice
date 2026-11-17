@@ -37,14 +37,14 @@ export function loadLead(root) {
 }
 /** Runtime lifecycle and projection data are independent of React and HTTP. */
 export class LeadPilot {
-  constructor({ root, makeRpc = () => new AppServerRpc(), detect = detectCli, load = loadLead, context = loadContext, agentId = 'lead', role = 'Lead Developer', prompt = pilotPrompt, profile = profilePath, authorization, continuationInstructions, taskTitle, runtimeConfig } = {}) {
-    Object.assign(this, { root, makeRpc, detect, load, context, agentId, role, prompt, profilePath:profile, authorization, continuationInstructions, taskTitle, runtimeConfig }); this.sequence = 0; this.pendingApproval = null; this.busy = false;
+  constructor({ root, makeRpc = () => new AppServerRpc(), detect = detectCli, load = loadLead, context = loadContext, agentId = 'lead', role = 'Lead Developer', prompt = pilotPrompt, profile = profilePath, authorization, continuationInstructions, taskTitle, runtimeConfig,projectId='office-demo',discoveryRoot,projectContext } = {}) {
+    Object.assign(this, { root, makeRpc, detect, load, context, agentId, role, prompt, profilePath:profile, authorization, continuationInstructions, taskTitle, runtimeConfig,projectId,discoveryRoot,projectContext }); this.sequence = 0; this.pendingApproval = null; this.busy = false;
     this.state = { connection: 'disconnected', execution: 'idle', version: null, authenticated: false, threadId: null, turnId: null,
-      agentId, role, skills: [], profile: null, instructionSources: [], contextFiles: [], result: '', plan: [], events: [], error: null, approval: null, startedAt: null, completedAt: null };
+      projectId,agentId, role, skills: [], profile: null, instructionSources: [], contextFiles: [], result: '', plan: [], events: [], error: null, approval: null, startedAt: null, completedAt: null };
   }
   snapshot() { return structuredClone(this.state); }
   event(method, message) {
-    this.state.events.push({ id: `codex-${++this.sequence}`, method, message, timestamp: new Date().toISOString(), source: 'codex', threadId: this.state.threadId, turnId: this.state.turnId, execution: this.state.execution, taskStartedAt: this.state.startedAt });
+    this.state.events.push({projectId:this.projectId,branch:this.projectContext?.currentBranch??null,id: `codex-${++this.sequence}`, method, message, timestamp: new Date().toISOString(), source: 'codex', threadId: this.state.threadId, turnId: this.state.turnId, execution: this.state.execution, taskStartedAt: this.state.startedAt });
     this.state.events = this.state.events.slice(-200);
   }
   async exclusive(fn) {
@@ -76,7 +76,7 @@ export class LeadPilot {
         const account = await rpc.request('account/read', { refreshToken: false });
         this.state.authenticated = Boolean(account.account);
         if (!this.state.authenticated) throw new Error('Sign in using codex login in your own terminal, then reconnect');
-        const discovered = await rpc.request('skills/list', { cwds: [this.root], forceReload: true });
+        const discovered = await rpc.request('skills/list', { cwds: [this.discoveryRoot??this.root], forceReload: true });
         const skills = discovered.data.flatMap(entry => entry.skills);
         for (const skill of this.lead.skills) {
           if (!skills.some(s => s.name === skill.name && s.enabled && realpathSync(s.path) === skill.path)) throw new Error('Codex did not discover the verified assigned Skills');

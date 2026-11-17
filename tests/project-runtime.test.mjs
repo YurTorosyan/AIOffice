@@ -1,0 +1,22 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdirSync,mkdtempSync,writeFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {TeamRuntime} from '../server/team.mjs';
+import {loadEmployee} from '../server/employee-config.mjs';
+import {MemoryCheckpointStorage} from '../src/checkpoints/model.ts';
+import {noRepository,projectContext} from '../src/projects/model.ts';
+const serviceRoot=resolve('.');
+function fixture(root,context,storage=new MemoryCheckpointStorage('codex')){
+ const calls=[],rpcs=new Map();const team=new TeamRuntime({root,serviceRoot,projectContext:context,storage,detect:async()=>({available:true,version:'codex-cli 0.144.5'}),makeRpc:agentId=>{
+  const rpc={async open(){},close(){},respond(){},reject(){},async request(method,params){calls.push({method,params,agentId});if(method==='account/read')return {account:{type:'chatgpt'}};if(method==='skills/list')return {data:[{skills:loadEmployee(serviceRoot,agentId).skills.map(s=>({...s,enabled:true}))}]};if(method==='thread/start'||method==='thread/resume')return {thread:{id:'owned-'+agentId,status:{type:'idle'}},sandbox:{type:'readOnly',networkAccess:false},approvalPolicy:'on-request',approvalsReviewer:'user'};if(method==='turn/start'){rpc.onNotification({method:'turn/started',params:{threadId:params.threadId,turn:{id:'turn-'+calls.length,status:'inProgress'}}});return {turn:{id:'turn-'+calls.length}};}return {};}};rpcs.set(agentId,rpc);return rpc;}});
+ const interrupted=()=>{const p=team.members.get('backend');rpcs.get('backend').onNotification({method:'turn/completed',params:{threadId:p.state.threadId,turn:{id:p.state.turnId,status:'interrupted'}}});};return {team,calls,storage,interrupted};
+}
+test('external project uses actual workspace, trusted Skills, project/task/agent ownership and original-thread pause/resume (RPC fixture only)',async()=>{
+ mkdirSync('work/project-rpc',{recursive:true});const root=mkdtempSync(resolve('work/project-rpc/fixture-'));writeFileSync(resolve(root,'README.md'),'External project source snapshot');const now=new Date().toISOString(),context=projectContext({id:'external',name:'External',description:'fixture',status:'ACTIVE',workspaceRoot:root,repository:{...noRepository(root),currentBranch:'main'},defaultBranch:null,createdAt:now,updatedAt:now,lastOpenedAt:now},'codex');
+ const f=fixture(root,context);try{await f.team.action('connect',{agentId:'backend'});await f.team.action('start',{agentId:'backend',projectId:'external'});const thread=f.calls.find(c=>c.method==='thread/start'),skills=f.calls.find(c=>c.method==='skills/list'),turn=f.calls.find(c=>c.method==='turn/start');assert.equal(thread.params.cwd,root);assert.deepEqual(skills.params.cwds,[serviceRoot]);assert.match(turn.params.input[0].text,/External project source snapshot/);const snapshots=JSON.parse(turn.params.input[0].text.split('REPOSITORY_SNAPSHOTS_JSON\n')[1]);assert.equal(JSON.parse(snapshots.find(s=>s.path==='project/context.json').text).projectId,'external');assert.equal(thread.params.sandbox,'read-only');const before=f.team.snapshot().members.backend;assert.equal(before.projectId,'external');assert(before.taskId);await f.team.action('pause',{agentId:'backend'});f.interrupted();const cp=f.storage.load().checkpoints.at(-1);assert.equal(cp.projectId,'external');assert.equal(cp.workspaceRoot,root);assert.equal(cp.agentId,'backend');f.team.disconnect();
+  const restored=fixture(root,context,f.storage);try{await restored.team.action('resume',{agentId:'backend',taskId:before.taskId,projectId:'external'});assert.equal(restored.team.snapshot().members.backend.taskId,before.taskId);assert(restored.calls.some(c=>c.method==='thread/resume'&&c.params.threadId===before.threadId));await restored.team.action('pause',{agentId:'backend'});restored.interrupted();context.currentBranch='other';await assert.rejects(restored.team.action('resume',{agentId:'backend',taskId:before.taskId}),/branch changed/);await assert.rejects(restored.team.action('start',{agentId:'qa',projectId:'foreign'}),/Wrong project/);}finally{restored.team.disconnect();}
+  const foreign=fixture(root,{...context,projectId:'other'},f.storage);try{assert(foreign.team.snapshot().members.backend.recoveryError);}finally{foreign.team.disconnect();}
+  const moved=fixture(serviceRoot,context,f.storage);try{assert(moved.team.snapshot().members.backend.recoveryError);}finally{moved.team.disconnect();}
+ }finally{f.team.disconnect();}
+});

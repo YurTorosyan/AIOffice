@@ -45,7 +45,7 @@ test('HTTP transport obtains a CSRF session, never sends runtime credentials, an
   }) as typeof fetch;
   const transport = new LocalBridgeTransport(request); await transport.action('connect');
   assert.deepEqual(calls.map(c => c.url), ['/api/codex/session', '/api/codex/action']);
-  assert.equal(calls[1].options?.body, '{"action":"connect"}'); assert.equal((calls[1].options?.headers as Record<string, string>)['X-AI-Office-Token'], 'local-nonce');
+  assert.equal(calls[1].options?.body, '{"action":"connect","projectId":"office-demo"}'); assert.equal((calls[1].options?.headers as Record<string, string>)['X-AI-Office-Token'], 'local-nonce');
   const offline = new LocalBridgeTransport((async () => new Response('', { status: 404 })) as typeof fetch);
   await assert.rejects(offline.snapshot(), /недоступен/);
 });

@@ -1,3 +1,4 @@
+import type {ProjectContext} from '../projects/model.ts';
 import {refinePendingImpacts,collectTeamResult,dependencySatisfied,deriveTeamPhase,finalResult,gatePass,handoffs,parseTeamPlan,roundGates,teamState,gateTask} from './team-workflow.ts';
 import type {Approval,TeamSpec} from './team-workflow.ts';
 import { buildContext, capabilities, clean, collectResult, emptyWorkflows, identifier, parsePlan, planningTask, selectEmployee, validatePlan, validateWorkflowBook } from './model.ts';
@@ -7,29 +8,33 @@ import type { ExecutionPort, PlanTask, Workflow, WorkflowBook, WorkflowStorage, 
 export class Orchestrator {
  private book:WorkflowBook; private tail:Promise<unknown>=Promise.resolve();private savedJSON='';
  recoveryError:string|null=null;
- constructor(privatePort:ExecutionPort,privateStorage:WorkflowStorage) {
-  this.port=privatePort;this.storage=privateStorage;this.book=emptyWorkflows(this.port.source);
+ constructor(privatePort:ExecutionPort,privateStorage:WorkflowStorage,project?:ProjectContext) {
+  this.project=project;this.port=privatePort;this.storage=privateStorage;this.book=emptyWorkflows(this.port.source);
   try { this.book=validateWorkflowBook(this.storage.load(),this.port.source);
+   if(this.book.workflows.some(w=>w.projectId!==(this.project?.projectId??'office-demo')||w.tasks.some(t=>t.inputContext?.project&&t.inputContext.project.workspaceRoot!==this.project?.workspaceRoot)))throw new Error('Workflow project/workspace mismatch');
    for(const w of this.book.workflows)if(!['completed','cancelled'].includes(w.status)){const refined=refinePendingImpacts(w);if(refined.length)this.event(w,'optional_gates_refined',null,`Removed unstarted optional gates: ${refined.join(', ')}`);w.status='paused';w.checkpoint={id:crypto.randomUUID(),createdAt:this.now(),reason:'Application restart; reconcile execution IDs before explicit resume'};for(const t of w.tasks)if(['launching','running'].includes(t.status)){t.status='paused';t.error={kind:'disconnect',message:'Restart: existing execution will be reconciled, never blindly started again'};}}
    this.save();
-  }catch {this.recoveryError='Workflow storage invalid or unavailable. Original data preserved; execution blocked.';}
+  }catch {this.book=emptyWorkflows(this.port.source);this.recoveryError='Workflow storage invalid or unavailable. Original data preserved; execution blocked.';}
  }
+ private project?:ProjectContext;
  private port:ExecutionPort; private storage:WorkflowStorage;
  private now(){return new Date().toISOString();}
- snapshot(){return {...structuredClone(this.book),recoveryError:this.recoveryError};}
- private save(){for(const w of this.book.workflows)if(w.team)w.team.state=deriveTeamPhase(w);if(this.recoveryError)throw new Error(this.recoveryError);try{const json=JSON.stringify(this.book);if(json===this.savedJSON)return;this.storage.save(validateWorkflowBook(this.book,this.port.source));this.savedJSON=json;}catch{this.recoveryError='Workflow checkpoint could not be saved; execution blocked. Repair storage before continuing.';throw new Error(this.recoveryError);}}
+ updateProjectContext(context:ProjectContext){if(context.projectId!==(this.project?.projectId??'office-demo')||this.project&&context.workspaceRoot!==this.project.workspaceRoot)throw new Error('Workflow project/workspace mismatch');this.project=context;}
+ snapshot(){return {projectId:this.project?.projectId??'office-demo',...structuredClone(this.book),recoveryError:this.recoveryError};}
+ private save(){const prior=this.savedJSON?JSON.parse(this.savedJSON):null;for(const w of this.book.workflows)for(const t of w.tasks){const old=prior?.workflows.find((v:Workflow)=>v.id===w.id)?.tasks.find((v:WorkflowTask)=>v.id===t.id);if(!t.updatedAt)t.updatedAt=t.completedAt??t.startedAt??t.createdAt;else if(old&&JSON.stringify({...old,updatedAt:null})!==JSON.stringify({...t,updatedAt:null}))t.updatedAt=this.now();}for(const w of this.book.workflows){if(w.team)w.team.state=deriveTeamPhase(w);w.currentStage=w.team?.state??w.status;w.rootTaskId??='plan';}if(this.recoveryError)throw new Error(this.recoveryError);try{const json=JSON.stringify(this.book);if(json===this.savedJSON)return;this.storage.save(validateWorkflowBook(this.book,this.port.source));this.savedJSON=json;}catch{this.recoveryError='Workflow checkpoint could not be saved; execution blocked. Repair storage before continuing.';throw new Error(this.recoveryError);}}
  private serial<T>(fn:()=>Promise<T>):Promise<T>{const p=this.tail.then(()=>{if(this.recoveryError)throw new Error(this.recoveryError);return fn();});this.tail=p.catch(()=>{});return p;}
- private event(w:Workflow,type:string,t:WorkflowTask|null,message:string){this.book.events.push({id:crypto.randomUUID(),type,workflowId:w.id,taskId:t?.id??null,agentId:t?.agentId??'lead',message,timestamp:this.now(),source:this.port.source});this.book.events=this.book.events.slice(-1000);}
- private task(p:PlanTask):WorkflowTask{return {...structuredClone(p),agentId:capabilities[p.type].agentId,status:'pending',inputContext:null,result:null,error:null,executionId:null,attempts:0,checkpointId:null,createdAt:this.now(),startedAt:null,completedAt:null};}
+ private event(w:Workflow,type:string,t:WorkflowTask|null,message:string){this.book.events.push({projectId:w.projectId,branch:this.project?.currentBranch??null,id:crypto.randomUUID(),type,workflowId:w.id,taskId:t?.id??null,agentId:t?.agentId??'lead',message,timestamp:this.now(),source:this.port.source});this.book.events=this.book.events.slice(-1000);}
+ private task(p:PlanTask):WorkflowTask{return {...structuredClone(p),projectId:this.project?.projectId??'office-demo',branch:this.project?.currentBranch??null,agentId:capabilities[p.type].agentId,status:'pending',inputContext:null,result:null,error:null,executionId:null,attempts:0,checkpointId:null,createdAt:this.now(),startedAt:null,completedAt:null};}
  create(rootTask:string,requestId:string,options:{team?:boolean;maxCycles?:number}={}):Promise<string>{return this.serial(async()=>{
   identifier(requestId);if(requestId.length>48)throw new Error('Workflow ID too long');const root=clean(rootTask),existing=this.book.workflows.find(w=>w.id===requestId);
   if(existing){if(existing.rootTask!==root)throw new Error('Request ID reused with different task');return existing.id;}
   if(this.book.workflows.length>=30)throw new Error('Workflow history capacity reached');
   if(this.book.workflows.some(w=>!['cancelled','completed'].includes(w.status)))throw new Error('Finish or cancel the current workflow first');
-  const w:Workflow={id:requestId,projectId:'office-demo',source:this.port.source,rootTask:root,status:'running',priority:'normal',tasks:[this.task({...planningTask,...(options.team?{teamSpec:{kind:'specification',acceptance:['Create a scoped team implementation plan'],scope:[],round:0,remediationFor:[],checksApproved:false,testEvidence:[]} as TeamSpec}:{})})],planned:false,error:null,createdAt:this.now(),startedAt:this.now(),completedAt:null,checkpoint:null,...(options.team?{team:teamState(options.maxCycles)}:{})};
+  const w:Workflow={id:requestId,projectId:this.project?.projectId??'office-demo',rootTaskId:'plan',currentStage:'PLANNING',source:this.port.source,rootTask:root,status:'running',priority:'normal',tasks:[this.task({...planningTask,...(options.team?{teamSpec:{kind:'specification',acceptance:['Create a scoped team implementation plan'],scope:[],round:0,remediationFor:[],checksApproved:false,testEvidence:[]} as TeamSpec}:{})})],planned:false,error:null,createdAt:this.now(),startedAt:this.now(),completedAt:null,checkpoint:null,...(options.team?{team:teamState(options.maxCycles)}:{})};
   this.book.workflows.push(w);this.event(w,'workflow_created',null,w.team?'Director started an approval-controlled development workflow':'Director started a read-only team workflow');this.save();return w.id;
  });}
  private get(id:string){identifier(id);const w=this.book.workflows.find(w=>w.id===id);if(!w)throw new Error('Unknown workflow');return w;}
+ private branchMatches(w:Workflow){return !this.project||w.tasks.every(t=>t.branch===undefined||t.branch===this.project!.currentBranch);}
  private issue(w:Workflow,t:WorkflowTask,kind:Problem,message:string){t.error={kind,message};t.status=kind==='permanent'||kind==='recoverable'?'failed':'paused';this.event(w,kind==='approval'?'approval_requested':t.status==='failed'?'task_failed':'task_paused',t,message);w.error=message;w.status='pausing';w.checkpoint={id:crypto.randomUUID(),createdAt:this.now(),reason:kind};}
  private installPlan(w:Workflow,text:string){
   const parsed=w.team?parseTeamPlan(text,w):null,plan=parsed?.tasks??parsePlan(text);w.tasks.push(...plan.map(p=>this.task(p)));
@@ -79,6 +84,7 @@ export class Orchestrator {
  tick():Promise<void>{return this.serial(async()=>{
   for(const w of this.book.workflows.filter(w=>!['completed','cancelled'].includes(w.status))){
    await this.observe(w);this.remediate(w);this.save();
+   if(w.status==='running'&&!this.branchMatches(w)){w.status='pausing';w.error='Workflow branch changed; return explicitly to the recorded branch before continuing';this.event(w,'workflow_branch_mismatch',null,w.error);this.save();}
    if(w.status==='pausing'||w.status==='cancelling'){await this.stopActive(w,w.status==='cancelling');this.save();continue;}
    if(w.status!=='running')continue;
    if(w.tasks.every(t=>t.status==='completed'||!!w.team&&t.status==='cancelled')&&(!w.team||Object.values(w.team.gates).every(id=>gatePass(w.tasks.find(t=>t.id===id)!)))){if(w.team)w.team.final=finalResult(w);w.status='completed';w.error=null;w.completedAt=this.now();this.event(w,'workflow_completed',null,'All required results confirmed');this.save();continue;}
@@ -90,7 +96,7 @@ export class Orchestrator {
     if(busy>=this.port.maxActive)break;
     const owner=selectEmployee(t,a);if(!owner)continue;
     if(w.team&&t.teamSpec?.kind==='qa'&&!t.teamSpec.checksApproved){this.approval(w,t,'run_tests');this.save();continue;}
-    t.inputContext=buildContext(w,t);if(w.team&&t.teamSpec){const rows=handoffs(w,t,t.inputContext);for(const h of rows)if(!w.team.handoffs.some(x=>x.id===h.id)){w.team.handoffs.push(h);this.event(w,'handoff_created',t,`${h.sourceEmployee} → ${h.targetEmployee}: ${h.sourceTaskId}`);}t.inputContext.team={spec:structuredClone(t.teamSpec),handoffs:rows};}
+    t.inputContext=buildContext(w,t);if(this.project)t.inputContext.project={...structuredClone(this.project),activeTaskId:t.id,relevantSkills:[...t.requiredSkills]};if(w.team&&t.teamSpec){const rows=handoffs(w,t,t.inputContext);for(const h of rows)if(!w.team.handoffs.some(x=>x.id===h.id)){w.team.handoffs.push(h);this.event(w,'handoff_created',t,`${h.sourceEmployee} → ${h.targetEmployee}: ${h.sourceTaskId}`);}t.inputContext.team={spec:structuredClone(t.teamSpec),handoffs:rows};}
     t.executionId=`wf-${w.id}-${t.id}-${t.attempts+1}`;identifier(t.executionId);t.attempts++;t.status='launching';t.startedAt??=this.now();t.error=null;this.save();if(w.team){const k=t.teamSpec?.kind;this.event(w,k==='qa'?'qa_started':k==='review'?'review_started':k==='security'?'security_review_started':t.id==='plan'?'planning_started':'task_execution_requested',t,t.title);}
     try{await this.port.start(t,t.inputContext,t.executionId);const e=this.port.read(t);if(e.status==='running'){t.status='running';this.event(w,'task_started',t,`${t.title}: runtime started`);}}
     catch {this.issue(w,t,'recoverable','Runtime start failed. Explicit bounded retry or checkpoint reconciliation required.');}
@@ -101,6 +107,7 @@ export class Orchestrator {
  });}
  command(workflowId:string,action:'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'revalidate_result',taskId?:string):Promise<void>{return this.serial(async()=>{
   const w=this.get(workflowId);if(['completed','cancelled'].includes(w.status))throw new Error('Workflow is closed');
+  if(['resume','retry','approve_action','revalidate_result'].includes(action)&&!this.branchMatches(w))throw new Error('Workflow branch changed; return explicitly to the original branch');
   const t=taskId?w.tasks.find(t=>t.id===taskId):undefined;if(taskId){identifier(taskId);if(!t&&!['approve_action','reject_action'].includes(action))throw new Error('Unknown workflow task');}
   if(action==='revalidate_result'){if(!t||!w.team||t.status!=='failed'||!t.error?.message.startsWith('Result rejected:')||this.port.read(t).status!=='completed')throw new Error('No rejected completed result to revalidate');t.status='running';t.error=null;this.event(w,'result_revalidation_requested',t,'Revalidate saved model result; no new Codex execution');await this.observe(w);this.save();return;}
   if(action==='approve_action'||action==='reject_action'){
@@ -127,6 +134,7 @@ export class Orchestrator {
  });}
  resumeEligible():Promise<void>{return this.serial(async()=>{
   for(const w of this.book.workflows.filter(w=>w.status==='running'))for(const t of w.tasks.filter(t=>t.status==='paused'&&!!t.executionId&&t.error?.kind!=='approval'&&!w.team?.approvals.some(a=>a.taskId===t.id&&a.status==='pending'))){
+   if(!this.branchMatches(w))continue;
    const a=this.port.availability(),owner=a[t.agentId];if(Object.values(a).filter(x=>['starting','working','waiting','interrupting','pausing','resuming'].includes(x.execution)).length>=this.port.maxActive)break;
    if(!owner?.connected||owner.recoveryError||owner.currentTask!==t.executionId||owner.execution!=='paused')continue;
    try{await this.port.resume(t);t.status='running';t.error=null;this.event(w,'task_resumed',t,'Existing task/checkpoint resumed; no new execution ID');}catch{this.issue(w,t,'disconnect','Checkpoint resume failed; preserved for Director');}this.save();

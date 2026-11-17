@@ -1,14 +1,14 @@
 import type {PilotAction,PilotOptions,RuntimeSnapshot} from '../integration/runtime.ts';
-export function RuntimePanel({runtime:r,busy,action,agentId='lead',role='Lead Developer',source='codex'}:{runtime:RuntimeSnapshot;busy:boolean;action:(command:PilotAction,options?:PilotOptions)=>void;agentId?:string;role?:string;source?:'mock'|'codex'}){
+export function RuntimePanel({runtime:r,busy,action,agentId='lead',role='Lead Developer',source='codex',projectAvailable=true}:{runtime:RuntimeSnapshot;busy:boolean;action:(command:PilotAction,options?:PilotOptions)=>void;agentId?:string;role?:string;source?:'mock'|'codex';projectAvailable?:boolean}){
  const active=['starting','working','waiting','interrupting','pausing','resuming'].includes(r.execution);
  const label=r.execution==='paused'?(r.pauseReason==='limit_reached'?'Paused — limit reached · Resumable':'Paused · Resumable'):r.execution;
  const send=(command:PilotAction)=>action(command,{agentId,taskId:command==='resume'?r.taskId??undefined:undefined});
  return <div className="runtime-panel" aria-label={`${source==='mock'?'Mock':'Codex'} · ${role}`}>
   <div className="runtime-controls"><strong>{role} · {source==='mock'?'MOCK':'Codex'}</strong><span role="status">{r.connection} · {label}</span>
-   <button disabled={busy||r.connection==='connected'} onClick={()=>send('connect')}>Подключить</button>
-   <button disabled={busy||active||r.execution==='paused'||!!r.recoveryError||r.connection!=='connected'} onClick={()=>send('start')}>{source==='mock'?'▷ Mock задание':'▷ Задание на чтение'}</button>
+   <button disabled={busy||!projectAvailable||r.connection==='connected'} onClick={()=>send('connect')}>Подключить</button>
+   <button disabled={busy||!projectAvailable||active||r.execution==='paused'||!!r.recoveryError||r.connection!=='connected'} onClick={()=>send('start')}>{source==='mock'?'▷ Mock задание':'▷ Задание на чтение'}</button>
    <button disabled={busy||!['working','waiting'].includes(r.execution)} onClick={()=>send('pause')}>Пауза</button>
-   <button disabled={busy||r.execution!=='paused'||!!r.recoveryError} onClick={()=>send('resume')}>Resume</button>
+   <button disabled={busy||!projectAvailable||r.execution!=='paused'||!!r.recoveryError} onClick={()=>send('resume')}>Resume</button>
    <button disabled={busy||!['working','waiting'].includes(r.execution)} onClick={()=>send('interrupt')}>Остановить</button>
    <button disabled={busy||r.connection==='disconnected'} onClick={()=>send('disconnect')}>Отключить</button>
    {source==='mock'&&<><button disabled={busy||!active} onClick={()=>send('mock_step')}>Mock: следующий шаг</button><button disabled={busy||!active} onClick={()=>send('mock_error')}>Mock: ошибка</button><button disabled={busy||!active} onClick={()=>send('mock_limit')}>Mock: лимит</button></>}

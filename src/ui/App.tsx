@@ -1,5 +1,10 @@
+import {configuration} from '../config.ts';
+import {ProjectsClient} from '../projects/ProjectsClient.ts';
+import type {ProjectSnapshot,ProjectCommand} from '../projects/ProjectsClient.ts';
+import {noRepository,projectContext} from '../projects/model.ts';
+import {ProjectPanel} from './ProjectPanel.tsx';
 import {SecurityPanel} from './SecurityPanel.tsx';
-import { useEffect, useState } from 'react';
+import { useEffect, useState,useMemo,useRef } from 'react';
 import { metrics } from '../state/office.ts';
 import { useOffice } from './useOffice.ts';
 import { agentView, displayStatus, taskDisplayStatus } from './presentation.ts';
@@ -7,7 +12,6 @@ import { TaskPanel } from './TaskPanel.tsx';
 import { RuntimePanel } from './RuntimePanel.tsx';
 import { WorkflowPanel } from './WorkflowPanel.tsx';
 import { AgentSkills } from './AgentSkills.tsx';
-import { configuration } from '../config.ts';
 import { statuses } from '../domain.ts';
 import { Character, Office, statusColors } from './Office.tsx';
 
@@ -16,15 +20,28 @@ function Clock() {
  useEffect(()=>{const timer=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(timer);},[]);
  return <time dateTime={now.toISOString()} title="Время в Ереване">◷ {now.toLocaleTimeString('ru-RU',{timeZone:'Asia/Yerevan',hour:'2-digit',minute:'2-digit'})}</time>;
 }
-export function App() {
- const {state,workflow,running,error,dispatch,startWorkflow,toggle,reset,mode,runtime,busy,pilotAction,changeMode,checkpoints,controlTask,orchestration,orchestrationClient,refreshOrchestration}=useOffice();
+type OfficeProps={client:ProjectsClient;catalog:ProjectSnapshot;scopeMode:'mock'|'codex';projectBusy:boolean;projectError:string|null;onModeChange:()=>Promise<void>;onProjectCommand:(data:ProjectCommand)=>Promise<void>;onProjectsRefresh:()=>void;guardRef:{current:(()=>Promise<void>)|null}};
+export function App(){
+ const client=useMemo(()=>new ProjectsClient(),[]),[scopeMode,setScopeMode]=useState<'mock'|'codex'>('mock'),[catalog,setCatalog]=useState(()=>client.snapshot('mock')),[projectBusy,setProjectBusy]=useState(false),[projectError,setProjectError]=useState<string|null>(null),guardRef=useRef<(()=>Promise<void>)|null>(null);
+ const onProjectsRefresh=()=>setCatalog(client.snapshot(scopeMode));
+ const onProjectCommand=async(data:ProjectCommand)=>{setProjectBusy(true);setProjectError(null);try{if(['switch','open','archive'].includes(data.action))await guardRef.current?.();await client.command(scopeMode,data);}catch(e){setProjectError((e as Error).message);throw e;}finally{setCatalog(client.snapshot(scopeMode));setProjectBusy(false);}};
+ const onModeChange=async()=>{const nextMode=scopeMode==='mock'?'codex':'mock',next=await client.refresh(nextMode);setCatalog(next);setScopeMode(nextMode);};
+ return <OfficeApplication key={scopeMode+':'+(catalog.activeProjectId??'unselected')} {...{client,catalog,scopeMode,projectBusy,projectError,onModeChange,onProjectCommand,onProjectsRefresh,guardRef}}/>;
+}
+function OfficeApplication({client,catalog,scopeMode,projectBusy,projectError,onModeChange,onProjectCommand,onProjectsRefresh,guardRef}:OfficeProps) {
+ const selectedProject=catalog.projects.find(p=>p.id===catalog.activeProjectId),context=catalog.activeContext??(selectedProject?projectContext(selectedProject,scopeMode):{projectId:'unselected-project',projectName:'Проект не выбран',workspaceRoot:'mock://unselected',repository:noRepository('mock://unselected'),currentBranch:null,defaultBranch:null,activeTaskId:null,relevantSkills:[],securityPolicy:'stage7-v2-project-scopes',runtimeMode:scopeMode}),available=!!catalog.activeContext&&!catalog.error&&selectedProject?.status==='ACTIVE';
+
+ const {state:officeState,prepareProjectSwitch,workflow,running,error,dispatch,startWorkflow,toggle,reset,mode,runtime,busy,pilotAction,changeMode,checkpoints,controlTask,orchestration,orchestrationClient,refreshOrchestration}=useOffice({context,mode:scopeMode,onModeChange,available,selected:!!selectedProject});
+ useEffect(()=>{guardRef.current=prepareProjectSwitch;return()=>{guardRef.current=null;};},[prepareProjectSwitch,guardRef]);
+ const projectEvents=catalog.events.filter(e=>e.projectId===catalog.activeProjectId).map(e=>({id:e.id,projectId:e.projectId,branch:e.branch,type:'runtime_event' as const,agentId:'lead',taskId:null,message:e.message+' · '+e.type,timestamp:e.timestamp,status:/invalid|denied|unavailable|failed/.test(e.type)?'error' as const:'waiting' as const,source:e.source,runtimeMethod:e.type}));
+ const state={...officeState,projects:catalog.projects,activity:[...officeState.activity,...projectEvents].filter(e=>(e.projectId??'office-demo')===catalog.activeProjectId).sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).slice(0,80)};
  const [selected,setSelected]=useState('lead'),[filter,setFilter]=useState('all');
  const [tab,setTab]=useState<'office'|'tasks'>('office');
  const [detailTab,setDetailTab]=useState<'task'|'activity'|'stats'>('task');
  const [night,setNight]=useState(false),[still,setStill]=useState(false);
  const agents=state.agents.map(agentView),agent=agents.find(a=>a.id===selected)!;
- const task=state.tasks.find(t=>t.id===agent.currentTask),project=state.projects.find(p=>p.id===configuration.projectId)!,stats=metrics(state);
- const locked=mode==='codex'||['running','paused'].includes(workflow.status);
+ const task=state.tasks.find(t=>t.id===agent.currentTask),stats=metrics(state);
+ const locked=!available||mode==='codex'||['running','paused'].includes(workflow.status);
  const selectedRuntime=runtime.members?.[selected]??runtime;
  const connectedCount=runtime.members?Object.values(runtime.members).filter(r=>r.connection==='connected').length:(runtime.connection==='connected'?1:0);
  const employeeEvents=state.activity.filter(e=>e.agentId===selected);
@@ -35,7 +52,7 @@ export function App() {
  return <div className={`app ${running?'':'paused'} ${night?'night':''} ${still?'still':''}`}>
   <header className="topbar">
    <a className="brand" href="./" aria-label="AI Office главная"><span className="qst-logo">QST</span><span>AI Office<small>ITS NEVER LATE TO START</small></span></a>
-   <label className="project-select"><span aria-hidden="true">▣</span><span className="sr-only">Текущий проект</span><select aria-label="Текущий проект" value={project.id} disabled>{state.projects.map(p=><option key={p.id} value={p.id}>Project: {p.name}</option>)}</select></label>
+   <label className="project-select"><span aria-hidden="true">▣</span><span className="sr-only">Текущий проект</span><select aria-label="Текущий проект" value={catalog.activeProjectId??''} disabled={projectBusy} onChange={e=>{void onProjectCommand({action:'switch',projectId:e.target.value}).catch(()=>{});}}><option value="" disabled>Выберите проект</option>{catalog.projects.map(p=><option key={p.id} value={p.id} disabled={p.status==='ARCHIVED'}>Project: {p.name}{p.status!=='ACTIVE'?' · '+p.status:''}</option>)}</select></label>
    <div className="header-tools"><span className="team-count" title="Сотрудников в офисе; подключение Codex указано отдельно">♟ {agents.length} / 8</span><Clock/><button className="theme-control" onClick={()=>setNight(!night)} aria-label={night?'Дневное оформление':'Ночное оформление'} aria-pressed={night}><span>{night?'☾':'☀'}</span> {night?'Night':'Day'}</button>
     <details className="header-popover"><summary aria-label="Настройки оформления" title="Настройки оформления">⚙</summary><div><strong>Оформление</strong><label><input type="checkbox" checked={still} onChange={e=>setStill(e.target.checked)}/> Уменьшить движение</label><p>Меняет только анимации. Пауза задач — в управлении офисом.</p></div></details>
     <details className="header-popover notifications"><summary aria-label={`Уведомления: ${alerts.length}`} title="События с ошибками">♧{alerts.length>0&&<b>{alerts.length}</b>}</summary><div><strong>Уведомления · {mode}</strong>{!alerts.length?<p>Событий с ошибками нет.</p>:alerts.slice(0,5).map(e=><p key={e.id}>{e.message}</p>)}</div></details>
@@ -45,12 +62,13 @@ export function App() {
    <div className="workspace">
     <section className="office-panel" aria-label="Рабочее пространство">
      <div className="panel-toolbar"><div className="tabs"><button className={tab==='office'?'active':''} onClick={()=>setTab('office')}>▦ Офис</button><button className={tab==='tasks'?'active':''} onClick={()=>setTab('tasks')}>≡ Задачи <span>{stats.total}</span></button></div><span className="mode-label">{mode==='mock'?'MOCK · демонстрация':`CODEX · ${connectedCount}/8 подключено`}</span><div className="simulation"><span className={running?'live':''}>{running?'● LIVE':'● PAUSED'}</span><button onClick={toggle} aria-label={mode==='codex'?(running?'Пауза анимации':'Продолжить анимацию'):(running?'Пауза симуляции':'Продолжить симуляцию')}>{running?'Ⅱ Пауза':'▷ Продолжить'}</button><button disabled={mode==='codex'} onClick={reset} aria-label="Сбросить демонстрацию" title="Сбросить демонстрацию">↺</button></div></div>
-     {error&&<p className="command-error" role="alert">{error}</p>}{workflow.error&&<p className="command-error" role="alert">{workflow.error}</p>}
+     {(error||projectError)&&<p className="command-error" role="alert">{error??projectError}</p>}{workflow.error&&<p className="command-error" role="alert">{workflow.error}</p>}
      {tab==='office'?<><div className="scene-scroll"><Office agents={agents} selected={selected} onSelect={setSelected} runtimeSource={mode} runtimeStates={runtime.members} tasks={Object.fromEntries(state.tasks.map(t=>[t.id,t.title]))}/></div><div className="scene-footer"><span>YEREVAN, ARMENIA <span className="scene-coordinate">/ QST STUDIO</span></span><span>Выберите сотрудника в офисе ↗</span></div></>:<div className="task-list"><h2>Задачи проекта</h2>{!state.tasks.length&&<p className="empty-state">Пока нет задач. Создайте первую в Task Panel.</p>}{state.tasks.map(t=><button key={t.id} onClick={()=>{setSelected(t.assignedAgent??'lead');setTab('office');setDetailTab('task');}}><span><strong>{t.title}</strong><small>{state.agents.find(a=>a.id===t.assignedAgent)?.role??'Не назначен'} · {t.priority}</small></span><span style={{color:statusColors[taskDisplayStatus(t.status)]}}>{t.status} · {t.progressIndeterminate?'—':`${t.progress}%`} ↗</span></button>)}</div>}
-     <div className="workflow-bar"><button disabled={busy} onClick={changeMode}>{mode==='mock'?'Codex team →':'← Mock mode'}</button>{mode==='mock'&&<><button onClick={startWorkflow} disabled={locked}>▷ Запустить workflow</button><span role="status">{workflow.label} · {workflow.step}/{workflow.total}{workflow.status==='paused'?' · Пауза':''}</span></>}<button disabled={busy} onClick={()=>pilotAction('connect_all')}>{mode==='mock'?'Подключить mock-сессии':'Подключить всех'}</button><button disabled={busy||connectedCount===0} onClick={()=>pilotAction('disconnect_all')}>Отключить всех</button><small>Слоты: {runtime.activeEmployees?.length??0}/{runtime.maxActive??1}</small></div>
+     <div className="workflow-bar"><button disabled={busy} onClick={changeMode}>{mode==='mock'?'Codex team →':'← Mock mode'}</button>{mode==='mock'&&<><button onClick={startWorkflow} disabled={locked}>▷ Запустить workflow</button><span role="status">{workflow.label} · {workflow.step}/{workflow.total}{workflow.status==='paused'?' · Пауза':''}</span></>}<button disabled={busy||!available} onClick={()=>pilotAction('connect_all')}>{mode==='mock'?'Подключить mock-сессии':'Подключить всех'}</button><button disabled={busy||connectedCount===0} onClick={()=>pilotAction('disconnect_all')}>Отключить всех</button><small>Слоты: {runtime.activeEmployees?.length??0}/{runtime.maxActive??1}</small></div>
      {runtime.teamError&&<p className="command-error" role="alert">{runtime.teamError}</p>}
-     <details className="employee-control-drawer" open={mode==='codex'}><summary>{mode==='mock'?'Mock-сессии сотрудников':'Codex · управление выбранным сотрудником'}</summary><RuntimePanel runtime={selectedRuntime} busy={busy||(mode==='mock'&&['running','paused'].includes(workflow.status))} action={pilotAction} agentId={selected} role={agent.role} source={mode}/></details>
+     <details className="employee-control-drawer" open={mode==='codex'}><summary>{mode==='mock'?'Mock-сессии сотрудников':'Codex · управление выбранным сотрудником'}</summary><RuntimePanel projectAvailable={available} runtime={selectedRuntime} busy={busy||(mode==='mock'&&['running','paused'].includes(workflow.status))} action={pilotAction} agentId={selected} role={agent.role} source={mode}/></details>
      <details className="office-controls"><summary>Task Panel · задачи и контрольные точки <span>↗</span></summary><TaskPanel checkpoints={checkpoints} control={controlTask} busy={busy} source={mode} state={state} locked={locked} dispatch={dispatch}/></details>
+     <ProjectPanel client={client} snapshot={catalog} mode={mode} onCommand={onProjectCommand} onUpdate={onProjectsRefresh}/>
      <SecurityPanel client={orchestrationClient} mode={mode} employeeId={selected}/>
      <WorkflowPanel client={orchestrationClient} mode={mode} snapshot={orchestration} onUpdate={refreshOrchestration}/>
      <details className="status-key"><summary>Статусы сотрудников</summary><div className="legend">{statuses.map(s=><span key={s}><i style={{background:statusColors[displayStatus[s]]}}/>{displayStatus[s]}</span>)}</div></details>
@@ -61,7 +79,7 @@ export function App() {
      <div id="employee-content" role="tabpanel" aria-labelledby={`employee-${detailTab}`}>
       {detailTab==='task'&&<div className="task-detail"><small>CURRENT TASK</small><h3><span className="task-symbol">⌘</span>{task?.title??'Нет активной задачи'}</h3><p>{task?.description??'Сотрудник готов к работе.'}</p><div className="progress-label"><span>Прогресс</span><strong>{agent.progressIndeterminate?'Не определён':`${agent.progress}%`}</strong></div><div className={`progress-track ${agent.progressIndeterminate?'indeterminate':''}`}><div style={{width:`${agent.progress}%`}}/></div>{task&&<p className="task-meta">{task.status} · {task.priority}</p>}<div className="agent-activity">↳ {agent.activity}</div><small className="last-activity">Последняя активность: {agent.lastActivity?new Date(agent.lastActivity).toLocaleTimeString('ru-RU'):'—'}</small><h3 className="recent-heading">Recent Activity</h3><ul className="recent-activity">{employeeEvents.slice(0,3).map(e=><li key={e.id}><i style={{background:statusColors[displayStatus[e.status]]}}/>{e.message}</li>)}{!employeeEvents.length&&<li>Пока нет событий.</li>}</ul></div>}
       {detailTab==='activity'&&<div className="employee-log"><h3>Activity · {employeeEvents.length}</h3>{log(employeeEvents)}</div>}
-      {detailTab==='stats'&&<div className="employee-stats"><small>Текущее состояние · {mode}</small><h3>Сотрудник</h3><dl><div><dt>Назначено задач</dt><dd>{employeeTasks.length}</dd></div><div><dt>Завершено</dt><dd>{employeeTasks.filter(t=>t.status==='completed').length}</dd></div><div><dt>Ошибки задач</dt><dd>{employeeTasks.filter(t=>t.status==='failed').length}</dd></div><div><dt>События в журнале</dt><dd>{employeeEvents.length}</dd></div><div><dt>Установлено Skills</dt><dd>{agent.skills.filter(s=>s.installationStatus==='installed').length}</dd></div></dl><h3>Проект · {project.name}</h3><dl>{[['Активные агенты',`${stats.active} / 8`],['Всего задач',stats.total],['In Progress',stats.inProgress],['Completed',stats.completed],['Errors',stats.errors]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p>Задачи учитываются по текущему исполнителю. Журнал хранит последние {configuration.activityLimit} событий команды.</p></div>}
+      {detailTab==='stats'&&<div className="employee-stats"><small>Текущее состояние · {mode}</small><h3>Сотрудник</h3><dl><div><dt>Назначено задач</dt><dd>{employeeTasks.length}</dd></div><div><dt>Завершено</dt><dd>{employeeTasks.filter(t=>t.status==='completed').length}</dd></div><div><dt>Ошибки задач</dt><dd>{employeeTasks.filter(t=>t.status==='failed').length}</dd></div><div><dt>События в журнале</dt><dd>{employeeEvents.length}</dd></div><div><dt>Установлено Skills</dt><dd>{agent.skills.filter(s=>s.installationStatus==='installed').length}</dd></div></dl><h3>Проект · {selectedProject?.name??'Проект не выбран'}</h3><dl>{[['Активные агенты',`${stats.active} / 8`],['Всего задач',stats.total],['In Progress',stats.inProgress],['Completed',stats.completed],['Errors',stats.errors]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p>Задачи учитываются по текущему исполнителю. Журнал хранит последние {configuration.activityLimit} событий команды.</p></div>}
      </div>
      <div className="skill-preview"><small>ASSIGNED SKILLS</small><div>{agent.skills.map(s=><span key={s.skillId} title={`${s.installationStatus} · ${s.skillName}`}>{s.skillName}</span>)}</div></div><details className="skills-drawer"><summary>Agent Skills <span>{agent.skills.length}</span></summary><AgentSkills agent={agent} runtimeConnected={mode==='codex'&&selectedRuntime.connection==='connected'}/></details>
     </section></aside>

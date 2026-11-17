@@ -15,8 +15,8 @@ export class MockExecutionPort implements ExecutionPort {
  constructor(adapter:MockCodexAdapter){this.adapter=adapter;}
  private adapter:MockCodexAdapter;
  availability(){const r=this.adapter.getRuntime();return Object.fromEntries(Object.entries(r.members??{}).map(([id,s])=>[id,{connected:s.connection==='connected',execution:s.execution,currentTask:s.taskId??null,skills:s.skills,recoveryError:s.recoveryError}]));}
- async start(t:WorkflowTask,context:Context,id:string){this.adapter.startOrchestrated(t.agentId,id,t.title,`${context.rootTask}\n${t.description}`);}
- read(t:WorkflowTask):Execution {
+ async start(t:WorkflowTask,context:Context,id:string){if((t.projectId??'office-demo')!==this.adapter.projectId||(context.projectId??'office-demo')!==this.adapter.projectId)throw new Error('Foreign mock project');this.adapter.startOrchestrated(t.agentId,id,t.title,`${context.rootTask}\n${t.description}`,context.workflowId);}
+ read(t:WorkflowTask):Execution {if((t.projectId??'office-demo')!==this.adapter.projectId)return {id:t.executionId!,status:'missing',kind:'permanent',error:'Foreign mock project'};
   const task=this.adapter.getTasks().find(x=>x.id===t.executionId),held=this.held.get(t.executionId!);
   if(!task)return {id:t.executionId!,status:'missing'};
   const cp=this.adapter.getCheckpoints().filter(c=>c.taskId===task.id).at(-1);
@@ -51,6 +51,7 @@ export class MemoryWorkflowStorage implements WorkflowStorage {
  book:WorkflowBook;constructor(source:'mock'|'codex'='mock'){this.book=emptyWorkflows(source);}load(){return structuredClone(this.book);}save(book:WorkflowBook){this.book=validateWorkflowBook(book,this.book.source);}
 }
 export class BrowserWorkflowStorage implements WorkflowStorage {
- load(){const raw=localStorage.getItem('ai-office-orchestrator-v1');return raw?validateWorkflowBook(JSON.parse(raw),'mock'):emptyWorkflows('mock');}
- save(book:WorkflowBook){localStorage.setItem('ai-office-orchestrator-v1',JSON.stringify(validateWorkflowBook(book,'mock')));}
+ private key:string;constructor(projectId='office-demo'){this.key=projectId==='office-demo'?'ai-office-orchestrator-v1':`ai-office-orchestrator-v1:${projectId}`;}
+ load(){const raw=localStorage.getItem(this.key);return raw?validateWorkflowBook(JSON.parse(raw),'mock'):emptyWorkflows('mock');}
+ save(book:WorkflowBook){localStorage.setItem(this.key,JSON.stringify(validateWorkflowBook(book,'mock')));}
 }

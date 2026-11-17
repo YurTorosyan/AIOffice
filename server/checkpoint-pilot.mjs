@@ -22,7 +22,7 @@ export class CheckpointPilot extends LeadPilot {
     Object.assign(this.state,{ checkpoints:[], savedTasks:[], taskId:null, pauseReason:null, resumeMode:null, recoveryError:null });
     try {
       this.book = validateBook(this.storage.load(),'codex');
-      if(this.book.tasks.some(t=>t.agentId!==this.agentId)||this.book.checkpoints.some(c=>c.agentId!==this.agentId))throw new Error('Recovery belongs to another employee');
+      if(this.book.tasks.some(t=>t.agentId!==this.agentId||t.projectId!==this.projectId)||this.book.checkpoints.some(c=>c.agentId!==this.agentId||c.projectId!==this.projectId||c.workspaceRoot&&c.workspaceRoot!==this.root))throw new Error('Recovery belongs to another employee');
       const task = [...this.book.tasks].reverse().find(t => ['paused','in_progress'].includes(t.status));
       if (task) {
         const cp = [...this.book.checkpoints].reverse().find(c => c.taskId === task.id && c.status !== 'invalid' && c.status !== 'completed');
@@ -49,7 +49,7 @@ export class CheckpointPilot extends LeadPilot {
   capture(reason, stopConfirmed, resumable, announce = true) {
     const task = this.book.tasks.find(t => t.id === this.state.taskId); if (!task) return null;
     const previous = [...this.book.checkpoints].reverse().find(c => c.taskId === task.id && ['paused','resumable'].includes(c.status));
-    const cp = { id:previous?.id ?? randomUUID(), taskId:task.id, agentId:this.agentId, projectId:'office-demo', source:'codex', reason,
+    const cp = { id:previous?.id ?? randomUUID(), taskId:task.id, agentId:this.agentId, projectId:this.projectId,workspaceRoot:this.root,...(task.branch!==undefined?{branch:task.branch}:{}), source:'codex', reason,
       status:resumable?'resumable':'paused', taskTitle:task.title, taskDescription:task.description, taskStatus:task.status,
       completedWork:this.state.plan.filter(p => p.status === 'completed').map(p => safeText(p.step)),
       remainingWork:this.state.plan.filter(p => p.status !== 'completed').map(p => safeText(p.step)),
@@ -70,7 +70,7 @@ export class CheckpointPilot extends LeadPilot {
     if (!this.book) return;
     if (method === 'task/submitted') {
       this.state.taskId = this.taskIdentifier ?? (this.agentId==='lead'?`pilot-${this.state.startedAt}`:`pilot-${this.agentId}-${randomUUID()}`); event.taskId = this.state.taskId;
-      this.book.tasks.push({ id:this.state.taskId,title:this.taskTitle??'Read-only план AI Office',description:this.prompt??pilotPrompt,agentId:this.agentId,projectId:'office-demo',status:'in_progress',createdAt:this.state.startedAt,completedAt:null });
+      this.book.tasks.push({ id:this.state.taskId,title:this.taskTitle??'Read-only план AI Office',description:this.prompt??pilotPrompt,agentId:this.agentId,projectId:this.projectId,...(this.projectContext?{branch:this.projectContext.currentBranch}:{}),status:'in_progress',createdAt:this.state.startedAt,completedAt:null });
     }
     const task = this.book.tasks.find(t => t.id === this.state.taskId);
     if (task && this.state.execution === 'completed') { task.status = 'completed'; task.completedAt = this.state.completedAt; this.closeCheckpoints(task.id,'completed'); }

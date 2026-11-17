@@ -1,3 +1,5 @@
+import {queryTasks,type TaskQuery} from './query.ts';
+import {assertProject} from '../projects/model.ts';
 import { configuration } from '../config.ts';
 import { statuses, taskStatuses, type ActivityEvent, type Agent, type AgentStatus, type EventType, type OfficeCommand, type OfficeState, type Task, type TaskStatus } from '../domain.ts';
 import { EventBus } from '../events/EventBus.ts';
@@ -10,11 +12,14 @@ export const transitions: Record<TaskStatus, readonly TaskStatus[]> = {
 export function isActive(task: Task) { return task.status !== 'completed' && task.status !== 'failed'; }
 export class TaskSystem {
   private state = createOffice();
+  readonly projectId:string;branch:string|null;
+  constructor(projectId:string='office-demo',branch:string|null=null){this.projectId=projectId;this.branch=branch;this.state=createOffice(projectId);}
+  query(filter:TaskQuery={}){return queryTasks(this.getSnapshot().tasks.map(t=>({...t,projectId:t.projectId??'office-demo'})),filter);}
   readonly events = new EventBus();
   getSnapshot = (): OfficeState => structuredClone(this.state);
-  reset() { this.state = createOffice(); }
+  reset() { this.state = createOffice(this.projectId); }
   /** Called only with validated recovery data; profile metadata always comes from the current registry. */
-  restoreTask(task: Task) {
+  restoreTask(task: Task) {assertProject(task.projectId??'office-demo',this.projectId);task={...task,projectId:this.projectId,updatedAt:task.updatedAt??task.createdAt};
     const previous = this.state.tasks.findIndex(t => t.id === task.id);
     if (previous < 0) this.state.tasks.push(structuredClone(task)); else this.state.tasks[previous] = structuredClone(task);
     for (const agent of this.state.agents) {
@@ -22,9 +27,10 @@ export class TaskSystem {
       else if (agent.currentTask === task.id) Object.assign(agent,releaseAgent(agent,new Date().toISOString()));
     }
   }
+  restoreActivity(activity:ActivityEvent[]){if(activity.some(e=>(e.projectId??'office-demo')!==this.projectId))throw new Error('Foreign activity');this.state.activity=structuredClone(activity);}
   recordRecovery(type: EventType,taskId: string,message: string) {
     const task = this.state.tasks.find(t => t.id === taskId); const agent = this.state.agents.find(a => a.id === (task?.assignedAgent ?? 'lead'))!;
-    const event: ActivityEvent = { id:crypto.randomUUID(),type,taskId,agentId:agent.id,message,timestamp:new Date().toISOString(),status:agent.status,source:'mock' };
+    const event: ActivityEvent = { projectId:this.projectId,branch:this.branch,id:crypto.randomUUID(),type,taskId,agentId:agent.id,message,timestamp:new Date().toISOString(),status:agent.status,source:'mock' };
     this.state.activity = [event,...this.state.activity].slice(0,configuration.activityLimit); this.events.publish([event]);
   }
   dispatch(command: OfficeCommand, now = new Date().toISOString()): string | undefined {
@@ -33,7 +39,7 @@ export class TaskSystem {
     const events: ActivityEvent[] = [];
     const agentById = (id: string) => { const agent = next.agents.find(a => a.id === id); if (!agent) throw new Error('Сотрудник не найден'); return agent; };
     const emit = (type: EventType, agent: Agent, task: Task | null, text: string) => {
-      events.push({ id: crypto.randomUUID(), type, agentId: agent.id, taskId: task?.id ?? null, message: `${agent.role} · ${text}`, timestamp: now, status: agent.status, source: 'mock' });
+      events.push({ projectId:this.projectId,branch:this.branch,id: crypto.randomUUID(), type, agentId: agent.id, taskId: task?.id ?? null, message: `${agent.role} · ${text}`, timestamp: now, status: agent.status, source: 'mock' });
     };
     const updateAgent = (updated: Agent, task: Task | null) => {
       const previous = agentById(updated.id);
@@ -58,7 +64,7 @@ export class TaskSystem {
       if (!command.title.trim()) throw new Error('Введите название задачи');
       if (!['low', 'normal', 'high'].includes(command.priority)) throw new Error('Некорректный приоритет');
       const creator = agentById(command.actorId ?? 'lead');
-      const task: Task = { id: crypto.randomUUID(), title: command.title.trim(), description: command.description.trim(), priority: command.priority, progress: 0, status: 'pending', assignedAgent: null, createdAt: now, startedAt: null, completedAt: null };
+      const task: Task = { projectId:this.projectId,branch:this.branch,updatedAt:now,id: crypto.randomUUID(), title: command.title.trim(), description: command.description.trim(), priority: command.priority, progress: 0, status: 'pending', assignedAgent: null, createdAt: now, startedAt: null, completedAt: null };
       next.tasks.push(task); result = task.id;
       creator.lastActivity = now; creator.activity = `Создал задачу «${task.title}»`;
       emit('task_created', creator, task, creator.activity);
@@ -98,6 +104,7 @@ export class TaskSystem {
         emit(eventTypes[command.status as keyof typeof eventTypes], agentById(target), task, `${eventTypes[command.status as keyof typeof eventTypes]}: «${task.title}»`);
       }
     }
+    if('taskId' in command){const changed=next.tasks.find(t=>t.id===command.taskId);if(changed)changed.updatedAt=now;}
     next.activity = [...events].reverse().concat(next.activity).slice(0, configuration.activityLimit);
     this.state = next;
     this.events.publish(events);

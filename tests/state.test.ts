@@ -16,7 +16,7 @@ test('initial state has exactly eight fixed workers and domain data has no prese
 });
 test('create task with required fields and emit task_created into log and subscription', () => {
   const system = new TaskSystem(); const events: ActivityEvent[] = []; system.events.subscribe(e => events.push(e)); const id = create(system, '  Новая задача  ');
-  assert.deepEqual(system.getSnapshot().tasks[0], { id, title: 'Новая задача', description: 'Описание', priority: 'high', status: 'pending', progress: 0, assignedAgent: null, createdAt: now, startedAt: null, completedAt: null });
+  assert.deepEqual(system.getSnapshot().tasks[0], { projectId:'office-demo',branch:null,updatedAt:now,id, title: 'Новая задача', description: 'Описание', priority: 'high', status: 'pending', progress: 0, assignedAgent: null, createdAt: now, startedAt: null, completedAt: null });
   assert.equal(events[0].type, 'task_created'); assert.equal(events[0].taskId, id); assert.equal(events[0].agentId, 'lead'); assert.deepEqual(system.getSnapshot().activity, [...events].reverse());
 });
 test('assign task reserves worker and sets waiting/currentTask/lastActivity', () => {
