@@ -1,0 +1,14 @@
+{
+  "mode": "isolated Mock",
+  "realCodexJobs": 0,
+  "officeEmployees": 8,
+  "blockedSpecificationVisible": true,
+  "leadPreparedWithoutAutomaticStart": true,
+  "explicitMockResumeAndLeadResolution": true,
+  "frontendReceivesResolvedHandoff": true,
+  "originalPlanningPreserved": true,
+  "originalBlockedVerdictPreserved": true,
+  "exactChangeApprovalStillRequired": true,
+  "qaWaitsForApproval": true,
+  "consoleErrors": []
+}

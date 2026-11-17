@@ -1,3 +1,4 @@
+import {applyLeadResolution,specificationBlockers,specificationAddressed} from './team-workflow.ts';
 import type {ProjectContext} from '../projects/model.ts';
 import {refinePendingImpacts,collectTeamResult,dependencySatisfied,deriveTeamPhase,finalResult,gatePass,handoffs,parseTeamPlan,roundGates,teamState,gateTask} from './team-workflow.ts';
 import type {Approval,TeamSpec} from './team-workflow.ts';
@@ -12,7 +13,7 @@ export class Orchestrator {
   this.project=project;this.port=privatePort;this.storage=privateStorage;this.book=emptyWorkflows(this.port.source);
   try { this.book=validateWorkflowBook(this.storage.load(),this.port.source);
    if(this.book.workflows.some(w=>w.projectId!==(this.project?.projectId??'office-demo')||w.tasks.some(t=>t.inputContext?.project&&t.inputContext.project.workspaceRoot!==this.project?.workspaceRoot)))throw new Error('Workflow project/workspace mismatch');
-   for(const w of this.book.workflows)if(!['completed','cancelled'].includes(w.status)){const refined=refinePendingImpacts(w);if(refined.length)this.event(w,'optional_gates_refined',null,`Removed unstarted optional gates: ${refined.join(', ')}`);w.status='paused';w.checkpoint={id:crypto.randomUUID(),createdAt:this.now(),reason:'Application restart; reconcile execution IDs before explicit resume'};for(const task of w.tasks)if(task.resource){delete task.resource.retryAt;task.resource.retry.automatic=false;}for(const t of w.tasks)if(['launching','running'].includes(t.status)){t.status='paused';t.error={kind:'disconnect',message:'Restart: existing execution will be reconciled, never blindly started again'};}}
+   for(const w of this.book.workflows)if(!['completed','cancelled'].includes(w.status)){this.routeBlockers(w);const refined=refinePendingImpacts(w);if(refined.length)this.event(w,'optional_gates_refined',null,`Removed unstarted optional gates: ${refined.join(', ')}`);w.status='paused';w.checkpoint={id:crypto.randomUUID(),createdAt:this.now(),reason:'Application restart; reconcile execution IDs before explicit resume'};for(const task of w.tasks)if(task.resource){delete task.resource.retryAt;task.resource.retry.automatic=false;}for(const t of w.tasks)if(['launching','running'].includes(t.status)){t.status='paused';t.error={kind:'disconnect',message:'Restart: existing execution will be reconciled, never blindly started again'};}}
    this.save();
   }catch {this.book=emptyWorkflows(this.port.source);this.recoveryError='Workflow storage invalid or unavailable. Original data preserved; execution blocked.';}
  }
@@ -60,6 +61,22 @@ export class Orchestrator {
   for(const id of Object.values(s.gates)){const t=w.tasks.find(t=>t.id===id)!;if(['pending','ready'].includes(t.status))t.status='cancelled';}
   s.round=next;w.tasks.push(...fixes);w.tasks.push(...roundGates(w,fixes.map(t=>t.id),next).map(p=>this.task(p)));this.event(w,'remediation_created',null,`Bounded corrective round ${next}/${s.maxCycles}`);if(failed.some(t=>t.result!.team!.verdict==='BLOCKED'||t.result!.team!.findings.some(f=>f.severity==='critical'))){w.status='paused';w.error='Critical or BLOCKED finding: corrective tasks preserved, explicit Director resume required';}
  }
+ private routeBlockers(w:Workflow){
+  if(!w.team||!w.planned||['completed','cancelled'].includes(w.status))return;
+  for(const task of w.tasks.filter(t=>t.teamSpec?.kind==='resolution'&&t.status==='completed'&&!t.teamSpec.resolutionApplied)){
+   try{const retry=applyLeadResolution(w,task);if(retry)w.tasks.push(this.task(retry));const decision=task.result!.team!.resolution!;this.event(w,'blocker_resolved',task,decision.reason);if(decision.action==='director_required'){w.status='pausing';w.error='Lead требует решения Director: '+decision.reason;}}
+   catch(e){task.status='failed';task.error={kind:'permanent',message:'Lead resolution rejected: '+(e as Error).message};w.status='pausing';w.error='Lead resolution requires Director: '+(e as Error).message;this.event(w,'blocker_resolution_failed',task,w.error);}
+  }
+  for(const source of specificationBlockers(w)){
+   const existing=w.tasks.find(t=>t.teamSpec?.kind==='resolution'&&t.teamSpec.remediationFor.includes(source.id));if(existing)continue;
+   const count=w.tasks.filter(t=>t.teamSpec?.kind==='resolution').length,limit=Math.min(3,w.team.maxCycles+1);
+   if(count>=limit||w.tasks.length>=80){if(!['paused','pausing'].includes(w.status))w.status='pausing';w.error='Достигнут лимит согласований Lead; требуется решение Director';continue;}
+   let n=count+1;while(w.tasks.some(t=>t.id===`lead-blocker-${n}`))n++;
+   const scope=[...new Set([...source.teamSpec!.scope,...w.tasks.filter(t=>t.teamSpec?.kind==='implementation'&&t.dependencies.includes(source.id)).flatMap(t=>t.teamSpec!.scope)])];
+   const next=this.task({id:`lead-blocker-${n}`,title:`Lead: согласовать блокер «${source.title}»`.slice(0,160),description:'Resolve the completed but blocked design handoff; preserve the original result and choose a structured safe next step. '+(source.result?.team?.nextAction??'').slice(0,900),type:'planning',dependencies:[source.id],requiredSkills:['planning-and-task-breakdown'],priority:'high',permissions:['read-only'],teamSpec:{kind:'resolution',acceptance:['Resolve the source design blocker or request an explicit Director decision'],scope,round:w.team.round,remediationFor:[source.id],checksApproved:false,testEvidence:[]}} as PlanTask);
+   w.tasks.push(next);w.status='pausing';w.error='Дизайнер вернул '+source.result!.team!.verdict+'. Подготовлена задача Lead; продолжение требует явного возобновления workflow.';w.checkpoint={id:crypto.randomUUID(),createdAt:this.now(),reason:'Specification blocker routed to Lead; no automatic Codex execution'};this.event(w,'blocker_escalated',source,w.error);
+  }
+ }
  private async observe(w:Workflow){
   for(const t of w.tasks.filter(t=>t.executionId&&['launching','running','paused'].includes(t.status))){
    if(w.team?.approvals.some(a=>a.taskId===t.id&&a.status==='pending'))continue;
@@ -84,7 +101,7 @@ export class Orchestrator {
  tick():Promise<void>{return this.serial(async()=>{
   for(const w of this.book.workflows.filter(w=>!['completed','cancelled'].includes(w.status))){
    if(w.status==='paused'){const eligible=w.tasks.filter(t=>t.status==='failed'&&t.resource?.retry.automatic&&t.resource.retryAt&&Date.parse(t.resource.retryAt)<=Date.now());if(eligible.length&&w.tasks.every(t=>t.status!=='failed'||eligible.includes(t))&&!w.team?.approvals.some(a=>a.status==='pending'))for(const t of eligible){try{await this.port.prepareRetry(t);t.status='ready';t.executionId=null;delete t.resource!.retryAt;delete t.resource;w.status='running';w.error=null;this.event(w,'task.retry',t,'Bounded verified transient retry; completed tasks retained');}catch{t.resource!.retry.automatic=false;this.event(w,'task.retry.exhausted',t,'Existing execution could not be reconciled; Director required');}this.save();}}
-   await this.observe(w);this.remediate(w);this.save();
+   await this.observe(w);this.routeBlockers(w);this.remediate(w);this.save();
    if(w.status==='running'&&!this.branchMatches(w)){w.status='pausing';w.error='Workflow branch changed; return explicitly to the recorded branch before continuing';this.event(w,'workflow_branch_mismatch',null,w.error);this.save();}
    if(w.status==='pausing'||w.status==='cancelling'){await this.stopActive(w,w.status==='cancelling');this.save();continue;}
    if(w.status!=='running')continue;
@@ -107,7 +124,7 @@ export class Orchestrator {
   }
  });}
  command(workflowId:string,action:'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'revalidate_result',taskId?:string):Promise<void>{return this.serial(async()=>{
-  const w=this.get(workflowId);if(['completed','cancelled'].includes(w.status))throw new Error('Workflow is closed');
+  const w=this.get(workflowId);if(action==='resume'&&specificationBlockers(w).some(source=>w.tasks.some(t=>t.teamSpec?.kind==='resolution'&&t.teamSpec.remediationFor.includes(source.id)&&t.status==='completed'&&!specificationAddressed(w,source))))throw new Error('Lead blocker remains unresolved; Director decision or replanning required');if(['completed','cancelled'].includes(w.status))throw new Error('Workflow is closed');
   if(['resume','retry','approve_action','revalidate_result'].includes(action)&&!this.branchMatches(w))throw new Error('Workflow branch changed; return explicitly to the original branch');
   const t=taskId?w.tasks.find(t=>t.id===taskId):undefined;if(taskId){identifier(taskId);if(!t&&!['approve_action','reject_action'].includes(action))throw new Error('Unknown workflow task');}
   if(action==='revalidate_result'){if(!t||!w.team||t.status!=='failed'||!t.error?.message.startsWith('Result rejected:')||this.port.read(t).status!=='completed')throw new Error('No rejected completed result to revalidate');t.status='running';t.error=null;this.event(w,'result_revalidation_requested',t,'Revalidate saved model result; no new Codex execution');await this.observe(w);this.save();return;}
