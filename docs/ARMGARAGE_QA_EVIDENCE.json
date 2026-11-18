@@ -1,0 +1,130 @@
+{
+  "scope": "QA harness validation only; ARMGARAGE application is not implemented or verified",
+  "profile": "armgarage-react-v1",
+  "image": "sha256:0907675574498661a48ea1ff3128266ada1b461bceda71d9864aad73960d308a",
+  "isolation": true,
+  "viewports": [
+    390,
+    768,
+    1440
+  ],
+  "cases": [
+    {
+      "fixture": "none",
+      "expected": "pass",
+      "observed": "pass",
+      "exitCode": 0
+    },
+    {
+      "fixture": "broken-filter",
+      "expected": "reject",
+      "observed": "reject",
+      "exitCode": 1
+    },
+    {
+      "fixture": "wrong-calculator",
+      "expected": "reject",
+      "observed": "reject",
+      "exitCode": 1
+    },
+    {
+      "fixture": "past-date-allowed",
+      "expected": "reject",
+      "observed": "reject",
+      "exitCode": 1
+    },
+    {
+      "fixture": "leak-storage",
+      "expected": "reject",
+      "observed": "reject",
+      "exitCode": 1
+    },
+    {
+      "fixture": "outgoing-submit",
+      "expected": "reject",
+      "observed": "reject",
+      "exitCode": 1
+    },
+    {
+      "fixture": "fake-confirmation",
+      "expected": "reject",
+      "observed": "reject",
+      "exitCode": 1
+    }
+  ],
+  "trustedDomainTests": 17,
+  "domainCases": [
+    {
+      "fixture": "none",
+      "expected": "pass",
+      "observed": "pass",
+      "exitCode": 0
+    },
+    {
+      "fixture": "floor-rounding",
+      "expected": "reject",
+      "observed": "reject",
+      "exitCode": 1
+    },
+    {
+      "fixture": "wrong-sort",
+      "expected": "reject",
+      "observed": "reject",
+      "exitCode": 1
+    },
+    {
+      "fixture": "accept-letters",
+      "expected": "reject",
+      "observed": "reject",
+      "exitCode": 1
+    },
+    {
+      "fixture": "past-date-allowed",
+      "expected": "reject",
+      "observed": "reject",
+      "exitCode": 1
+    }
+  ],
+  "realCodexJobs": 0,
+  "coffeeHouseProjectRuns": 0,
+  "pipelineFixture": {
+    "scope": "synthetic fixture only",
+    "profile": "armgarage-react-v1",
+    "image": "sha256:0907675574498661a48ea1ff3128266ada1b461bceda71d9864aad73960d308a",
+    "revision": "f2791a0ea9e98df20f9cba319f037fa188ed858b18c2fb1f5a9d8a7c5f09c567",
+    "records": [
+      {
+        "command": "vitest run --config [trusted React/jsdom profile] tests/garage.test.ts /opt/qa/armgarage-domain.test.mjs",
+        "status": "PASS",
+        "exitCode": 0,
+        "output": "run=18021259-b8b1-404f-8d97-5c6170ab8397; image=sha256:0907675574498661a48ea1ff3128266ada1b461bceda71d9864aad73960d308a; input=f2791a0ea9e98df20f9cba319f037fa188ed858b18c2fb1f5a9d8a7c5f09c567\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.1.0 \u001b[39m\u001b[90m/work\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[30m\u001b[45m node-contracts \u001b[49m\u001b[39m tests/garage.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 25\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m \u001b[30m\u001b[45m trusted-armgarage \u001b[49m\u001b[39m ../opt/qa/armgarage-domain.test.mjs \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 90\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m2 passed\u001b[39m\u001b[22m\u001b[90m (2)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m18 passed\u001b[39m\u001b[22m\u001b[90m (18)\u001b[39m\n\u001b[2m   Start at \u001b[22m 08:38:05\n\u001b[2m   Duration \u001b[22m 2.53s\u001b[2m (transform 58%, import 19%, tests 12%, worker 11%)\u001b[22m\n\n\u001b[2m    Isolate \u001b[22m \u001b[33m2 workers spawned\u001b[39m\u001b[2m · ~695ms startup each (spawn + environment, per file)\u001b[22m\n\u001b[2m            \u001b[22m \u001b[2mat least ~695ms faster with \u001b[22m\u001b[33misolate: false\u001b[39m\u001b[2m — reuses workers across files instead of one per file\u001b[22m\n\n",
+        "revision": "f2791a0ea9e98df20f9cba319f037fa188ed858b18c2fb1f5a9d8a7c5f09c567",
+        "source": "runner"
+      },
+      {
+        "command": "tsc --noEmit [trusted React profile] && vite build [trusted profile]",
+        "status": "PASS",
+        "exitCode": 0,
+        "output": "run=18021259-b8b1-404f-8d97-5c6170ab8397; image=sha256:0907675574498661a48ea1ff3128266ada1b461bceda71d9864aad73960d308a; input=f2791a0ea9e98df20f9cba319f037fa188ed858b18c2fb1f5a9d8a7c5f09c567\nvite v8.1.5 building client environment for production...\n\u001b[2K\rtransforming...✓ 5 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                 0.62 kB │ gzip: 0.44 kB\ndist/assets/index-CblBqKKS.js  10.47 kB │ gzip: 4.05 kB\n\n✓ built in 459ms\n\nbuild assets sha256=d81f7fb7e299cc86bc80ed74a719699753ad0f6280e17061bb2ec697e1198519",
+        "revision": "f2791a0ea9e98df20f9cba319f037fa188ed858b18c2fb1f5a9d8a7c5f09c567",
+        "source": "runner"
+      },
+      {
+        "command": "Playwright Chromium (sandboxed): ARMGARAGE filters, calculator, demo booking, privacy and keyboard at 390/768/1440px",
+        "status": "PASS",
+        "exitCode": 0,
+        "output": "run=18021259-b8b1-404f-8d97-5c6170ab8397; image=sha256:0907675574498661a48ea1ff3128266ada1b461bceda71d9864aad73960d308a; input=f2791a0ea9e98df20f9cba319f037fa188ed858b18c2fb1f5a9d8a7c5f09c567\nPASS ARMGARAGE {\"width\":390,\"filters\":true,\"detailsAndKeyboard\":true,\"calculator\":true,\"bookingValidation\":true,\"estimateTransfer\":true,\"demoConfirmation\":true,\"noPersonalDataStorage\":true,\"noOverflow\":true,\"noOutgoingSubmission\":true,\"noConsoleLeaks\":true,\"screenshotSha256\":\"8e5cd2847ecb00f6d47251bad70a5765e8916fc44ec38f41732b77abae95aa7f\"}\nPASS ARMGARAGE {\"width\":768,\"filters\":true,\"detailsAndKeyboard\":true,\"calculator\":true,\"bookingValidation\":true,\"estimateTransfer\":true,\"demoConfirmation\":true,\"noPersonalDataStorage\":true,\"noOverflow\":true,\"noOutgoingSubmission\":true,\"noConsoleLeaks\":true,\"screenshotSha256\":\"b3d47afc3ea899549f4738841a04b73ad2f2268cbee79526b3c05ecd0755d1dd\"}\nPASS ARMGARAGE {\"width\":1440,\"filters\":true,\"detailsAndKeyboard\":true,\"calculator\":true,\"bookingValidation\":true,\"estimateTransfer\":true,\"demoConfirmation\":true,\"noPersonalDataStorage\":true,\"noOverflow\":true,\"noOutgoingSubmission\":true,\"noConsoleLeaks\":true,\"screenshotSha256\":\"47fe192e092d65b772463c94ee5c9781ee9f237c46ac6596f36587bc71f22159\"}\n",
+        "revision": "f2791a0ea9e98df20f9cba319f037fa188ed858b18c2fb1f5a9d8a7c5f09c567",
+        "source": "runner"
+      }
+    ]
+  },
+  "coffeeHousePreservation": {
+    "sourceAndConfigHashesUnchanged": true,
+    "oldImageRunnerAndDockerfileUnchanged": true,
+    "verificationRevisionUnchanged": true,
+    "verificationRevision": "ce3b9d531ee8ffd9e23d92f66a51fd7056bb2edfa75a99917f3c1985266b57c3",
+    "projectTestsRun": 0
+  },
+  "applicationImplemented": false
+}
