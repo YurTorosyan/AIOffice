@@ -8,5 +8,22 @@
   "registeredOrUnknownExecutionsDenied": true,
   "projectTestsRerun": 0,
   "filesReapplied": 0,
-  "realCodexJobsLaunched": 0
+  "realCodexJobsLaunched": 0,
+  "liveRecovery": {
+    "bridgeReloaded": true,
+    "workflowStatus": "paused",
+    "workflowError": null,
+    "securityTaskId": "gate-security-0-evidence-1",
+    "securityTaskStatus": "ready",
+    "securityExecutionId": null,
+    "attemptsStill": 1,
+    "connectedEmployees": 8,
+    "qaVerdict": "PASS",
+    "qaTaskAndThreeReceiptsUnchanged": true,
+    "otherResultsAndExecutionsUnchanged": true,
+    "sourceHashesUnchanged": true,
+    "implementationApplyCount": 1,
+    "approvedQARunCount": 1,
+    "activeEmployees": 0
+  }
 }
