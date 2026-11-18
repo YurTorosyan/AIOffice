@@ -1,0 +1,18 @@
+import type {Workflow,WorkflowTask} from './model.ts';
+import type {Finding} from './team-workflow.ts';
+export interface TaskInputs {readFiles:string[];handoffs:{taskId:string;agentId:string;summary:string;decisions:string[];codeInfo:string[];acceptance:string[];verdict:string|null}[];}
+/** Only completed ancestors and exact approved file receipts; no caller-supplied glob or write grant. */
+export function buildTaskInputs(w:Workflow,t:WorkflowTask):TaskInputs {
+ const ids=new Set<string>();const visit=(id:string)=>{if(ids.has(id))return;const d=w.tasks.find(x=>x.id===id);if(!d)throw new Error('Missing input dependency');ids.add(id);d.dependencies.forEach(visit);};t.dependencies.forEach(visit);
+ const ancestors=w.tasks.filter(x=>ids.has(x.id)&&x.status==='completed'&&x.result),applied=w.team?.approvals.filter(a=>a.action==='apply_changes'&&a.status==='approved'&&a.revision&&ancestors.some(x=>x.id===a.taskId&&JSON.stringify(x.result!.filesChanged)===JSON.stringify(a.patches.map(p=>p.path))&&JSON.stringify(x.result!.team?.patches)===JSON.stringify(a.patches)))??[];
+ const result={readFiles:[...new Set([...(t.teamSpec?.scope??[]),...applied.flatMap(a=>a.patches.map(p=>p.path))])],handoffs:ancestors.map(d=>({taskId:d.id,agentId:d.agentId,summary:d.result!.summary,decisions:[...d.result!.decisions],codeInfo:[...(d.result!.team?.codeInfo??[])],acceptance:[...(d.teamSpec?.acceptance??[])],verdict:d.result!.team?.verdict??null}))};
+ if(result.readFiles.length>16||result.handoffs.length>40||JSON.stringify(result).length>100000)throw new Error('Attributed input context exceeds bounded snapshot budget');return result;
+}
+export function validateTaskInputs(w:Workflow,t:WorkflowTask){if(t.inputContext?.inputs&&JSON.stringify(t.inputContext.inputs)!==JSON.stringify(buildTaskInputs(w,t)))throw new Error('Task inputs differ from approved dependency context');}
+export function findingReferencesAllowed(w:Workflow,reporter:WorkflowTask,f:Finding){
+ const owner=w.tasks.find(x=>x.id===f.responsibleTask&&x.teamSpec?.kind==='implementation');if(!owner)return false;
+ if(f.files.every(p=>owner.teamSpec!.scope.includes(p)))return true;
+ // A missing-input report can reference read-only dependency inputs, without making them writable.
+ return reporter.id===owner.id&&reporter.teamSpec?.kind==='implementation'&&reporter.result?.team?.verdict==='BLOCKED'&&!reporter.result.team.patches.length&&f.files.every(p=>buildTaskInputs(w,reporter).readFiles.includes(p));
+}
+export function contextRetryCandidate(w:Workflow,t:WorkflowTask){return !!w.team&&t.status==='completed'&&t.teamSpec?.kind==='implementation'&&!!t.executionId&&t.result?.team?.verdict==='BLOCKED'&&!t.result.team.patches.length&&!t.result.filesChanged.length&&!!t.result.team.findings.length&&t.result.team.findings.every(f=>findingReferencesAllowed(w,t,f))&&/snapshot|handoff|missing.{0,40}(?:input|source)|(?:source|input).{0,80}(?:absent|missing|not included)/i.test(t.result.summary+' '+t.result.team.findings.map(f=>f.message).join(' '));}

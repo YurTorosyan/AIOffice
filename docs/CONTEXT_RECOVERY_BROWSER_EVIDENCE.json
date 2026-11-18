@@ -1,0 +1,16 @@
+{
+  "mode": "isolated Mock UI",
+  "employees": 8,
+  "explicitContinuationVisible": true,
+  "originalBlockedResponsePreserved": true,
+  "originalExecutionPreserved": true,
+  "writeScopeUnchanged": true,
+  "approvalsUnchanged": true,
+  "workflowPaused": true,
+  "continuationAndQaUnstarted": true,
+  "qaRewiredToContinuation": true,
+  "reloadPreserved": true,
+  "realCodexJobs": 0,
+  "filesApplied": 0,
+  "pageErrors": []
+}
