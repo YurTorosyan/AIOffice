@@ -1,0 +1,12 @@
+{
+  "mode": "saved-context preflight only",
+  "oldPromptCharacters": 11158,
+  "newPromptCharacters": 8919,
+  "limit": 10000,
+  "allThreeQAReceiptsRetained": true,
+  "knownOversizedPreflightRecoveryAllowed": true,
+  "registeredOrUnknownExecutionsDenied": true,
+  "projectTestsRerun": 0,
+  "filesReapplied": 0,
+  "realCodexJobsLaunched": 0
+}

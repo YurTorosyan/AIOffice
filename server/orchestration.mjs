@@ -1,4 +1,6 @@
 import {taskResources} from '../src/resources/policy.ts';
+import {originalTeamPromptLength} from '../src/orchestration/team-workflow.ts';
+import {orchestratedPromptLimit} from '../src/orchestration/prompt-budget.ts';
 import {backupLegacyBook} from './migration-backup.mjs';
 import {WorkspaceBoundary} from './permissions.mjs';
 import {teamOutputSchema} from './team-output.mjs';
@@ -38,7 +40,13 @@ export class RealExecutionPort {
  async resume(t){const p=this.team.members.get(t.agentId),original=p.context,originalSchema=p.outputSchema,originalSecurity=p.securityContext,originalResource=p.resourceTask;p.resourceTask=taskResources(t,null,t.inputContext?.project??this.team.projectContext??{projectId:this.team.projectId,workspaceRoot:this.team.root});p.securityContext={projectId:this.team.projectId,workflowId:t.inputContext?.workflowId??'office-demo',taskId:t.id,agentId:t.agentId,files:t.teamSpec?.scope??[],active:true};p.context=this.contextProvider(t);p.outputSchema=teamOutputSchema(t);try{return await this.team.action('resume',{agentId:t.agentId,taskId:t.executionId});}finally{p.context=original;p.outputSchema=originalSchema;p.securityContext=originalSecurity;p.resourceTask=originalResource;}}
  async cancel(t){const p=this.team.members.get(t.agentId);if(p.state.taskId!==t.executionId)return;if(p.state.approval)p.rejectApproval();if(['working','waiting'].includes(p.state.execution))await this.pause(t);if(p.state.execution==='paused'){const cp=p.book.checkpoints.filter(c=>c.taskId===t.executionId).at(-1);if(!cp?.lastKnownState.stopConfirmed)throw new Error('Stop not confirmed');const saved=p.book.tasks.find(x=>x.id===t.executionId);saved.status='failed';saved.completedAt=new Date().toISOString();p.closeCheckpoints(saved.id,'invalid');Object.assign(p.state,{execution:'idle',taskId:null,approval:null});p.event('task_cancelled','Director cancelled orchestrated work; checkpoint retained, not resumable');}else if(p.state.execution==='error'&&p.book.tasks.find(x=>x.id===t.executionId)?.status==='failed'){Object.assign(p.state,{execution:'idle',taskId:null,error:null});p.event('task_cancelled','Director closed failed orchestrated execution');}}
  async resolveApproval(t){const p=this.team.members.get(t.agentId);if(p.state.approval)p.rejectApproval();if(p.state.execution==='working')await p.pause();}
- async prepareRetry(t){const p=this.team.members.get(t.agentId);if(p.state.taskId!==t.executionId||p.book.tasks.find(x=>x.id===t.executionId)?.status!=='failed'||p.state.execution!=='error')throw new Error('Failure not confirmed');Object.assign(p.state,{execution:'idle',taskId:null,error:null});}
+ async prepareRetry(t){
+  const p=this.team.members.get(t.agentId);
+  const absent=[...this.team.members.values()].every(member=>!member.book.tasks.some(task=>task.id===t.executionId)&&!member.book.checkpoints.some(cp=>cp.taskId===t.executionId));
+  const rejectedBeforeStart=t.projectId===this.team.projectId&&t.status==='failed'&&t.attempts<3&&t.error?.kind==='recoverable'&&t.inputContext?.project?.workspaceRoot===this.team.root&&t.teamSpec?.kind!=='resolution'&&t.inputContext?.team&&originalTeamPromptLength(t,t.inputContext)>orchestratedPromptLimit&&absent&&!p.state.recoveryError&&p.state.connection==='connected'&&p.state.execution==='idle'&&!p.state.taskId&&!p.state.threadId&&!p.state.turnId;
+  if(rejectedBeforeStart){taskPrompt(t,t.inputContext);this.team.resources?.settle(t.executionId,'failed');return;}
+  if(p.state.taskId!==t.executionId||p.book.tasks.find(x=>x.id===t.executionId)?.status!=='failed'||p.state.execution!=='error')throw new Error('Failure not confirmed');Object.assign(p.state,{execution:'idle',taskId:null,error:null});
+ }
 }
 export function createOrchestration(root,team,storage=new WorkflowFileStorage(root),projectContext=team.projectContext){
  const engine=new Orchestrator(new RealExecutionPort(team,new TeamActions(root,{permissions:team.permissions,confinedExecutor:team.testExecutor})),storage,projectContext);

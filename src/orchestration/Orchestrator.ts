@@ -117,7 +117,7 @@ export class Orchestrator {
     t.inputContext=buildContext(w,t);if(this.project)t.inputContext.project={...structuredClone(this.project),activeTaskId:t.id,relevantSkills:[...t.requiredSkills]};if(w.team&&t.teamSpec){const rows=handoffs(w,t,t.inputContext);for(const h of rows)if(!w.team.handoffs.some(x=>x.id===h.id)){w.team.handoffs.push(h);this.event(w,'handoff_created',t,`${h.sourceEmployee} → ${h.targetEmployee}: ${h.sourceTaskId}`);}t.inputContext.team={spec:structuredClone(t.teamSpec),handoffs:rows};}
     t.executionId=`wf-${w.id}-${t.id}-${t.attempts+1}`;identifier(t.executionId);if(this.port.prepareResources&&this.port.resources){t.resource=this.port.prepareResources(t,t.inputContext);const admission=this.port.resources.allowed(t.executionId);if(!admission.allowed){this.port.resources.defer(t.executionId,admission.reason);this.save();continue;}}t.attempts++;t.status='launching';t.startedAt??=this.now();t.error=null;this.save();if(w.team){const k=t.teamSpec?.kind;this.event(w,k==='qa'?'qa_started':k==='review'?'review_started':k==='security'?'security_review_started':t.id==='plan'?'planning_started':'task_execution_requested',t,t.title);}
     try{await this.port.start(t,t.inputContext,t.executionId);const e=this.port.read(t);if(e.status==='running'){t.status='running';this.event(w,'task_started',t,`${t.title}: runtime started`);}}
-    catch {this.issue(w,t,'recoverable','Runtime start failed. Explicit bounded retry or checkpoint reconciliation required.');}
+    catch(error) {const e=error as Error&{code?:string};this.issue(w,t,'recoverable',['TEAM_PROMPT_BUDGET','ORCHESTRATION_PROMPT_TOO_LARGE'].includes(e.code??'')?e.message:'Runtime start failed. Explicit bounded retry or checkpoint reconciliation required.');}
     this.save();if(w.status!=='running')break;
    }
    this.save();
@@ -153,7 +153,7 @@ export class Orchestrator {
   else if(action==='retry'){
    if(!t||t.status!=='failed'||t.error?.kind!=='recoverable'||t.attempts>=3)throw new Error('Retry is not safe or retry limit reached');
    const e=this.port.read(t);if(['starting','running','approval'].includes(e.status))throw new Error('Existing execution still active');
-   if(e.status==='paused'){t.status='paused';}else{await this.port.prepareRetry(t);t.status='ready';t.executionId=null;delete t.resource;t.error=null;}this.event(w,'task_retry_requested',t,'Director requested bounded retry; read-only only');
+   if(e.status==='paused'){t.status='paused';}else{await this.port.prepareRetry(t);t.status='ready';t.executionId=null;delete t.resource;t.error=null;}if(!w.tasks.some(task=>task.status==='failed'||task.error))w.error=null;this.event(w,'task_retry_requested',t,'Director requested bounded retry; read-only only');
   }else if(action==='reject_approval'){
    if(!t||t.error?.kind!=='approval')throw new Error('No pending approval');await this.port.resolveApproval(t);t.error={kind:'pause',message:'Additional permission denied. Original read-only scope retained.'};this.event(w,'approval_rejected',t,t.error.message);
   }else if(action==='resume'){
