@@ -1,0 +1,14 @@
+{
+  "mode": "isolated Mock UI",
+  "employees": 8,
+  "explicitDeferralVisible": true,
+  "originalBlockedPreserved": true,
+  "originalExecutionPreserved": true,
+  "approvalsUnchanged": true,
+  "workflowPaused": true,
+  "uiAndQaUnstarted": true,
+  "reloadPreserved": true,
+  "realCodexJobs": 0,
+  "filesApplied": 0,
+  "pageErrors": []
+}

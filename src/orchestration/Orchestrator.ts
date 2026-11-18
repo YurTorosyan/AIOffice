@@ -1,3 +1,4 @@
+import {deferredVerificationCandidate} from './implementation-handoff.ts';
 import {rejectedPlan,acceptedLeadRevision,suggestPlanRepair} from './plan-recovery.ts';
 import {applyLeadResolution,specificationBlockers,specificationAddressed} from './team-workflow.ts';
 import type {ProjectContext} from '../projects/model.ts';
@@ -26,7 +27,7 @@ export class Orchestrator {
  private save(){const prior=this.savedJSON?JSON.parse(this.savedJSON):null;for(const w of this.book.workflows)for(const t of w.tasks){const old=prior?.workflows.find((v:Workflow)=>v.id===w.id)?.tasks.find((v:WorkflowTask)=>v.id===t.id);if(!t.updatedAt)t.updatedAt=t.completedAt??t.startedAt??t.createdAt;else if(old&&JSON.stringify({...old,updatedAt:null})!==JSON.stringify({...t,updatedAt:null}))t.updatedAt=this.now();}for(const w of this.book.workflows){if(w.team)w.team.state=deriveTeamPhase(w);w.currentStage=w.team?.state??w.status;w.rootTaskId??='plan';}if(this.recoveryError)throw new Error(this.recoveryError);try{const json=JSON.stringify(this.book);if(json===this.savedJSON)return;this.storage.save(validateWorkflowBook(this.book,this.port.source));this.savedJSON=json;}catch{this.recoveryError='Workflow checkpoint could not be saved; execution blocked. Repair storage before continuing.';throw new Error(this.recoveryError);}}
  private serial<T>(fn:()=>Promise<T>):Promise<T>{const p=this.tail.then(()=>{if(this.recoveryError)throw new Error(this.recoveryError);return fn();});this.tail=p.catch(()=>{});return p;}
  private event(w:Workflow,type:string,t:WorkflowTask|null,message:string){this.book.events.push({projectId:w.projectId,branch:this.project?.currentBranch??null,id:crypto.randomUUID(),type,workflowId:w.id,taskId:t?.id??null,agentId:t?.agentId??'lead',message,timestamp:this.now(),source:this.port.source});this.book.events=this.book.events.slice(-1000);}
- private task(p:PlanTask):WorkflowTask{const copy=structuredClone(p) as WorkflowTask;delete copy.resource;return {...copy,projectId:this.project?.projectId??'office-demo',branch:this.project?.currentBranch??null,agentId:capabilities[p.type].agentId,status:'pending',inputContext:null,result:null,error:null,executionId:null,attempts:0,checkpointId:null,createdAt:this.now(),startedAt:null,completedAt:null};}
+ private task(p:PlanTask):WorkflowTask{const copy=structuredClone(p) as WorkflowTask;delete copy.resource;delete copy.verificationDeferral;return {...copy,projectId:this.project?.projectId??'office-demo',branch:this.project?.currentBranch??null,agentId:capabilities[p.type].agentId,status:'pending',inputContext:null,result:null,error:null,executionId:null,attempts:0,checkpointId:null,createdAt:this.now(),startedAt:null,completedAt:null};}
  create(rootTask:string,requestId:string,options:{team?:boolean;maxCycles?:number}={}):Promise<string>{return this.serial(async()=>{
   identifier(requestId);if(requestId.length>48)throw new Error('Workflow ID too long');const root=clean(rootTask),existing=this.book.workflows.find(w=>w.id===requestId);
   if(existing){if(existing.rootTask!==root)throw new Error('Request ID reused with different task');return existing.id;}
@@ -124,9 +125,9 @@ export class Orchestrator {
    this.save();
   }
  });}
- command(workflowId:string,action:'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'refresh_action'|'recheck_gate'|'revalidate_result'|'prepare_plan_repair'|'apply_plan_repair'|'revise_plan',taskId?:string):Promise<void>{return this.serial(async()=>{
+ command(workflowId:string,action:'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'refresh_action'|'recheck_gate'|'revalidate_result'|'prepare_plan_repair'|'apply_plan_repair'|'revise_plan'|'defer_verification',taskId?:string):Promise<void>{return this.serial(async()=>{
   const w=this.get(workflowId);if(action==='resume'&&specificationBlockers(w).some(source=>w.tasks.some(t=>t.teamSpec?.kind==='resolution'&&t.teamSpec.remediationFor.includes(source.id)&&t.status==='completed'&&!specificationAddressed(w,source))))throw new Error('Lead blocker remains unresolved; Director decision or replanning required');if(['completed','cancelled'].includes(w.status))throw new Error('Workflow is closed');
-  if(['resume','retry','approve_action','refresh_action','recheck_gate','revalidate_result'].includes(action)&&!this.branchMatches(w))throw new Error('Workflow branch changed; return explicitly to the original branch');
+  if(['resume','retry','approve_action','refresh_action','recheck_gate','revalidate_result','defer_verification'].includes(action)&&!this.branchMatches(w))throw new Error('Workflow branch changed; return explicitly to the original branch');
   const t=taskId?w.tasks.find(t=>t.id===taskId):undefined;if(taskId){identifier(taskId);if(!t&&!['approve_action','reject_action','refresh_action'].includes(action))throw new Error('Unknown workflow task');}
   if(['prepare_plan_repair','apply_plan_repair','revise_plan'].includes(action)){
    const root=w.tasks[0];if(!w.team||w.planned||w.tasks.length!==1||root.id!=='plan'||!this.branchMatches(w)||['completed','cancelled','cancelling'].includes(w.status))throw new Error('Plan recovery is unavailable');
@@ -142,6 +143,12 @@ export class Orchestrator {
     r.status='revision_ready';r.candidate=null;root.status='ready';root.executionId=null;root.result=null;root.error=null;root.completedAt=null;delete root.resource;w.status='paused';w.error=null;this.event(w,'plan_revision_prepared',root,'Only Lead revision queued; archived original response retained; explicit resume required');
    }
    this.save();return;
+  }
+  if(action==='defer_verification'){
+   if(!t||t.verificationDeferral||w.status!=='paused')throw new Error('Pause workflow before explicitly deferring verification');const c=deferredVerificationCandidate(w,t);
+   if(!c||c.qa.executionId||!['pending','ready'].includes(c.qa.status)||Object.values(this.port.availability()).some(a=>['starting','working','waiting','pausing','interrupting','resuming'].includes(a.execution)))throw new Error('Only unperformed checks on an applied implementation can be deferred to unstarted QA');
+   if(this.port.source==='codex'&&!this.port.validateVerificationDeferral)throw new Error('Applied file verification unavailable');this.port.validateVerificationDeferral?.(w,t);
+   t.verificationDeferral={qaTaskId:c.qa.id,findingIds:c.findings.map(f=>f.id),executionId:t.executionId!,approvalId:c.approval.id,approvedAt:this.now()};w.error=null;this.event(w,'verification_deferred',t,'Director moved unperformed checks to '+c.qa.id+'; original BLOCKED preserved; QA evidence still mandatory; explicit resume required');this.save();return;
   }
   if(action==='refresh_action'){
    const old=w.team?.approvals.find(a=>a.id===taskId&&a.status==='pending');if(!old||!old.security||old.security.decision!=='denied'&&Date.parse(old.security.expiresAt)>Date.now())throw new Error('Only denied or expired pending approvals can be refreshed');
