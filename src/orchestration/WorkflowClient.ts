@@ -27,7 +27,7 @@ export class WorkflowClient {
   this.refreshController=new AbortController();const signal=this.refreshController.signal;const r=await fetch('/api/workflows/snapshot?projectId='+encodeURIComponent(this.projectId),{signal});if(!r.ok)throw new Error('Обновлённый мост оркестратора недоступен.');const snapshot=await r.json();if((snapshot.projectId??'office-demo')!==this.projectId)throw new Error('Workflow project mismatch');this.real=snapshot;
   const security=await fetch('/api/security/snapshot?projectId='+encodeURIComponent(this.projectId),{signal});if(security.ok)this.security=await security.json();else this.security={...emptyPermissions(),available:false,error:'Мост ещё не загрузил Stage 7.'};
  }
- async command(mode:'mock'|'codex',action:'create'|'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'refresh_action'|'recheck_gate',workflowId:string,rootTask?:string,taskId?:string,scenario:MockScenario='parallel',team=false,maxCycles=2){
+ async command(mode:'mock'|'codex',action:'create'|'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'refresh_action'|'recheck_gate'|'prepare_plan_repair'|'apply_plan_repair'|'revise_plan',workflowId:string,rootTask?:string,taskId?:string,scenario:MockScenario='parallel',team=false,maxCycles=2){
   if(mode==='mock'){
    if(action==='create'){this.port.scenario=scenario;await this.adapter.action('connect_all');await this.engine.create(rootTask??'',workflowId,{team,maxCycles});}else await this.engine.command(workflowId,action,taskId);
    await this.engine.resumeEligible();await this.engine.tick();return;

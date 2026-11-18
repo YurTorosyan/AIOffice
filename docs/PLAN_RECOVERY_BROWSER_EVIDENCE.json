@@ -1,0 +1,16 @@
+{
+  "mode": "isolated Mock UI",
+  "employees": 8,
+  "diagnosticsVisible": true,
+  "originalResponseAndHashVisible": true,
+  "correctionPreviewVisible": true,
+  "filesBefore": 9,
+  "filesAfter": 8,
+  "originalLeadIdentityPreserved": true,
+  "reloadPreserved": true,
+  "workflowPaused": true,
+  "downstreamExecutions": 0,
+  "automaticApprovals": 0,
+  "realCodexJobs": 0,
+  "pageErrors": []
+}

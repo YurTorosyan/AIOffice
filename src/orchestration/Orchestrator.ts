@@ -1,3 +1,4 @@
+import {rejectedPlan,acceptedLeadRevision,suggestPlanRepair} from './plan-recovery.ts';
 import {applyLeadResolution,specificationBlockers,specificationAddressed} from './team-workflow.ts';
 import type {ProjectContext} from '../projects/model.ts';
 import {refinePendingImpacts,collectTeamResult,dependencySatisfied,deriveTeamPhase,finalResult,gatePass,handoffs,parseTeamPlan,roundGates,teamState,gateTask} from './team-workflow.ts';
@@ -38,9 +39,9 @@ export class Orchestrator {
  private branchMatches(w:Workflow){return !this.project||w.tasks.every(t=>t.branch===undefined||t.branch===this.project!.currentBranch);}
  private issue(w:Workflow,t:WorkflowTask,kind:Problem,message:string){t.error={kind,message};t.status=kind==='permanent'||kind==='recoverable'?'failed':'paused';this.event(w,kind==='approval'?'approval_requested':t.status==='failed'?'task_failed':'task_paused',t,message);w.error=message;w.status='pausing';w.checkpoint={id:crypto.randomUUID(),createdAt:this.now(),reason:kind};}
  private installPlan(w:Workflow,text:string){
-  const parsed=w.team?parseTeamPlan(text,w):null,plan=parsed?.tasks??parsePlan(text);w.tasks.push(...plan.map(p=>this.task(p)));
-  if(w.team&&parsed){w.team.impacts=parsed.impacts;w.tasks.push(...roundGates(w,plan.filter(p=>(p as any).teamSpec?.kind==='implementation').map(p=>p.id),0).map(p=>this.task(p)));}
-  w.planned=true;this.event(w,'plan_generated',null,`Validated dependency graph: ${w.tasks.length-1} tasks`);for(const t of w.tasks.filter(t=>t.id!=='plan')){this.event(w,'employee_selected',t,`${t.agentId}: relevant role and Skills`);this.event(w,'task_assigned',t,`${t.title} → ${t.agentId}`);}
+  const staged=structuredClone(w),parsed=w.team?parseTeamPlan(text,staged):null,plan=parsed?.tasks??parsePlan(text);staged.tasks.push(...plan.map(p=>this.task(p)));
+  if(staged.team&&parsed){staged.team.impacts=parsed.impacts;staged.tasks.push(...roundGates(staged,plan.filter(p=>(p as any).teamSpec?.kind==='implementation').map(p=>p.id),0).map(p=>this.task(p)));}
+  staged.planned=true;delete staged.planRecovery;validateWorkflowBook({...emptyWorkflows(this.port.source),workflows:[staged]},this.port.source);w.tasks.push(...staged.tasks.slice(w.tasks.length));if(staged.team)w.team=staged.team;w.planned=true;this.event(w,'plan_generated',null,`Validated dependency graph: ${w.tasks.length-1} tasks`);for(const t of w.tasks.filter(t=>t.id!=='plan')){this.event(w,'employee_selected',t,`${t.agentId}: relevant role and Skills`);this.event(w,'task_assigned',t,`${t.title} → ${t.agentId}`);}
  }
  private approval(w:Workflow,t:WorkflowTask,action:Approval['action']){
   if(w.team!.approvals.some(a=>a.taskId===t.id&&a.status==='pending'))return;
@@ -82,7 +83,7 @@ export class Orchestrator {
    if(w.team?.approvals.some(a=>a.taskId===t.id&&a.status==='pending'))continue;
    const e=this.port.read(t);t.checkpointId=e.checkpointId??t.checkpointId;
    if(e.status==='completed'){
-    try{if(w.team)this.port.validateResult?.(t);t.result=w.team&&t.id!=='plan'?collectTeamResult(e.result??'',t):collectResult(e.result??'');if(t.id==='plan'&&!w.planned)this.installPlan(w,e.result??'');t.status='completed';t.error=null;t.completedAt=this.now();if(w.team&&t.result.team?.patches.length){this.event(w,'proposal_created',t,`${t.title}: model proposal awaits Director approval`);this.approval(w,t,'apply_changes');}else this.event(w,'task_completed',t,`${t.title}: runtime confirmed completion`);}
+    try{if(w.team)this.port.validateResult?.(t);t.result=w.team&&t.id!=='plan'?collectTeamResult(e.result??'',t):collectResult(e.result??'');if(t.id==='plan'&&!w.planned){const raw=e.result??'';try{const accepted=w.planRecovery?.status==='revision_ready'?await acceptedLeadRevision(raw,w,t.executionId!):null;this.installPlan(w,raw);if(accepted)w.planRecovery=accepted;}catch(error){if(!w.team)throw error;w.planRecovery=await rejectedPlan(raw,w,t.executionId!,w.planRecovery);t.status='completed';t.error=null;t.completedAt=this.now();w.status='paused';w.error='План требует согласования: '+w.planRecovery.responses.at(-1)!.issues.map(i=>i.message).join('; ');this.event(w,'plan_validation_rejected',t,w.error);continue;}}t.status='completed';t.error=null;t.completedAt=this.now();if(w.team&&t.result.team?.patches.length){this.event(w,'proposal_created',t,`${t.title}: model proposal awaits Director approval`);this.approval(w,t,'apply_changes');}else this.event(w,'task_completed',t,`${t.title}: runtime confirmed completion`);}
     catch(error){this.issue(w,t,'permanent',`Result rejected: ${(error as Error).message}`);}
    }else if(e.status==='failed'&&t.status!=='failed'){this.issue(w,t,e.kind??'recoverable',clean(e.error??'Execution failed',1000));if(t.resource&&this.port.resources){t.resource.retry=this.port.resources.retry(t.executionId!,e.failureClass??'UNKNOWN',t.attempts);if(t.resource.retry.automatic)t.resource.retryAt=new Date(Date.now()+1000*Math.min(t.attempts,5)).toISOString();}}
    else if(e.status==='approval'&&t.error?.kind!=='approval')this.issue(w,t,'approval','Runtime requests additional permission. Read-only policy cannot be widened; reject request before continuing.');
@@ -114,7 +115,7 @@ export class Orchestrator {
     if(busy>=this.port.maxActive)break;
     const owner=selectEmployee(t,a);if(!owner)continue;
     if(w.team&&t.teamSpec?.kind==='qa'&&!t.teamSpec.checksApproved){this.approval(w,t,'run_tests');this.save();continue;}
-    t.inputContext=buildContext(w,t);if(this.project)t.inputContext.project={...structuredClone(this.project),activeTaskId:t.id,relevantSkills:[...t.requiredSkills]};if(w.team&&t.teamSpec){const rows=handoffs(w,t,t.inputContext);for(const h of rows)if(!w.team.handoffs.some(x=>x.id===h.id)){w.team.handoffs.push(h);this.event(w,'handoff_created',t,`${h.sourceEmployee} → ${h.targetEmployee}: ${h.sourceTaskId}`);}t.inputContext.team={spec:structuredClone(t.teamSpec),handoffs:rows};}
+    t.inputContext=buildContext(w,t);if(t.id==='plan'&&w.planRecovery?.status==='revision_ready'){const previous=w.planRecovery.responses.at(-1)!;t.inputContext.planFeedback={executionId:previous.executionId,response:previous.text,issues:previous.issues};}if(this.project)t.inputContext.project={...structuredClone(this.project),activeTaskId:t.id,relevantSkills:[...t.requiredSkills]};if(w.team&&t.teamSpec){const rows=handoffs(w,t,t.inputContext);for(const h of rows)if(!w.team.handoffs.some(x=>x.id===h.id)){w.team.handoffs.push(h);this.event(w,'handoff_created',t,`${h.sourceEmployee} → ${h.targetEmployee}: ${h.sourceTaskId}`);}t.inputContext.team={spec:structuredClone(t.teamSpec),handoffs:rows};}
     t.executionId=`wf-${w.id}-${t.id}-${t.attempts+1}`;identifier(t.executionId);if(this.port.prepareResources&&this.port.resources){t.resource=this.port.prepareResources(t,t.inputContext);const admission=this.port.resources.allowed(t.executionId);if(!admission.allowed){this.port.resources.defer(t.executionId,admission.reason);this.save();continue;}}t.attempts++;t.status='launching';t.startedAt??=this.now();t.error=null;this.save();if(w.team){const k=t.teamSpec?.kind;this.event(w,k==='qa'?'qa_started':k==='review'?'review_started':k==='security'?'security_review_started':t.id==='plan'?'planning_started':'task_execution_requested',t,t.title);}
     try{await this.port.start(t,t.inputContext,t.executionId);const e=this.port.read(t);if(e.status==='running'){t.status='running';this.event(w,'task_started',t,`${t.title}: runtime started`);}}
     catch(error) {const e=error as Error&{code?:string};this.issue(w,t,'recoverable',['TEAM_PROMPT_BUDGET','ORCHESTRATION_PROMPT_TOO_LARGE'].includes(e.code??'')?e.message:'Runtime start failed. Explicit bounded retry or checkpoint reconciliation required.');}
@@ -123,10 +124,25 @@ export class Orchestrator {
    this.save();
   }
  });}
- command(workflowId:string,action:'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'refresh_action'|'recheck_gate'|'revalidate_result',taskId?:string):Promise<void>{return this.serial(async()=>{
+ command(workflowId:string,action:'pause'|'resume'|'cancel'|'retry'|'reject_approval'|'approve_action'|'reject_action'|'refresh_action'|'recheck_gate'|'revalidate_result'|'prepare_plan_repair'|'apply_plan_repair'|'revise_plan',taskId?:string):Promise<void>{return this.serial(async()=>{
   const w=this.get(workflowId);if(action==='resume'&&specificationBlockers(w).some(source=>w.tasks.some(t=>t.teamSpec?.kind==='resolution'&&t.teamSpec.remediationFor.includes(source.id)&&t.status==='completed'&&!specificationAddressed(w,source))))throw new Error('Lead blocker remains unresolved; Director decision or replanning required');if(['completed','cancelled'].includes(w.status))throw new Error('Workflow is closed');
   if(['resume','retry','approve_action','refresh_action','recheck_gate','revalidate_result'].includes(action)&&!this.branchMatches(w))throw new Error('Workflow branch changed; return explicitly to the original branch');
   const t=taskId?w.tasks.find(t=>t.id===taskId):undefined;if(taskId){identifier(taskId);if(!t&&!['approve_action','reject_action','refresh_action'].includes(action))throw new Error('Unknown workflow task');}
+  if(['prepare_plan_repair','apply_plan_repair','revise_plan'].includes(action)){
+   const root=w.tasks[0];if(!w.team||w.planned||w.tasks.length!==1||root.id!=='plan'||!this.branchMatches(w)||['completed','cancelled','cancelling'].includes(w.status))throw new Error('Plan recovery is unavailable');
+   if(action==='prepare_plan_repair'){
+    if(w.planRecovery)throw new Error('Plan recovery already prepared');
+    if(root.status!=='failed'||!root.error?.message.startsWith('Result rejected:')||!root.executionId||!root.result?.summary)throw new Error('No preserved rejected planning response');
+    w.planRecovery=await rejectedPlan(root.result.summary,w,root.executionId);root.status='completed';root.error=null;root.completedAt??=this.now();w.status='paused';w.error='План требует согласования: '+w.planRecovery.responses.at(-1)!.issues.map(i=>i.message).join('; ');this.event(w,'plan_recovery_prepared',root,w.error);
+   }else if(action==='apply_plan_repair'){
+    const r=w.planRecovery;if(r?.status!=='proposal_ready'||!r.candidate)throw new Error('No verified correction proposal');const candidate=suggestPlanRepair(r.responses.at(-1)!.text,w);if(JSON.stringify(candidate)!==JSON.stringify(r.candidate))throw new Error('Correction proposal changed');
+    if(this.port.source==='codex'&&!this.port.validatePlanRepair)throw new Error('Project file preservation check unavailable');this.port.validatePlanRepair?.(w,r.candidate);this.installPlan(w,r.candidate.text);w.planRecovery={...r,status:'applied',acceptedText:r.candidate.text,resolution:'consolidated_tests'};w.status='paused';w.error=null;this.event(w,'plan_repair_applied',root,'Validated test-target consolidation; original response retained; explicit resume required');
+   }else{
+    const r=w.planRecovery;if(!r||!['needs_revision','proposal_ready'].includes(r.status)||root.attempts>=3||r.responses.length>=3||this.port.read(root).status!=='completed')throw new Error('Lead revision unavailable or limit reached');
+    r.status='revision_ready';r.candidate=null;root.status='ready';root.executionId=null;root.result=null;root.error=null;root.completedAt=null;delete root.resource;w.status='paused';w.error=null;this.event(w,'plan_revision_prepared',root,'Only Lead revision queued; archived original response retained; explicit resume required');
+   }
+   this.save();return;
+  }
   if(action==='refresh_action'){
    const old=w.team?.approvals.find(a=>a.id===taskId&&a.status==='pending');if(!old||!old.security||old.security.decision!=='denied'&&Date.parse(old.security.expiresAt)>Date.now())throw new Error('Only denied or expired pending approvals can be refreshed');
    if(w.team!.approvals.length>=150)throw new Error('Approval history limit reached');const target=w.tasks.find(t=>t.id===old.taskId)!;
@@ -158,6 +174,7 @@ export class Orchestrator {
    if(!t||t.error?.kind!=='approval')throw new Error('No pending approval');await this.port.resolveApproval(t);t.error={kind:'pause',message:'Additional permission denied. Original read-only scope retained.'};this.event(w,'approval_rejected',t,t.error.message);
   }else if(action==='resume'){
    await this.observe(w);
+   if(w.planRecovery&&!w.planned&&w.planRecovery.status!=='revision_ready')throw new Error('Resolve plan diagnostics before resume');
    if(w.team?.approvals.some(a=>a.status==='pending')||w.tasks.some(t=>t.status==='failed'||t.error?.kind==='approval'))throw new Error('Resolve failures or reject additional permissions before resume');
    const paused=w.tasks.filter(t=>t.status==='paused');
    for(const t of paused){const e=this.port.read(t);if(e.status!=='paused'&&e.status!=='completed')throw new Error('Cannot resume missing or active execution; inspect runtime/checkpoint');}

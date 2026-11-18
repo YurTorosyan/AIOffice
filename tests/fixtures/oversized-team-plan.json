@@ -1,0 +1,116 @@
+{
+  "tasks": [
+    {
+      "id": "design-handoff",
+      "title": "design-handoff",
+      "description": "Implement and verify design-handoff",
+      "type": "design",
+      "dependencies": [],
+      "requiredSkills": [
+        "frontend-design"
+      ],
+      "priority": "high",
+      "permissions": [
+        "read-only"
+      ],
+      "acceptance": [
+        "Preserve all specified behaviour and automated coverage"
+      ],
+      "scope": []
+    },
+    {
+      "id": "domain-contracts",
+      "title": "domain-contracts",
+      "description": "Implement and verify domain-contracts",
+      "type": "backend",
+      "dependencies": [],
+      "requiredSkills": [
+        "api-and-interface-design"
+      ],
+      "priority": "high",
+      "permissions": [
+        "read-only"
+      ],
+      "acceptance": [
+        "Preserve all specified behaviour and automated coverage"
+      ],
+      "scope": [
+        "src/domain/garage.ts",
+        "tests/garage.test.ts"
+      ]
+    },
+    {
+      "id": "service-experience",
+      "title": "service-experience",
+      "description": "Implement and verify service-experience",
+      "type": "frontend",
+      "dependencies": [
+        "design-handoff",
+        "domain-contracts"
+      ],
+      "requiredSkills": [
+        "vercel-react-best-practices"
+      ],
+      "priority": "high",
+      "permissions": [
+        "read-only"
+      ],
+      "acceptance": [
+        "Preserve all specified behaviour and automated coverage"
+      ],
+      "scope": [
+        "src/components/ServiceCatalog.tsx",
+        "tests/ServiceCatalog.test.tsx"
+      ]
+    },
+    {
+      "id": "booking-dialog",
+      "title": "booking-dialog",
+      "description": "Implement and verify booking-dialog",
+      "type": "frontend",
+      "dependencies": [
+        "design-handoff",
+        "domain-contracts"
+      ],
+      "requiredSkills": [
+        "vercel-react-best-practices"
+      ],
+      "priority": "high",
+      "permissions": [
+        "read-only"
+      ],
+      "acceptance": [
+        "Preserve all specified behaviour and automated coverage"
+      ],
+      "scope": [
+        "src/components/BookingDialog.tsx",
+        "tests/BookingDialog.test.tsx"
+      ]
+    },
+    {
+      "id": "app-integration",
+      "title": "app-integration",
+      "description": "Implement and verify app-integration",
+      "type": "frontend",
+      "dependencies": [
+        "service-experience",
+        "booking-dialog"
+      ],
+      "requiredSkills": [
+        "vercel-react-best-practices"
+      ],
+      "priority": "high",
+      "permissions": [
+        "read-only"
+      ],
+      "acceptance": [
+        "Preserve all specified behaviour and automated coverage"
+      ],
+      "scope": [
+        "src/App.tsx",
+        "src/styles.css",
+        "tests/App.test.tsx"
+      ]
+    }
+  ]
+}
