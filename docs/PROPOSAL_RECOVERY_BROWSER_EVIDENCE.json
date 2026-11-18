@@ -1,0 +1,13 @@
+{
+  "mode": "isolated Mock UI",
+  "employees": 8,
+  "originalResponseAndHashVisible": true,
+  "correctedThreeFileDiffVisible": true,
+  "onePendingExactApproval": true,
+  "workflowPaused": true,
+  "qaUnstarted": true,
+  "noFilesApplied": true,
+  "noRealCodexJobs": true,
+  "reloadPreserved": true,
+  "pageErrors": []
+}

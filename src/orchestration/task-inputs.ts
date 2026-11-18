@@ -16,3 +16,6 @@ export function findingReferencesAllowed(w:Workflow,reporter:WorkflowTask,f:Find
  return reporter.id===owner.id&&reporter.teamSpec?.kind==='implementation'&&reporter.result?.team?.verdict==='BLOCKED'&&!reporter.result.team.patches.length&&f.files.every(p=>buildTaskInputs(w,reporter).readFiles.includes(p));
 }
 export function contextRetryCandidate(w:Workflow,t:WorkflowTask){return !!w.team&&t.status==='completed'&&t.teamSpec?.kind==='implementation'&&!!t.executionId&&t.result?.team?.verdict==='BLOCKED'&&!t.result.team.patches.length&&!t.result.filesChanged.length&&!!t.result.team.findings.length&&t.result.team.findings.every(f=>findingReferencesAllowed(w,t,f))&&/snapshot|handoff|missing.{0,40}(?:input|source)|(?:source|input).{0,80}(?:absent|missing|not included)/i.test(t.result.summary+' '+t.result.team.findings.map(f=>f.message).join(' '));}
+
+/** Historical input blocker is addressed by its explicitly prepared, same-scope continuation. */
+export function contextContinuationAddressed(w:Workflow,t:WorkflowTask){return t.teamSpec?.kind==='implementation'&&w.tasks.some(n=>/-context-[12]$/.test(n.id)&&n.teamSpec?.remediationFor.includes(t.id)&&n.dependencies.includes(t.id)&&n.agentId===t.agentId&&n.type===t.type&&JSON.stringify(n.teamSpec.scope)===JSON.stringify(t.teamSpec!.scope)&&!['cancelled','failed'].includes(n.status));}

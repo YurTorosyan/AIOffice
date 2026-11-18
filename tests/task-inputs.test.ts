@@ -7,7 +7,7 @@ import {MockCodexAdapter} from '../src/integration/MockCodexAdapter.ts';
 import {MockExecutionPort,MemoryWorkflowStorage} from '../src/orchestration/MockExecutionPort.ts';
 import {Orchestrator} from '../src/orchestration/Orchestrator.ts';
 import {buildTaskInputs} from '../src/orchestration/task-inputs.ts';
-import {dependencySatisfied} from '../src/orchestration/team-workflow.ts';
+import {dependencySatisfied,deriveTeamPhase} from '../src/orchestration/team-workflow.ts';
 import {validateWorkflowBook} from '../src/orchestration/model.ts';
 import {RealExecutionPort} from '../server/orchestration.mjs';
 import {TeamActions} from '../server/team-actions.mjs';
@@ -21,7 +21,7 @@ test('applied transitive sources and attributed design are attached without expa
  }finally{f.adapter.stop();}
 });
 test('missing-input continuation preserves original response and queues only the same implementation scope',async()=>{
- const f=await fixture();try{const before=f.w(),source=before.tasks.find(t=>t.id==='ui')!,jobs=f.adapter.getTasks().length;await f.engine.command('inputs','retry_with_context','ui');const w=f.w(),next=w.tasks.find(t=>t.id==='ui-context-1')!;assert(next);assert.equal(w.status,'paused');assert.equal(next.executionId,null);assert.deepEqual(next.teamSpec!.scope,source.teamSpec!.scope);assert.deepEqual(w.tasks.find(t=>t.id==='ui')!.result,source.result);assert.equal(w.tasks.find(t=>t.id==='ui')!.executionId,source.executionId);assert.deepEqual(w.team!.approvals,before.team!.approvals);assert(w.tasks.find(t=>t.id===w.team!.gates.qa)!.dependencies.includes(next.id));assert(next.dependencies.every(id=>dependencySatisfied(w,next,id)));assert(buildTaskInputs(w,next).handoffs.some(h=>h.taskId==='design'));await f.engine.tick();assert.equal(f.adapter.getTasks().length,jobs);assert.equal(new Orchestrator(f.port,f.storage).recoveryError,null);await assert.rejects(f.engine.command('inputs','retry_with_context','ui'),/already prepared/);
+ const f=await fixture();try{const before=f.w(),source=before.tasks.find(t=>t.id==='ui')!,jobs=f.adapter.getTasks().length;await f.engine.command('inputs','retry_with_context','ui');const w=f.w(),next=w.tasks.find(t=>t.id==='ui-context-1')!;assert(next);assert.equal(w.status,'paused');assert.notEqual(deriveTeamPhase({...w,status:'running'}),'CHANGES_REQUIRED');assert.equal(next.executionId,null);assert.deepEqual(next.teamSpec!.scope,source.teamSpec!.scope);assert.deepEqual(w.tasks.find(t=>t.id==='ui')!.result,source.result);assert.equal(w.tasks.find(t=>t.id==='ui')!.executionId,source.executionId);assert.deepEqual(w.team!.approvals,before.team!.approvals);assert(w.tasks.find(t=>t.id===w.team!.gates.qa)!.dependencies.includes(next.id));assert(next.dependencies.every(id=>dependencySatisfied(w,next,id)));assert(buildTaskInputs(w,next).handoffs.some(h=>h.taskId==='design'));await f.engine.tick();assert.equal(f.adapter.getTasks().length,jobs);assert.equal(new Orchestrator(f.port,f.storage).recoveryError,null);await assert.rejects(f.engine.command('inputs','retry_with_context','ui'),/already prepared/);
  }finally{f.adapter.stop();}
 });
 test('an unrelated reference is rejected before result assignment and never poisons workflow storage',async()=>{
