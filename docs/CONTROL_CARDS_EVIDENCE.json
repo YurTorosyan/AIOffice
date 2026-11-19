@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "change": "presentation only",
+  "build": "PASS",
+  "mock": {
+    "version": 1,
+    "mode": "isolated Mock fixture",
+    "employees": 8,
+    "toolCards": 6,
+    "emptyStateAndTaskForm": true,
+    "viewports": [
+      1440,
+      390
+    ],
+    "mobileHorizontalOverflow": false,
+    "reviewDoesNotApprove": true,
+    "exactDiffVisible": true,
+    "explicitApprovalWorks": true,
+    "resumeAndPauseWork": true,
+    "qaNeedsSeparateApproval": true,
+    "projectAndRuntimeToolsAccessible": true,
+    "reloadPreservesApproval": true,
+    "realCodexJobs": 0,
+    "realFileApplications": 0,
+    "nonGetRequests": [],
+    "pageErrors": []
+  },
+  "recovery": {
+    "version": 1,
+    "browser": "fresh installed Chromium via Playwright",
+    "originKind": "ephemeral fixture-only loopback",
+    "employees": 8,
+    "selectedCancellationRecovery": true,
+    "proposalPreserved": true,
+    "oldApprovalRejected": true,
+    "freshApprovalPending": true,
+    "reloadPreserved": true,
+    "diagnosticsVisible": true,
+    "offlineStateExplicit": true,
+    "viewports": [
+      1440,
+      390
+    ],
+    "realCodexJobs": 0,
+    "realCommands": 0,
+    "projectFilesApplied": 0,
+    "pageErrors": []
+  },
+  "live": {
+    "origin": "http://127.0.0.1:5173",
+    "project": "ArmGarage",
+    "employees": 8,
+    "mainWorkflowVisible": true,
+    "historySelectable": true,
+    "approvalVisible": true,
+    "diagnosticsVisible": true,
+    "workflowPaused": true,
+    "qaUnstarted": true,
+    "nonGetRequests": [],
+    "pageErrors": []
+  },
+  "preservation": {
+    "readyFilesUnchanged": 30,
+    "projectJournalsUnchanged": 18,
+    "tasksApprovalsAndHandoffsUnchanged": true,
+    "mainWorkflowPaused": true,
+    "activeEmployees": 0
+  },
+  "realCodexJobs": 0,
+  "liveFileApplications": 0,
+  "liveQaRuns": 0,
+  "artifacts": [
+    {
+      "path": "work/deployment/cards-build.log",
+      "sha256": "5bb07af870af8c9dac25d218b7a89714debaf5980a1660e5d54bf3e71ed1187e"
+    },
+    {
+      "path": "work/deployment/cards-interactions-browser.log",
+      "sha256": "8e05c586eccfa3c28d75761667145dfe0ab6450e8e30eb8379787fcf0f7b3cda"
+    },
+    {
+      "path": "work/deployment/cards-recovery-browser.log",
+      "sha256": "49260c6b5c52f3ced3be847f297f0a3242d9980154d8030f307e3f34a3abe03c"
+    },
+    {
+      "path": "work/deployment/cards-live-browser.log",
+      "sha256": "822425f6fa86c0dc7b9121af3e55381817da03c69c0f75ebb4b8887be76e13ba"
+    },
+    {
+      "path": "docs/control-cards.png",
+      "sha256": "2ea84a32c0eb7445a6c07bb7ae26cd53dbc3dbc40576dc0b634836e496660bbd"
+    }
+  ]
+}

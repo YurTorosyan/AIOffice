@@ -47,9 +47,9 @@ try{
  await page.reload();await openPanel();await expect(page.getByRole('heading',{name:/Требуется подтверждение/})).toBeVisible();
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:resolve(output,'recovered-mobile.png'),fullPage:true});
  await page.setViewportSize({width:1440,height:1000});await page.getByRole('button',{name:'Codex team →',exact:true}).click();await openPanel();
- await expect.poll(()=>page.locator('summary').filter({hasText:/^Team workflow/}).first().locator('..').textContent()).toContain('реальный Codex');
- await expect.poll(()=>workflowReads).toBeGreaterThan(0);offline=true;await expect(page.locator('summary').filter({hasText:/^Team workflow/}).first().locator('..').getByText('Мост недоступен; показано последнее полученное состояние',{exact:true})).toBeVisible();
- await expect(page.locator('summary').filter({hasText:/^Team workflow/}).first().locator('..').getByText(/Последнее получение данных:/)).toBeVisible();await page.screenshot({path:resolve(output,'stale-snapshot.png'),fullPage:true});
+ await expect.poll(()=>page.getByRole('region',{name:'Управление workflow',exact:true}).textContent()).toContain('КОМАНДА CODEX');
+ await expect.poll(()=>workflowReads).toBeGreaterThan(0);offline=true;await expect(page.getByRole('region',{name:'Управление workflow',exact:true}).getByText('Мост недоступен; показано последнее полученное состояние',{exact:true})).toBeVisible();
+ await expect(page.getByRole('region',{name:'Управление workflow',exact:true}).getByText(/Последнее получение данных:/)).toBeVisible();await page.screenshot({path:resolve(output,'stale-snapshot.png'),fullPage:true});
  assert.equal(realCommands,0);assert.deepEqual(pageErrors,[]);
  const evidence={version:1,browser:'fresh installed Chromium via Playwright',originKind:'ephemeral fixture-only loopback',employees:8,selectedCancellationRecovery:true,proposalPreserved:true,oldApprovalRejected:true,freshApprovalPending:true,reloadPreserved:true,diagnosticsVisible:true,offlineStateExplicit:true,viewports:[1440,390],realCodexJobs:0,realCommands,projectFilesApplied:0,pageErrors};
  writeFileSync(resolve(output,'evidence.json'),JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence));
