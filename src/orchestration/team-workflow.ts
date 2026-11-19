@@ -141,7 +141,7 @@ export function validateTeamIntegrity(w:Workflow){
  for(const t of w.tasks){
   validateVerificationDeferral(w,t);
   if(t.result?.team){const r=t.result.team;if(t.teamSpec?.kind==='resolution')validateResolution(t,r);else if(r.resolution)throw new Error('Foreign resolution result');for(const key of ['completedWork','codeInfo'] as const)strings(r[key]);if(!['PASS','FAIL','BLOCKED','APPROVED','CHANGES_REQUIRED'].includes(r.verdict)||!Array.isArray(r.patches)||!Array.isArray(r.findings)||!Array.isArray(r.tests))throw new Error('Invalid persisted outcome');r.tests.forEach(validateTest);
-   for(const f of r.findings){if(!findingReferencesAllowed(w,t,f))throw new Error('Finding outside responsible task scope');}
+   for(const f of r.findings){if(!findingReferencesAllowed(w,t,f))throw new Error('Finding outside responsible task scope: '+f.id+' → '+f.responsibleTask);}
    if(t.teamSpec?.kind==='qa'&&JSON.stringify(r.tests)!==JSON.stringify(t.teamSpec.testEvidence))throw new Error('Unattributed QA evidence');
    if(t.result.filesChanged.length&&!s.approvals.some(a=>a.taskId===t.id&&a.action==='apply_changes'&&a.status==='approved'&&JSON.stringify(a.patches.map(p=>p.path))===JSON.stringify(t.result!.filesChanged)))throw new Error('Changed files need an approved receipt');
   }

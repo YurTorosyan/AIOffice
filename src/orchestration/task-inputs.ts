@@ -14,6 +14,16 @@ export function validateTaskInputs(w:Workflow,t:WorkflowTask){const actual=t.inp
 export function findingReferencesAllowed(w:Workflow,reporter:WorkflowTask,f:Finding){
  const owner=w.tasks.find(x=>x.id===f.responsibleTask&&x.teamSpec?.kind==='implementation');if(!owner)return false;
  if(f.files.every(p=>owner.teamSpec!.scope.includes(p)))return true;
+ // Independent gates may cite approved dependency inputs as context. The named owner
+ // must be an actual upstream implementation and at least one cited file must be its own.
+ // These references never become that owner's write scope or corrective-task scope.
+ if(['qa','security','seo','review','integration'].includes(reporter.teamSpec?.kind??'')){
+  const supplied=reporter.inputContext?.inputs;if(supplied?.version!==2)return false;
+  const verified=buildTaskInputs(w,reporter);
+  return verified.handoffs.some(h=>h.taskId===owner.id)&&supplied.handoffs.some(h=>h.taskId===owner.id)
+   &&f.files.some(p=>owner.teamSpec!.scope.includes(p))
+   &&f.files.every(p=>owner.teamSpec!.scope.includes(p)||verified.requiredFiles?.includes(p)&&supplied.requiredFiles?.includes(p)&&verified.readFiles.includes(p)&&supplied.readFiles.includes(p));
+ }
  // A missing-input report can reference read-only dependency inputs, without making them writable.
  return reporter.id===owner.id&&reporter.teamSpec?.kind==='implementation'&&reporter.result?.team?.verdict==='BLOCKED'&&!reporter.result.team.patches.length&&f.files.every(p=>buildTaskInputs(w,reporter).readFiles.includes(p));
 }
