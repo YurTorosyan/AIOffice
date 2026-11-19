@@ -1,3 +1,4 @@
+import {QAReportStore} from './qa-report-store.mjs';
 import {validateTest} from '../src/orchestration/team-workflow.ts';
 import {workflowBudgets,proposalBudget} from '../src/orchestration/budgets.ts';
 import {OperationStore,operationFingerprint} from './operation-store.mjs';
@@ -16,7 +17,7 @@ import {safeText} from '../src/checkpoints/model.ts';
 const sha=s=>createHash('sha256').update(s).digest('hex');
 /** No shell or agent-provided command strings. File effects require a durable, exact Director approval. */
 export class TeamActions {
- constructor(root,{permissions,confinedExecutor,failpoint=()=>{}}={}){this.root=realpathSync(root);this.confinedExecutor=confinedExecutor;this.permissions=permissions??new PermissionAuthority(root);this.failpoint=failpoint;this.operations=new OperationStore(this.root,this.permissions.projectId,{failpoint});this.run=this.runTests.bind(this);this.dir=resolve(this.root,'.ai-office/team-actions');}
+ constructor(root,{permissions,confinedExecutor,failpoint=()=>{}}={}){this.root=realpathSync(root);this.confinedExecutor=confinedExecutor;this.permissions=permissions??new PermissionAuthority(root);this.failpoint=failpoint;this.reports=new QAReportStore(this.root,this.permissions.projectId);this.operations=new OperationStore(this.root,this.permissions.projectId,{failpoint});this.run=this.runTests.bind(this);this.dir=resolve(this.root,'.ai-office/team-actions');}
  context(w,t){const projectId=w.projectId??t.projectId??'office-demo';if(projectId!==this.permissions.projectId||t.projectId&&t.projectId!==projectId)throw new PermissionDenied('Foreign project task');return {projectId,workflowId:w.id,taskId:t.id,agentId:t.agentId,files:t.teamSpec?.scope??[],active:!['completed','cancelled'].includes(w.status)&&t.status!=='cancelled'};}
  requests(w,t,a,retainPreparedDirectories=false){const ctx=this.context(w,t),base={projectId:ctx.projectId,workflowId:w.id,taskId:t.id,agentId:t.agentId};const requests=[];
   // Keep the exact prepared directory operations even if another approved task created them.
@@ -88,6 +89,16 @@ export class TeamActions {
  async cleanupOperation(w,t,a,preview){const row=this.operations.get(preview.operationId);if(row.projectId!==this.permissions.projectId||row.workflowId!==w.id||row.taskId!==t.id)throw new Error('Foreign QA cleanup');const plan=await this.inspectQA(row);if(plan.planHash!==preview.planHash||plan.state!=='cleanup_required'||!this.confinedExecutor?.cleanupOwned)throw new Error('Owned cleanup observation changed or unavailable');for(const c of row.containers){if(!c.cleanupConfirmed)await this.confinedExecutor.cleanupOwned(c);}this.operations.update(row.id,{containers:row.containers.map(c=>({...c,cleanupConfirmed:true}))});return this.inspectQA(this.operations.get(row.id));}
  prepareRecovery(w,t,a){const plan=this.inspect(w,t,a);if(plan.state==='unknown')return this.inspectQA(this.operations.get(plan.operationId));if(plan.state==='conflict')throw new Error('User file changed; recovery will not overwrite it');return plan;}
  reconcileMetadata(w,t,a,preview){const plan=this.inspect(w,t,a);if(plan.planHash!==preview.planHash||!['completed','metadata_only'].includes(plan.state))throw new Error('Recovery observation changed or effects remain');if(plan.state==='completed')return plan.receipt;const op=this.operations.get(plan.operationId),receipt={filesChanged:op.payload.patches.map(p=>p.path),tests:[],revision:this.revision(t.teamSpec.scope)};this.operations.update(op.id,{state:'completed',resources:op.resources.map(r=>({...r,state:'observed'})),receipt,observationConfirmedBy:'director'});return receipt;}
+ reportSnapshots(t,context){
+  const refs=[...(t.teamSpec?.testEvidence??[]).map(e=>({taskId:t.id,e})),...(context.inputs?.handoffs??[]).flatMap(h=>(h.tests??[]).map(e=>({taskId:h.taskId,e})))],snapshots=[],seen=new Set();let size=0;
+  for(const {taskId,e} of refs){if(!e.report)continue;
+   const row=this.reports.get(e.report,{workflowId:context.workflowId,taskId,command:e.command,revision:e.revision}),op=this.operations.get(row.operationId);
+   if(op.state!=='completed'||op.action!=='run_tests'||op.workflowId!==row.workflowId||op.taskId!==row.taskId||op.agentId!=='qa'||!op.receipt.tests.some(x=>x.command===e.command&&x.revision===e.revision&&JSON.stringify(x.report)===JSON.stringify(e.report))||row.status!==e.status||row.exitCode!==e.exitCode)throw Error('QA report has no matching committed runner receipt');
+   if(seen.has(e.report.id))continue;seen.add(e.report.id);
+   const text=JSON.stringify(row);size+=text.length;if(size>200000)throw Error('Full QA diagnostic snapshot budget exceeded; split context without truncating reports');
+   snapshots.push({path:'project/qa-reports/'+row.id+'.json',text,sha256:sha(text)});
+  }return snapshots;
+ }
  async runTests(scope,revision,ctx){
   const profile=webScope(scope)?webRegistration(this.webRegistration()).permission:'node_tests',files=scope.filter(path=>(profile!=='node_tests'?/^tests\/[a-zA-Z0-9_./-]+\.test\.(?:tsx|ts|mjs|js)$/:/^tests\/[a-zA-Z0-9_./-]+\.test\.(?:ts|mjs|js)$/).test(path)),command=profile!=='node_tests'?webCommands(files,this.webRegistration())[0]:'node --experimental-strip-types --test '+files.join(' ');
   const blocked=output=>[{command,status:'BLOCKED',exitCode:null,output,revision,source:'runner'}];
@@ -95,7 +106,7 @@ export class TeamActions {
   if(!files.length||files.some(p=>!existsSync(this.checked(p))))return blocked('No approved existing test files');
   if(!ctx||ctx.agentId!=='qa')return blocked('Owned QA task context required');
   const context={...ctx,...(profile!=='node_tests'?{baselineFiles:webSupportFiles}:{})},paths=[...new Set([...scope,...(profile!=='node_tests'?webSupportFiles:[])])],sources=paths.map(path=>this.permissions.readFile(context,path));
-  if(profile!=='node_tests')webSnapshot(files,sources);const evidence=await this.confinedExecutor.run({profile,files,sources,revision,operationId:ctx.operationId,recordContainer:ctx.recordContainer});
+  if(profile!=='node_tests')webSnapshot(files,sources);const evidence=await this.confinedExecutor.run({profile,files,sources,revision,operationId:ctx.operationId,recordContainer:ctx.recordContainer,recordReport:report=>this.reports.put(ctx,report)});
   const expected=profile!=='node_tests'?webCommands(files,this.webRegistration()):[command];
   if(!Array.isArray(evidence)||evidence.length>expected.length)throw Error('Invalid executor receipt set');
   evidence.forEach(validateTest);if(evidence.some(e=>e.source!=='runner'||e.revision!==revision||!expected.includes(e.command))||new Set(evidence.map(e=>e.command)).size!==evidence.length)throw Error('Foreign, stale or duplicate executor receipt');
