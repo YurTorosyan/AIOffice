@@ -55,6 +55,7 @@ export interface ExecutionPort {
  validateVerificationDeferral?(workflow:Workflow,task:WorkflowTask):void;
  canRecheckGate?(workflow:Workflow,task:WorkflowTask):boolean;
  reconcileStorage?():void;
+ reconcileUnsubmitted?(task:WorkflowTask):string;
  prepareOperationRecovery?(workflow:Workflow,task:WorkflowTask,approval:Approval):{operationId:string;planHash:string;state:string;completedPaths:string[]}|Promise<{operationId:string;planHash:string;state:string;completedPaths:string[]}>;
  cleanupOperation?(workflow:Workflow,task:WorkflowTask,approval:Approval):Promise<unknown>;
  confirmOperationRecovery?(workflow:Workflow,task:WorkflowTask,approval:Approval):Promise<{filesChanged:string[];tests:TestEvidence[];revision:string|null}>;
