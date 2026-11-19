@@ -1,3 +1,4 @@
+import {readJson,writeJson,contentHash} from './durable-json.mjs';
 import {backupLegacyBook} from './migration-backup.mjs';
 import {WorkspaceBoundary} from './permissions.mjs';
 import { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync, lstatSync, realpathSync, openSync, fsyncSync, closeSync, unlinkSync } from 'node:fs';
@@ -16,24 +17,14 @@ export class FileCheckpointStorage {
   }
   load() {
     this.check();
-    if (!existsSync(this.file)) return emptyBook('codex');
+    if (!existsSync(this.file)){this.hash=null;return emptyBook('codex');}
     const bytes = readFileSync(this.file); if (bytes.length > 8_000_000) throw new Error('Recovery file too large');
-    const raw=JSON.parse(bytes.toString('utf8'));this.legacy=raw.checkpoints?.some(c=>!c.workspaceRoot);return validateBook(raw,'codex');
+    const raw=JSON.parse(bytes.toString('utf8'));this.legacy=raw.checkpoints?.some(c=>!c.workspaceRoot);const safe=validateBook(raw,'codex');this.hash=contentHash(bytes);return safe;
   }
   save(book) {
-    const safe = validateBook(book,'codex'); this.check(); mkdirSync(this.directory,{ recursive:true,mode:0o700 }); this.check();
-    const bytes = Buffer.from(JSON.stringify(safe,null,2)+'\n');
-    if (bytes.length > 8_000_000) throw new Error('Recovery file too large');
-    backupLegacyBook(this.file,this.legacy);this.legacy=false;const temporary = resolve(this.directory,`recovery-${randomUUID()}.tmp`);
-    writeFileSync(temporary,bytes,{ flag:'wx',mode:0o600 });
-    const fd = openSync(temporary,'r+'); try { fsyncSync(fd); } finally { closeSync(fd); }
-    try {
-      // Windows scanners can briefly hold the destination. Keep replacement atomic; never unlink the live book.
-      for(let attempt=0;;attempt++){
-        try { this.rename(temporary,this.file);break; }
-        catch(error){if(attempt===4||!['EPERM','EACCES','EBUSY','EEXIST'].includes(error.code))throw error;this.wait(15*(attempt+1));}
-      }
-    } finally { if(existsSync(temporary))unlinkSync(temporary); }
+    const safe=validateBook(book,'codex');this.check();mkdirSync(this.directory,{recursive:true,mode:0o700});this.check();backupLegacyBook(this.file,this.legacy);this.legacy=false;
+    const expectedHash=this.hash!==undefined?this.hash:existsSync(this.file)?contentHash(readFileSync(this.file)):null;
+    const receipt=writeJson(this.file,safe,{validate:v=>validateBook(v,'codex'),expectedHash,rename:this.rename,wait:this.wait});this.hash=receipt.hash;
   }
   acquireLock() {
     this.check();mkdirSync(this.directory,{recursive:true,mode:0o700});this.check();

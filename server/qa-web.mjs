@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {createHash,randomUUID} from 'node:crypto';
-import {docker} from './qa-executor.mjs';
+import {docker,inspectOwnedContainer,cleanupOwnedContainer} from './qa-executor.mjs';
 import {canonicalResourceSyntax,secretResource} from '../src/security/policy.ts';
 import {safeText} from '../src/security/redaction.ts';
 import {webRegistration} from './qa-web-profiles.mjs';
@@ -10,11 +10,11 @@ export const webSupportFiles=['package.json','package-lock.json','index.html','s
 export const webScope=scope=>scope.some(p=>/\.(tsx|css)$/.test(p));
 const sha=s=>createHash('sha256').update(s).digest('hex');
 const seccomp=fileURLToPath(new URL('./qa-web-image/seccomp.json',import.meta.url));
-export function webContainerArgs(name,mode,registration='coffee-house'){
+export function webContainerArgs(name,mode,registration='coffee-house',operationId){if(operationId!==undefined&&!/^[a-zA-Z0-9_.:-]{1,160}$/.test(operationId))throw Error('Invalid operation ID');
  const image=webRegistration(registration);
  if(!/^ai-office-web-qa-[a-f0-9-]{36}$/.test(name)||!['probe','vitest','build','browser'].includes(mode)||!/^sha256:[a-f0-9]{64}$/.test(image.image))throw Error('Invalid fixed QA image/profile');
  if(sha(readFileSync(seccomp))!=='80fd2aa8207f28065018ec5411cd132947b304300fc1367f4a934e520f70702b')throw Error('Seccomp profile changed');
- return ['run','--rm','--pull=never','--name',name,'--label','ai-office.owner=web-qa','--network=none','--read-only','--cap-drop=ALL','--security-opt=no-new-privileges','--security-opt=seccomp='+seccomp,'--user=1000:1000','--pids-limit=256','--memory=1g','--memory-swap=1g','--cpus=2','--ulimit','nofile=1024:1024','--ulimit','fsize=16777216:16777216','--tmpfs','/work:rw,nosuid,nodev,size=64m,mode=1777','--tmpfs','/tmp:rw,nosuid,nodev,size=64m,mode=1777','--shm-size=128m','--ipc=private','--workdir=/work','--log-driver=none','--init','-i',image.image,mode];
+ return ['run','--rm','--pull=never','--name',name,'--label','ai-office.owner=web-qa',...(operationId?['--label','ai-office.operation='+operationId]:[]),'--network=none','--read-only','--cap-drop=ALL','--security-opt=no-new-privileges','--security-opt=seccomp='+seccomp,'--user=1000:1000','--pids-limit=256','--memory=1g','--memory-swap=1g','--cpus=2','--ulimit','nofile=1024:1024','--ulimit','fsize=16777216:16777216','--tmpfs','/work:rw,nosuid,nodev,size=64m,mode=1777','--tmpfs','/tmp:rw,nosuid,nodev,size=64m,mode=1777','--shm-size=128m','--ipc=private','--workdir=/work','--log-driver=none','--init','-i',image.image,mode];
 }
 export function webSnapshot(files,sources){
  if(!Array.isArray(files)||!files.length||files.length>16||!Array.isArray(sources)||sources.length>24)throw Error('Invalid web snapshot');const seen=new Set();let size=0;
@@ -30,15 +30,17 @@ export const webCommands=(files,name='coffee-house')=>['vitest run --config [tru
 export class WebQAExecutor {
  constructor({command=docker,registration='coffee-house'}={}){this.registration=registration;this.contract=webRegistration(registration);this.command=command;this.ready=false;this.busy=false;this.reason='Web QA not verified';this.verifiedAt=null;}
  status(){return {available:this.ready,kind:'docker-web-snapshot',profile:this.contract.profile,image:this.contract.image,verifiedAt:this.verifiedAt,reason:this.reason};}
- async execute(mode,input=''){const name='ai-office-web-qa-'+randomUUID();try{return await this.command(webContainerArgs(name,mode,this.registration),{input:typeof input==='string'?input:JSON.stringify(input),timeoutMs:90000,maxOutput:mode==='build'?5000000:100000,redact:mode!=='build'});}finally{const c=await this.command(['rm','--force',name]);if(c.code!==0&&!/No such container/i.test(c.output)){this.ready=false;this.reason='Web QA cleanup unconfirmed';throw Error(this.reason);}}}
+ inspectOwned(identity){if(identity.profile!==this.contract.permission)throw Error('Foreign QA profile');return inspectOwnedContainer(this.command,identity,identity.operationId,this.contract.image);}
+ cleanupOwned(identity){if(identity.profile!==this.contract.permission)throw Error('Foreign QA profile');return cleanupOwnedContainer(this.command,identity,identity.operationId,this.contract.image);}
+ async execute(mode,input='',{operationId,recordContainer}={}){const name='ai-office-web-qa-'+randomUUID(),identity={name,operationId:operationId??null,kind:'web',image:this.contract.image,profile:this.contract.permission,mode,cleanupConfirmed:false};recordContainer?.(identity);try{return await this.command(webContainerArgs(name,mode,this.registration,operationId),{input:typeof input==='string'?input:JSON.stringify(input),timeoutMs:90000,maxOutput:mode==='build'?5000000:100000,redact:mode!=='build'});}finally{const c=await this.command(['rm','--force',name]);if(c.code!==0&&!/No such container/i.test(c.output)){this.ready=false;this.reason='Web QA cleanup unconfirmed';throw Error(this.reason);}recordContainer?.({...identity,cleanupConfirmed:true});}}
  async verify(){this.ready=false;try{const info=await this.command(['info','--format','{{json .}}']);if(info.code!==0)throw Error('Local Docker engine unavailable');const j=JSON.parse(info.output);if(j.OSType!=='linux'||!j.MemoryLimit||!j.PidsLimit||!j.SecurityOptions?.some(s=>s.includes('seccomp')))throw Error('Required Linux isolation unavailable');const inspected=await this.command(['image','inspect',this.contract.image,'--format','{{json .}}']);if(inspected.code!==0||JSON.parse(inspected.output).Id!==this.contract.image)throw Error('Pinned web QA image unavailable');const probe=await this.execute('probe');if(probe.code!==0||probe.timedOut||probe.limited)throw Error('Web isolation/browser probe failed: '+probe.output.slice(-700));this.ready=true;this.reason=null;this.verifiedAt=new Date().toISOString();}catch(e){this.reason=e.message;}return this.status();}
- async run({profile,files,sources,revision}){
+ async run({profile,files,sources,revision,operationId,recordContainer}){
   const commands=webCommands(files,this.registration),records=[],runId=randomUUID(),record=(i,status,code,output)=>({command:commands[i],status,exitCode:code,output:safeText(`run=${runId}; image=${this.contract.image}; input=${revision}\n`+output).slice(-5000),revision,source:'runner'});
   if(!this.ready||this.busy||profile!==this.contract.permission)return commands.map((_,i)=>record(i,'BLOCKED',null,'Verified web QA unavailable or busy'));
   this.busy=true;try{const input=webSnapshot(files,sources);if((input.registration??'coffee-house')!==this.registration)throw Error('QA profile/project mismatch');let assets=null;
    for(const [i,mode] of ['vitest','build','browser'].entries()){
     if(mode==='browser'&&!assets){records.push(record(i,'BLOCKED',null,'No successful production build; browser did not run'));continue;}
-    const r=await this.execute(mode,mode==='browser'?{assets}:input);if(r.code===null||[125,126,127].includes(r.code)||r.timedOut||r.limited){records.push(record(i,'BLOCKED',null,r.timedOut?'Isolated timeout':r.limited?'Output limit':r.output));continue;}
+    const r=await this.execute(mode,mode==='browser'?{assets}:input,{operationId,recordContainer});if(r.code===null||[125,126,127].includes(r.code)||r.timedOut||r.limited){records.push(record(i,'BLOCKED',null,r.timedOut?'Isolated timeout':r.limited?'Output limit':r.output));continue;}
     let output=r.output;if(mode==='build'&&r.code===0){const b=JSON.parse(r.output);if(!Array.isArray(b.assets)||!b.assets.length||b.assets.length>64)throw Error('Invalid production assets');let bytes=0;for(const a of b.assets){canonicalResourceSyntax(a.path);if(!/\.(html|js|css|svg)$/.test(a.path)||typeof a.text!=='string')throw Error('Unexpected artifact type');bytes+=Buffer.byteLength(a.text);}if(bytes>4000000||!b.assets.some(a=>a.path==='index.html'))throw Error('Invalid build size/index');assets=b.assets;output=b.output+'\nbuild assets sha256='+sha(JSON.stringify(assets));}
     records.push(record(i,r.code===0?'PASS':'FAIL',r.code,output));
    }return records;

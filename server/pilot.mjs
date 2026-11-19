@@ -1,3 +1,5 @@
+import {workflowBudgets} from '../src/orchestration/budgets.ts';
+import {safeText} from '../src/security/redaction.ts';
 import {modelCatalog} from '../src/resources/policy.ts';
 import { readFileSync, realpathSync } from 'node:fs';
 import { resolve, relative, isAbsolute } from 'node:path';
@@ -102,7 +104,7 @@ export class LeadPilot {
       this.state.profile = { path: this.profilePath, sha256: this.lead.profileHash, mode: 'explicit-developer-instructions' };
       this.prepareResources?.(context);
       this.state.failureClass=null;this.state.execution = 'starting'; this.state.result = ''; this.lastMessage = ''; this.state.plan = []; this.state.error = null;
-      this.state.threadId = null; this.state.turnId = null; this.state.startedAt = new Date().toISOString(); this.state.completedAt = null;
+      delete this.state.responseRef;this.state.responsePersistenceError=null;this.state.threadId = null; this.state.turnId = null; this.state.startedAt = new Date().toISOString(); this.state.completedAt = null;
       this.event('task/submitted', `Director submitted a read-only task to ${this.role}`);
       try {
         // No named root-agent selector exists in the reviewed stable schema. Pass this exact profile explicitly.
@@ -119,26 +121,40 @@ export class LeadPilot {
     });
   }
   resourceSelection(){const d=this.state.resourceDecision;return {...(d?.selectedModel?{model:d.selectedModel}:{}),...(d?.selectedReasoning?{effort:d.selectedReasoning}:{})};}
+  captureResponse(text){
+    const safe=safeText(String(text)),status=safe!==text?'redacted':safe.length>workflowBudgets.maxResponseCharacters?'truncated':'complete';
+    this.pendingResponse={text:safe.slice(0,workflowBudgets.maxResponseCharacters),contentStatus:status,taskId:this.state.taskId,turnId:this.state.turnId};
+    const sink=this.outputSinks?.get(this.state.taskId)??this.defaultOutputSink;this.state.responsePersistenceError=null;
+    if(sink){try{const row=sink(this.pendingResponse.text,this.state.turnId,status);this.state.responseRef=row.ref;this.state.result=row.response;this.pendingResponse=null;return;}catch(e){this.state.responsePersistenceError='Full response persistence failed; reconcile before continuing';this.state.error=this.state.responsePersistenceError;}}
+    // Legacy/non-durable fixture mode preserves bounded text but never fabricates a durable reference.
+    this.state.result=safeText(String(text)).slice(0,workflowBudgets.maxResponseCharacters);
+  }
+  reconcileResponse(){
+    if(!this.state.responsePersistenceError)return;
+    const pending=this.pendingResponse,sink=this.outputSinks?.get(this.state.taskId)??this.defaultOutputSink;
+    if(!pending||!sink||pending.taskId!==this.state.taskId||pending.turnId!==this.state.turnId)throw new Error('Owned full response unavailable; no replay permitted');
+    const row=sink(pending.text,pending.turnId,pending.contentStatus);this.state.responseRef=row.ref;this.state.result=row.response;this.state.responsePersistenceError=null;this.state.error=null;this.pendingResponse=null;this.event('response_reconciled','Owned full response persisted after explicit storage reconciliation; no model replay');
+  }
   notification({ method, params: p = {} }) {
     if (!this.state.threadId || p.threadId !== this.state.threadId) return;
     if (p.turnId && this.state.turnId && p.turnId !== this.state.turnId) return;
     this.resourceMonitor?.(method,p);
     if (method === 'turn/started') {
-      this.state.turnId = p.turn.id; this.state.execution = 'working'; this.event(method, `${this.role} started the real task`);
+      delete this.state.responseRef;this.state.responsePersistenceError=null;this.state.result='';this.lastMessage='';this.state.turnId = p.turn.id; this.state.execution = 'working'; this.event(method, `${this.role} started the real task`);
     } else if (method === 'turn/plan/updated') {
       this.state.plan = (p.plan || []).map(x => ({ step: String(x.step).slice(0, 1000), status: x.status }));
       this.event(method, 'Codex updated the task plan (no numerical progress supplied)');
     } else if (method === 'item/completed') {
-      if (p.item?.type === 'agentMessage' && p.item.phase === 'final_answer') this.state.result = String(p.item.text || '').slice(0, 40000);
-      if (p.item?.type === 'agentMessage' && p.item.phase == null) this.lastMessage = String(p.item.text || '').slice(0, 40000);
+      if (p.item?.type === 'agentMessage' && p.item.phase === 'final_answer') this.captureResponse(String(p.item.text || ''));
+      if (p.item?.type === 'agentMessage' && p.item.phase == null) this.lastMessage = String(p.item.text || '').slice(0, workflowBudgets.maxResponseCharacters+1);
       this.event(method, `Codex completed item: ${p.item?.type || 'unknown'}`);
     } else if (method === 'item/started') {
       this.event(method, `Codex started item: ${p.item?.type || 'unknown'}`);
     } else if (method === 'turn/completed') {
       this.state.turnId = p.turn.id; this.state.completedAt = new Date().toISOString();
       this.state.execution = p.turn.status === 'completed' ? 'completed' : p.turn.status === 'interrupted' ? 'interrupted' : 'error';
-      if (this.state.execution === 'completed' && !this.state.result) this.state.result = this.lastMessage || '';
-      this.state.error = p.turn.status === 'failed' ? 'Codex turn failed; inspect the local runtime' : null;
+      if (this.state.execution === 'completed' && !this.state.result) this.captureResponse(this.lastMessage || '');
+      this.state.error = this.state.responsePersistenceError ?? (p.turn.status === 'failed' ? 'Codex turn failed; inspect the local runtime' : null);
       this.pendingApproval = null; this.state.approval = null;
       this.event(method, `Codex confirmed turn ${p.turn.status}`);
     } else if (method === 'error') {

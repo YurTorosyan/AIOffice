@@ -1,14 +1,16 @@
+import {workflowBudgets as b} from './budgets.ts';
 import type {Workflow,WorkflowTask} from './model.ts';
-import type {Finding} from './team-workflow.ts';
-export interface TaskInputs {readFiles:string[];handoffs:{taskId:string;agentId:string;summary:string;decisions:string[];codeInfo:string[];acceptance:string[];verdict:string|null}[];}
+import type {Finding,TestEvidence} from './team-workflow.ts';
+import type {ResponseRef} from './durability.ts';
+export interface TaskInputs {version?:2;requiredFiles?:string[];readFiles:string[];handoffs:{taskId:string;agentId:string;summary:string;decisions:string[];codeInfo:string[];acceptance:string[];verdict:string|null;description?:string;executionId?:string|null;responseRef?:ResponseRef;findings?:Finding[];tests?:TestEvidence[];warnings?:string[];unresolved?:string[]}[];}
 /** Only completed ancestors and exact approved file receipts; no caller-supplied glob or write grant. */
 export function buildTaskInputs(w:Workflow,t:WorkflowTask):TaskInputs {
  const ids=new Set<string>();const visit=(id:string)=>{if(ids.has(id))return;const d=w.tasks.find(x=>x.id===id);if(!d)throw new Error('Missing input dependency');ids.add(id);d.dependencies.forEach(visit);};t.dependencies.forEach(visit);
  const ancestors=w.tasks.filter(x=>ids.has(x.id)&&x.status==='completed'&&x.result),applied=w.team?.approvals.filter(a=>a.action==='apply_changes'&&a.status==='approved'&&a.revision&&ancestors.some(x=>x.id===a.taskId&&JSON.stringify(x.result!.filesChanged)===JSON.stringify(a.patches.map(p=>p.path))&&JSON.stringify(x.result!.team?.patches)===JSON.stringify(a.patches)))??[];
- const result={readFiles:[...new Set([...(t.teamSpec?.scope??[]),...applied.flatMap(a=>a.patches.map(p=>p.path))])],handoffs:ancestors.map(d=>({taskId:d.id,agentId:d.agentId,summary:d.result!.summary,decisions:[...d.result!.decisions],codeInfo:[...(d.result!.team?.codeInfo??[])],acceptance:[...(d.teamSpec?.acceptance??[])],verdict:d.result!.team?.verdict??null}))};
- if(result.readFiles.length>16||result.handoffs.length>40||JSON.stringify(result).length>100000)throw new Error('Attributed input context exceeds bounded snapshot budget');return result;
+ const result:TaskInputs={version:2,requiredFiles:[...new Set(applied.flatMap(a=>a.patches.map(p=>p.path)))],readFiles:[...new Set([...(t.teamSpec?.scope??[]),...applied.flatMap(a=>a.patches.map(p=>p.path))])],handoffs:ancestors.map(d=>({taskId:d.id,agentId:d.agentId,summary:d.result!.summary,decisions:[...d.result!.decisions],codeInfo:[...(d.result!.team?.codeInfo??[])],acceptance:[...(d.teamSpec?.acceptance??[])],verdict:d.result!.team?.verdict??null,description:d.description,executionId:d.executionId,...(d.responseRef?{responseRef:structuredClone(d.responseRef)}:{}),findings:structuredClone(d.result!.team?.findings??[]),tests:structuredClone(d.result!.team?.tests??[]),warnings:[...d.result!.warnings],unresolved:[...d.result!.unresolved]}))};
+ if(result.readFiles.length>b.maxInputFiles||result.handoffs.length>b.maxInputHandoffs||JSON.stringify(result).length>b.maxInputCharacters)throw new Error('Attributed input context exceeds bounded snapshot budget');return result;
 }
-export function validateTaskInputs(w:Workflow,t:WorkflowTask){if(t.inputContext?.inputs&&JSON.stringify(t.inputContext.inputs)!==JSON.stringify(buildTaskInputs(w,t)))throw new Error('Task inputs differ from approved dependency context');}
+export function validateTaskInputs(w:Workflow,t:WorkflowTask){const actual=t.inputContext?.inputs;if(!actual)return;const expected=buildTaskInputs(w,t);if(actual.version===undefined){delete expected.version;delete expected.requiredFiles;expected.handoffs=expected.handoffs.map(({taskId,agentId,summary,decisions,codeInfo,acceptance,verdict})=>({taskId,agentId,summary,decisions,codeInfo,acceptance,verdict}));}else if(actual.version!==2)throw new Error('Unsupported task input version');if(JSON.stringify(actual)!==JSON.stringify(expected))throw new Error('Task inputs differ from approved dependency context');}
 export function findingReferencesAllowed(w:Workflow,reporter:WorkflowTask,f:Finding){
  const owner=w.tasks.find(x=>x.id===f.responsibleTask&&x.teamSpec?.kind==='implementation');if(!owner)return false;
  if(f.files.every(p=>owner.teamSpec!.scope.includes(p)))return true;

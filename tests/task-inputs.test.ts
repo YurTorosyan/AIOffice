@@ -31,3 +31,12 @@ test('real snapshots read fresh approved sources and full handoffs; baseline acc
  const f=await fixture();try{const w=f.w(),t=w.tasks.find(t=>t.id==='ui')!,base=resolve('work/task-input-tests');mkdirSync(base,{recursive:true});const root=mkdtempSync(resolve(base,'project-'));mkdirSync(resolve(root,'src'));mkdirSync(resolve(root,'tests'));const text='export const fresh = 42;\n';writeFileSync(resolve(root,'src/team-api.ts'),text);const actions=new TeamActions(root),team={members:new Map([['frontend',{context:()=>[{path:'project/manifest.json',text:'original',sha256:'a'.repeat(64)}]}]])},port=new RealExecutionPort(team,actions),rows=port.contextProvider(t)();assert.equal(rows.find(r=>r.path==='src/team-api.ts')!.text,text);assert.equal(rows.find(r=>r.path==='src/team-api.ts')!.sha256,createHash('sha256').update(text).digest('hex'));const full=JSON.parse(rows.find(r=>r.path==='project/upstream-handoffs.json')!.text);assert(full.handoffs.some(h=>h.taskId==='design'));assert.deepEqual(full.writeScope,t.teamSpec!.scope);assert.equal(actions.permissions.evaluate({workflowId:w.id,taskId:t.id,agentId:t.agentId,files:t.teamSpec!.scope,baselineFiles:t.inputContext!.inputs!.readFiles,active:true},{id:'deny-write',workflowId:w.id,taskId:t.id,agentId:t.agentId,action:'file.modify',resources:['src/team-api.ts'],reason:'must remain read-only'}).decision,'denied');
  }finally{f.adapter.stop();}
 });
+test('missing applied dependency and a changed preflight snapshot block submission instead of masquerading as a new file',async()=>{
+ const f=await fixture();try{
+  const w=f.w(),t=w.tasks.find(t=>t.id==='ui')!,base=resolve('work/task-input-tests');mkdirSync(base,{recursive:true});const root=mkdtempSync(resolve(base,'admission-'));mkdirSync(resolve(root,'src'));mkdirSync(resolve(root,'tests'));
+  const actions=new TeamActions(root),team={members:new Map([['frontend',{context:()=>[]}]])},port=new RealExecutionPort(team,actions);
+  assert(t.inputContext!.inputs!.requiredFiles!.includes('src/team-api.ts'));assert.throws(()=>port.preflight(t,t.inputContext!),/Applied dependency input is missing/);
+  writeFileSync(resolve(root,'src/team-api.ts'),'first');port.preflight(t,t.inputContext!);writeFileSync(resolve(root,'src/team-api.ts'),'changed between admission and turn submission');
+  assert.throws(()=>port.contextProvider(t)(),/changed after preflight/);
+ }finally{f.adapter.stop();}
+});

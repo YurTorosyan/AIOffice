@@ -1,6 +1,6 @@
 /** AI Office public bridge contract, NOT the Codex wire protocol. No credentials/raw RPC cross this boundary. */
 export interface RuntimeEvent { projectId?:string;branch?:string|null; id: string; method: string; message: string; timestamp: string; source: 'codex'|'mock'; taskId?:string|null; agentId?:string; origin?:'runtime'|'bridge';threadId: string | null; turnId: string | null; execution: RuntimeSnapshot['execution']; taskStartedAt: string | null }
-export interface RuntimeSnapshot {resources?:ReturnType<import('../resources/ResourceOrchestrator.ts').ResourceOrchestrator['snapshot']>;resourceDecision?:import('../resources/policy.ts').ResourceDecision; projectId?:string;projectContext?:import('../projects/model.ts').ProjectContext;
+export interface RuntimeSnapshot {responseRef?:import('../orchestration/durability.ts').ResponseRef;responsePersistenceError?:string|null;resources?:ReturnType<import('../resources/ResourceOrchestrator.ts').ResourceOrchestrator['snapshot']>;resourceDecision?:import('../resources/policy.ts').ResourceDecision; projectId?:string;projectContext?:import('../projects/model.ts').ProjectContext;
   source?:'mock'|'codex'; agentId?:string; role?:string; members?:Record<string,RuntimeSnapshot>; maxActive?:number; activeEmployees?:string[]; teamError?:string|null;
   connection: 'disconnected' | 'connecting' | 'connected' | 'error';
   execution: 'idle' | 'starting' | 'working' | 'waiting' | 'interrupting' | 'pausing' | 'paused' | 'resuming' | 'completed' | 'interrupted' | 'error';

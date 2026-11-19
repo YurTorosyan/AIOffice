@@ -14,12 +14,12 @@ export const securityEmployees=['lead','design','frontend','backend','seo','secu
 export type SecurityEmployee=typeof securityEmployees[number];
 export type Risk='safe'|'sensitive'|'dangerous';
 export type Decision='allowed'|'denied'|'approval_required';
-export const permissionPolicyVersion='stage7-v5-armgarage-checks';
+export const permissionPolicyVersion='stage7-v6-p0-operation-binding';
 export interface CommandSpec { profile:'armgarage_checks'|'web_checks'|'node_tests'|'git_status'|'git_diff'|'git_log'|'npm_script'|'dependency_install'|'dependency_remove'|'dependency_update'; files?:string[]; script?:'test'|'build'|'lint'; packageName?:string; version?:string }
 export interface PermissionContext {projectId?:string;workflowId:string;taskId:string;agentId:string;files:string[];baselineFiles?:string[];hosts?:string[];active:boolean;}
 export interface ActionRequest {projectId?:string;repository?:Record<string,unknown>;id:string;workflowId:string;taskId:string;agentId:string;action:PermissionAction;resources:string[];reason:string;command?:CommandSpec;}
 export interface PolicyDecision {decision:Decision;risk:Risk;reason:string;}
-export interface PermissionRecord {request:ActionRequest;fingerprint:string;policyVersion:string;status:'pending'|'approved'|'rejected'|'expired'|'consumed'|'failed';createdAt:string;expiresAt:string;decidedAt:string|null;usedAt:string|null;decisionBy:'director'|null;}
+export interface PermissionRecord {operationId?:string;request:ActionRequest;fingerprint:string;policyVersion:string;status:'pending'|'approved'|'rejected'|'expired'|'consumed'|'failed';createdAt:string;expiresAt:string;decidedAt:string|null;usedAt:string|null;decisionBy:'director'|null;}
 export interface SecurityEvent {projectId?:string;id:string;type:'action_requested'|'action_allowed'|'action_denied'|'approval_requested'|'approval_approved'|'approval_rejected'|'approval_expired'|'action_executed'|'action_failed';agentId:string;workflowId:string;taskId:string;action:string;resources:string[];risk:Risk;reason:string;timestamp:string;}
 export interface PermissionBook {version:1;records:PermissionRecord[];events:SecurityEvent[];}
 export const emptyPermissions=():PermissionBook=>({version:1,records:[],events:[]});

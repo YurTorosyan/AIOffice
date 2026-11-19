@@ -40,8 +40,17 @@ export class CheckpointPilot extends LeadPilot {
     try { this.storage.save(this.book); this.syncBook(); return true; }
     catch { this.state.recoveryError = 'Could not save recovery data. Task is preserved in memory; resume is blocked until storage is repaired.'; return false; }
   }
+  reconcileStorage(){
+    const fresh=validateBook(this.storage.load(),'codex');
+    if(fresh.tasks.some(t=>t.agentId!==this.agentId||t.projectId!==this.projectId)||fresh.checkpoints.some(c=>c.agentId!==this.agentId||c.projectId!==this.projectId||c.workspaceRoot&&c.workspaceRoot!==this.root))throw new Error('Foreign employee recovery data');
+    const task=fresh.tasks.find(t=>t.id===this.state.taskId),cp=fresh.checkpoints.filter(c=>c.taskId===this.state.taskId).at(-1);
+    if(this.state.taskId&&(!task||!cp))throw new Error('Owned task/checkpoint absent; no replay permitted');
+    if(this.state.responseRef){if(cp)cp.responseRef=structuredClone(this.state.responseRef);if(task&&this.state.execution==='completed'){task.status='completed';task.completedAt=this.state.completedAt;for(const c of fresh.checkpoints.filter(c=>c.taskId===task.id)){c.status='completed';c.resumable=false;}}}
+    this.book=fresh;this.state.recoveryError=null;
+    if(!this.persist())throw new Error('Employee recovery remains unavailable');
+  }
   hydrate(cp) {
-    Object.assign(this.state,{ resourceDecision:cp.resource?structuredClone(cp.resource):undefined,taskId:cp.taskId, execution:'paused', pauseReason:cp.reason, threadId:cp.codexThreadId,
+    Object.assign(this.state,{ responseRef:cp.responseRef?structuredClone(cp.responseRef):undefined,resourceDecision:cp.resource?structuredClone(cp.resource):undefined,taskId:cp.taskId, execution:'paused', pauseReason:cp.reason, threadId:cp.codexThreadId,
       turnId:cp.lastKnownState.turnId, startedAt:cp.lastKnownState.startedAt, completedAt:null, plan:structuredClone(cp.lastKnownState.plan), contextFiles:structuredClone(cp.relevantFiles), result:'', approval:null });
     this.workNotes = [...cp.lastKnownState.workNotes];
     this.limitCode = cp.lastKnownState.limitCode;
@@ -49,7 +58,7 @@ export class CheckpointPilot extends LeadPilot {
   capture(reason, stopConfirmed, resumable, announce = true) {
     const task = this.book.tasks.find(t => t.id === this.state.taskId); if (!task) return null;
     const previous = [...this.book.checkpoints].reverse().find(c => c.taskId === task.id && ['paused','resumable'].includes(c.status));
-    const cp = { ...(this.state.resourceDecision?{resource:structuredClone(this.state.resourceDecision)}:{}),id:previous?.id ?? randomUUID(), taskId:task.id, agentId:this.agentId, projectId:this.projectId,workspaceRoot:this.root,...(task.branch!==undefined?{branch:task.branch}:{}), source:'codex', reason,
+    const cp = { ...(this.state.responseRef?{responseRef:structuredClone(this.state.responseRef)}:{}),...(this.state.resourceDecision?{resource:structuredClone(this.state.resourceDecision)}:{}),id:previous?.id ?? randomUUID(), taskId:task.id, agentId:this.agentId, projectId:this.projectId,workspaceRoot:this.root,...(task.branch!==undefined?{branch:task.branch}:{}), source:'codex', reason,
       status:resumable?'resumable':'paused', taskTitle:task.title, taskDescription:task.description, taskStatus:task.status,
       completedWork:this.state.plan.filter(p => p.status === 'completed').map(p => safeText(p.step)),
       remainingWork:this.state.plan.filter(p => p.status !== 'completed').map(p => safeText(p.step)),
@@ -73,6 +82,7 @@ export class CheckpointPilot extends LeadPilot {
       this.book.tasks.push({ id:this.state.taskId,title:this.taskTitle??'Read-only план AI Office',description:this.prompt??pilotPrompt,agentId:this.agentId,projectId:this.projectId,...(this.projectContext?{branch:this.projectContext.currentBranch}:{}),status:'in_progress',createdAt:this.state.startedAt,completedAt:null });
     }
     const task = this.book.tasks.find(t => t.id === this.state.taskId);
+    if(task&&this.state.responseRef){const cp=this.book.checkpoints.filter(c=>c.taskId===task.id).at(-1);if(cp)cp.responseRef=structuredClone(this.state.responseRef);}
     if (task && this.state.execution === 'completed') { task.status = 'completed'; task.completedAt = this.state.completedAt; this.closeCheckpoints(task.id,'completed'); }
     else if (task && this.state.execution === 'error') { task.status = 'failed'; task.completedAt = this.state.completedAt; this.closeCheckpoints(task.id,'invalid'); }
     if (task && active(this.state.execution) && !method.startsWith('checkpoint_') && !method.startsWith('task_resume')) this.capture(this.pauseWanted ?? 'manual_checkpoint',false,false,false);

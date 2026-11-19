@@ -1,3 +1,4 @@
+import {workflowBudgets} from '../src/orchestration/budgets.ts';
 import {createHash} from 'node:crypto';
 import {collectTeamResult} from '../src/orchestration/team-workflow.ts';
 /** Remove indentation only from whitespace trivia between parsed TS/JSX tokens. */
@@ -9,7 +10,7 @@ export async function reduceIndentation(path,text){
  if(JSON.stringify(tokens(before,text))!==JSON.stringify(tokens(after,result))||text.replace(/[ \t]/g,'')!==result.replace(/[ \t]/g,''))throw new Error('Formatting recovery changed tokens, comments, literals or line breaks');return result;
 }
 export async function repairProposalFormatting(t,originalResponse){
- const original=JSON.parse(originalResponse),patches=original.team?.patches;if(!Array.isArray(patches)||!patches.length||new Set(patches.map(p=>p.path)).size!==patches.length||patches.some(p=>typeof p.content!=='string'||p.content.length>12000))throw new Error('Only an aggregate patch budget can be repaired by formatting');const total=patches.reduce((n,p)=>n+p.content.length,0);if(total<=24000)throw new Error('No aggregate patch overflow');
+ const original=JSON.parse(originalResponse),patches=original.team?.patches;if(!Array.isArray(patches)||!patches.length||new Set(patches.map(p=>p.path)).size!==patches.length||patches.some(p=>typeof p.content!=='string'||p.content.length>workflowBudgets.maxCharactersPerPatchFile))throw new Error('Only an aggregate patch budget can be repaired by formatting');const total=patches.reduce((n,p)=>n+p.content.length,0);if(total<=workflowBudgets.maxCharactersPerProposal)throw new Error('No aggregate patch overflow');
  for(const p of patches.filter(p=>/\.(?:ts|tsx)$/.test(p.path))){const content=await reduceIndentation(p.path,p.content);if(content.length===p.content.length)continue;const corrected=structuredClone(original);corrected.team.patches.find(q=>q.path===p.path).content=content;const text=JSON.stringify(corrected);try{collectTeamResult(text,t);}catch{continue;}return {executionId:t.executionId,originalResponse,originalSha256:createHash('sha256').update(originalResponse).digest('hex'),correctedResponse:text,changedPath:p.path,removedCharacters:p.content.length-content.length,createdAt:new Date().toISOString()};}
  throw new Error('Formatting alone cannot satisfy patch limits; preserve the response and split the task explicitly');
 }

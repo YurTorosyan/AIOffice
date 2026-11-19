@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "browser": "fresh installed Chromium via Playwright",
+  "originKind": "ephemeral fixture-only loopback",
+  "employees": 8,
+  "selectedCancellationRecovery": true,
+  "proposalPreserved": true,
+  "oldApprovalRejected": true,
+  "freshApprovalPending": true,
+  "reloadPreserved": true,
+  "diagnosticsVisible": true,
+  "offlineStateExplicit": true,
+  "viewports": [
+    1440,
+    390
+  ],
+  "realCodexJobs": 0,
+  "realCommands": 0,
+  "projectFilesApplied": 0,
+  "pageErrors": []
+}

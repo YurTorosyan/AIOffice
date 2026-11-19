@@ -1,3 +1,7 @@
+# Текущая стабилизация P0–P3
+
+Director согласовал контракт D1–D8 и разрешил выполнить P0–P3 в его отсутствие. Работать только в изолированной ветке `stabilization/p0-p3`; действующий мост, ARMGARAGE и Coffee House не менять и не использовать как fixtures. Сохранять офис, восемь IDs/ролей/Skills, точные подтверждения, read-only Codex и изоляцию QA. Реальные задания Codex, P4 и перенос версии в живые проекты требуют отдельного решения. Подробности: `docs/STABILIZATION_IMPLEMENTATION.md`, `docs/STABILIZATION_SCENARIOS.md`, `docs/STABILIZATION_REPORT.md`. Проверки — искусственные filesystem/RPC/container fixtures и отдельный браузер; после двух полных прогонов, build, browser и коммита остановиться. Это разрешение заменяет исторические ограничения объёма прошлых этапов только для P0–P3.
+
 # Текущий Stage 9 — Intelligent Model & Resource Orchestrator
 
 Director разрешил этап 9 поверх этапов 1–8: отдельная детерминированная resource policy, только объявленные runtime модели/effort, неизвестные cost/quota не выдумывать, conservative concurrency, relevant installed Skills, bounded retry/escalation с checkpoints. Сохранить 8 работников, графику, Stage 7/8 границы. Новые реальные задания Codex во время проверки НЕ запускать; Mock и RPC fixtures. После тестов/build/browser/commit остановиться. Исторический запрет Stage 9 ниже отменён только этим разрешением.

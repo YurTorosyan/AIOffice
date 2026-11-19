@@ -11,5 +11,5 @@ test('temporary Windows destination locks retry atomic replacement with bounded 
 });
 test('persistent destination denial preserves the original book and removes only the failed temporary file',t=>{
  const root=directory(t),good=new FileCheckpointStorage(root);good.save(emptyBook('codex'));const before=readFileSync(good.file,'utf8');let attempts=0;
- const broken=new FileCheckpointStorage(root,{rename:()=>{attempts++;throw Object.assign(new Error('denied'),{code:'EACCES'});},wait:()=>{}});assert.throws(()=>broken.save(emptyBook('codex')),/denied/);assert.equal(attempts,5);assert.equal(readFileSync(good.file,'utf8'),before);assert.ok(readdirSync(good.directory).every(p=>!p.endsWith('.tmp')));
+ const broken=new FileCheckpointStorage(root,{rename:()=>{attempts++;throw Object.assign(new Error('denied'),{code:'EACCES'});},wait:()=>{}});assert.throws(()=>broken.save(emptyBook('codex')),e=>e.code==='STORE_IO'&&e.cause?.message==='denied');assert.equal(attempts,5);assert.equal(readFileSync(good.file,'utf8'),before);assert.ok(readdirSync(good.directory).every(p=>!p.endsWith('.tmp')));
 });

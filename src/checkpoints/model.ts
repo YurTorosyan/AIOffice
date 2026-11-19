@@ -1,3 +1,4 @@
+import {validateResponseRef,type ResponseRef} from '../orchestration/durability.ts';
 import {validateResourceDecision,type ResourceDecision} from '../resources/policy.ts';
 import {projectIdentifier} from '../projects/model.ts';
 export const pauseReasons = ['user_pause','limit_reached','runtime_interrupted','connection_lost','manual_checkpoint'] as const;
@@ -7,7 +8,7 @@ export interface RecoveryTask {
   id: string; title: string; description: string; agentId: string; projectId: string;branch?:string|null;
   status: 'in_progress' | 'paused' | 'completed' | 'failed'; createdAt: string; completedAt: string | null;
 }
-export interface TaskCheckpoint {resource?:ResourceDecision;
+export interface TaskCheckpoint {responseRef?:ResponseRef;resource?:ResourceDecision;
   id: string; taskId: string; agentId: string; projectId: string; reason: PauseReason; status: CheckpointStatus;
   workspaceRoot?:string;branch?:string|null; source: 'mock' | 'codex'; taskTitle: string; taskDescription: string; taskStatus: string;
   completedWork: string[]; remainingWork: string[]; importantDecisions: string[];
@@ -30,7 +31,7 @@ function id(value: unknown) { text(value, 160); if (!/^[a-zA-Z0-9_.:-]+$/.test(v
 function date(value: unknown) { text(value, 40); if (!Number.isFinite(Date.parse(value as string))) throw new Error('Invalid checkpoint date'); }
 function strings(value: unknown) { if (!Array.isArray(value) || value.length > 100) throw new Error('Invalid checkpoint list'); value.forEach(v => text(v)); }
 export function validateCheckpoint(value: unknown, source: 'mock' | 'codex'): TaskCheckpoint {
-  object(value); keys(value, ['id','taskId','agentId','projectId','reason','status','source','taskTitle','taskDescription','taskStatus','completedWork','remainingWork','importantDecisions','relevantFiles','lastKnownState','codexThreadId','createdAt','resumable',...(Object.hasOwn(value,'workspaceRoot')?['workspaceRoot']:[]),...(Object.hasOwn(value,'branch')?['branch']:[]),...(value.resource?['resource']:[])]);if(value.resource){validateResourceDecision(value.resource);if(value.resource.projectId!==value.projectId||value.resource.taskId!==value.taskId||value.resource.agentId!==value.agentId)throw new Error('Foreign resource checkpoint');}if(value.branch!==undefined&&value.branch!==null)text(value.branch,200);
+  object(value); keys(value, ['id','taskId','agentId','projectId','reason','status','source','taskTitle','taskDescription','taskStatus','completedWork','remainingWork','importantDecisions','relevantFiles','lastKnownState','codexThreadId','createdAt','resumable',...(Object.hasOwn(value,'workspaceRoot')?['workspaceRoot']:[]),...(Object.hasOwn(value,'branch')?['branch']:[]),...(value.resource?['resource']:[]),...(value.responseRef?['responseRef']:[])]);if(value.responseRef){validateResponseRef(value.responseRef);if(value.responseRef.executionId!==value.taskId)throw new Error('Foreign checkpoint response');}if(value.resource){validateResourceDecision(value.resource);if(value.resource.projectId!==value.projectId||value.resource.taskId!==value.taskId||value.resource.agentId!==value.agentId)throw new Error('Foreign resource checkpoint');}if(value.branch!==undefined&&value.branch!==null)text(value.branch,200);
   id(value.id); id(value.taskId);projectIdentifier(value.projectId);if(value.workspaceRoot!==undefined)text(value.workspaceRoot,500); if (!employees.includes(value.agentId) || value.source !== source) throw new Error('Wrong checkpoint assignment');
   if (!pauseReasons.includes(value.reason) || !['paused','resumable','resumed','invalid','completed'].includes(value.status) || typeof value.resumable !== 'boolean' || (value.resumable && !['paused','resumable'].includes(value.status))) throw new Error('Invalid checkpoint status');
   for (const field of ['taskTitle','taskDescription','taskStatus']) text(value[field]);

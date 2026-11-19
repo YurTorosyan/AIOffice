@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "contract": "D1-D8 / P0-P3",
+  "date": "2026-11-19T08:35:13.308Z",
+  "branch": "stabilization/p0-p3",
+  "baseline": "9021ff00c47e26189c434fbdde53cffae0542305",
+  "deployed": false,
+  "realCodexJobs": 0,
+  "liveProjectActions": 0,
+  "testedCodeFingerprint": {
+    "algorithm": "SHA-256 of sorted Git index records excluding docs",
+    "sha256": "a639a6d3680183bad62ec94ade87ebd043720f8e1bce6f968efcc3c161c9def7"
+  },
+  "environment": {
+    "node": "v24.18.0",
+    "python": "3.14.6",
+    "playwright": "1.65.1",
+    "testFileConcurrency": 2
+  },
+  "runs": [
+    {
+      "configuredEmployeeSlots": 1,
+      "node": {
+        "tests": 324,
+        "passed": 324,
+        "failed": 0,
+        "durationMs": 319920.756
+      },
+      "python": {
+        "tests": 6,
+        "passed": 6,
+        "failed": 0
+      },
+      "path": "work/stabilization-suite-1.txt",
+      "sha256": "d8f35396408733c63953f153231e83ae4d1b246f32ea1df5bc75619f04d80111"
+    },
+    {
+      "configuredEmployeeSlots": 2,
+      "node": {
+        "tests": 324,
+        "passed": 324,
+        "failed": 0,
+        "durationMs": 294027.5823
+      },
+      "python": {
+        "tests": 6,
+        "passed": 6,
+        "failed": 0
+      },
+      "path": "work/stabilization-suite-2.txt",
+      "sha256": "859cc1695c828349bd701452f494f4836e621a0d88bb82db00a96fc807951bdc"
+    }
+  ],
+  "processDeathMatrices": [
+    {
+      "slots": 1,
+      "cases": 70,
+      "filesPerProposal": 3,
+      "windows": [
+        "intent_saved",
+        "grants_consumed",
+        "before_effect",
+        "file_replaced",
+        "resource_recorded",
+        "before_receipt",
+        "after_receipt"
+      ],
+      "path": "work/p0-validation/crashes/matrix-1.json",
+      "sha256": "4d9320eadbd74e50888996572badb4ed9a4096bb923be47c2e70fb30f3a90316"
+    },
+    {
+      "slots": 2,
+      "cases": 70,
+      "filesPerProposal": 3,
+      "windows": [
+        "intent_saved",
+        "grants_consumed",
+        "before_effect",
+        "file_replaced",
+        "resource_recorded",
+        "before_receipt",
+        "after_receipt"
+      ],
+      "path": "work/p0-validation/crashes/matrix-2.json",
+      "sha256": "4d9320eadbd74e50888996572badb4ed9a4096bb923be47c2e70fb30f3a90316"
+    }
+  ],
+  "criticalRepeatedCases": {
+    "effectAcknowledgement": 10,
+    "startIntentAndAcknowledgement": 10,
+    "terminalArchive": 10,
+    "durablePublication": 10,
+    "perFullRun": true
+  },
+  "build": {
+    "status": "PASS",
+    "path": "work/stabilization-build.txt",
+    "sha256": "23b150c5933c8c5abaeec1fb0405180cb2f3c2f05eabd9e13d1f774382566bd2",
+    "assets": [
+      {
+        "path": "dist/assets/index-CscEh0fq.js",
+        "bytes": 477437,
+        "sha256": "9100c4ec39594261b83f2b47fa58ebede50e7dfeeefeb868280581333e122bf7"
+      },
+      {
+        "path": "dist/assets/index-DhXpLuXU.css",
+        "bytes": 26619,
+        "sha256": "6114355522f49602a81dfb9df0490c38e6a4dcf809402b99882cfb7ccb82f843"
+      }
+    ]
+  },
+  "browser": {
+    "status": "PASS",
+    "version": 1,
+    "browser": "fresh installed Chromium via Playwright",
+    "originKind": "ephemeral fixture-only loopback",
+    "employees": 8,
+    "selectedCancellationRecovery": true,
+    "proposalPreserved": true,
+    "oldApprovalRejected": true,
+    "freshApprovalPending": true,
+    "reloadPreserved": true,
+    "diagnosticsVisible": true,
+    "offlineStateExplicit": true,
+    "viewports": [
+      1440,
+      390
+    ],
+    "realCodexJobs": 0,
+    "realCommands": 0,
+    "projectFilesApplied": 0,
+    "pageErrors": [],
+    "path": "work/stabilization-browser.txt",
+    "sha256": "49260c6b5c52f3ced3be847f297f0a3242d9980154d8030f307e3f34a3abe03c",
+    "screenshots": [
+      {
+        "path": "work/stabilization-browser/recovered-desktop.png",
+        "sha256": "9b051345c215c12ee76e7b2c8ac00bfe8b9d95e23a4f54bd82c812330e6176dc"
+      },
+      {
+        "path": "work/stabilization-browser/recovered-mobile.png",
+        "sha256": "624104db0d4b36f92ad7e39801462d65c7a8da71f691292294c7e6897fe2e4ef"
+      },
+      {
+        "path": "work/stabilization-browser/stale-snapshot.png",
+        "sha256": "8e711696f8a1f7e195a4df3a13538987c8d62575932597a7e070e51aff6e0451"
+      }
+    ]
+  },
+  "dependencyAudit": {
+    "vulnerabilities": 0,
+    "path": "work/dependency-audit-after.json",
+    "sha256": "9d9e236f1cd3c531de87b50c8be2c95329de80f788d16de35ff4d10e82012de5",
+    "packageLockSha256": "8e0882bc33b94a42f3d90af177570680b685d1851f89948383da072d5deef4d0"
+  },
+  "changedFiles": [
+    ".gitattributes",
+    "AGENTS.md",
+    "docs/P0_STABILIZATION_PLAN.md",
+    "docs/STABILIZATION_BROWSER_EVIDENCE.json",
+    "docs/STABILIZATION_CONTRACT_DRAFT.md",
+    "docs/STABILIZATION_EVIDENCE.json",
+    "docs/STABILIZATION_IMPLEMENTATION.md",
+    "docs/STABILIZATION_REPORT.md",
+    "docs/STABILIZATION_SCENARIOS.md",
+    "package-lock.json",
+    "package.json",
+    "scripts/verify-stabilization-browser.mjs",
+    "server/checkpoint-pilot.mjs",
+    "server/checkpoint-store.mjs",
+    "server/durable-json.mjs",
+    "server/http.mjs",
+    "server/operation-reconciler.mjs",
+    "server/operation-store.mjs",
+    "server/orchestration.mjs",
+    "server/permissions.mjs",
+    "server/pilot.mjs",
+    "server/projects.mjs",
+    "server/proposal-format.mjs",
+    "server/qa-executor.mjs",
+    "server/qa-web.mjs",
+    "server/result-archive.mjs",
+    "server/team-actions.mjs",
+    "server/team-output.mjs",
+    "server/team.mjs",
+    "src/checkpoints/model.ts",
+    "src/integration/runtime.ts",
+    "src/orchestration/Orchestrator.ts",
+    "src/orchestration/WorkflowClient.ts",
+    "src/orchestration/attempt-budget.ts",
+    "src/orchestration/budgets.ts",
+    "src/orchestration/dependency-contract.ts",
+    "src/orchestration/diagnostics.ts",
+    "src/orchestration/durability.ts",
+    "src/orchestration/input-contract.ts",
+    "src/orchestration/model.ts",
+    "src/orchestration/plan-recovery.ts",
+    "src/orchestration/prompt-budget.ts",
+    "src/orchestration/proposal-recovery.ts",
+    "src/orchestration/quality.ts",
+    "src/orchestration/recovery.ts",
+    "src/orchestration/task-inputs.ts",
+    "src/orchestration/team-workflow.ts",
+    "src/security/policy.ts",
+    "src/ui/WorkflowPanel.tsx",
+    "src/ui/useOffice.ts",
+    "tests/checkpoint-storage.test.mjs",
+    "tests/fixtures/p0-worker.mjs",
+    "tests/orchestrator-server.test.mjs",
+    "tests/p0-crash-matrix.test.mjs",
+    "tests/p0-durability.test.mjs",
+    "tests/p0-operation-recovery.test.mjs",
+    "tests/p0-recovery.test.ts",
+    "tests/p0-runtime-windows.test.ts",
+    "tests/p0-workflow-client.test.ts",
+    "tests/specification-blockers.test.ts",
+    "tests/stabilization-admission.test.mjs",
+    "tests/stabilization-contract.test.ts",
+    "tests/task-inputs.test.ts",
+    "tests/team-actions.test.mjs",
+    "tests/team-workflow.test.ts"
+  ],
+  "notPerformed": [
+    "P4 real provider control tasks",
+    "Migration/deployment to running bridge",
+    "Live ARMGARAGE/Coffee House effects or QA reruns",
+    "Hardware power-loss verification"
+  ]
+}
