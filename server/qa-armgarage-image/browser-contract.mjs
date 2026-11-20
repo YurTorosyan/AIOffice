@@ -4,9 +4,17 @@ import {services,expectedQuote} from './catalog.mjs';
 const expect=baseExpect.configure({timeout:6000});
 const decode=value=>{try{return decodeURIComponent(value);}catch{return value;}};
 const digits=text=>Number(text.replace(/[^0-9]/g,''));
+// README section 2 puts the brand in the header and a value proposition in the hero.
+// Neither the Russian hero copy nor its H1 accessible name must equal the brand.
+export async function verifyArmgarageIdentity(page){
+ const header=page.getByRole('banner');
+ await expect(header).toBeVisible();
+ await expect(header).toContainText(/ARM\s*GARAGE/i);
+ await expect(page.getByRole('heading',{level:1,name:/\S/})).toBeVisible();
+}
 export async function verifyArmgarage(page,width){
  const ui=id=>page.getByTestId(id),check=async(id,n,attribute='data-amount')=>{await expect(ui(id)).toBeVisible();await expect(ui(id)).toHaveAttribute(attribute,String(n));assert.equal(digits(await ui(id).innerText()),n,id);};
- await expect(page.getByRole('heading',{name:'ARMGARAGE',level:1,exact:true})).toBeVisible();
+ await verifyArmgarageIdentity(page);
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Initial horizontal overflow');
  if(width===390){const toggle=ui('mobile-menu-toggle');await expect(toggle).toBeVisible();await toggle.click();await expect(toggle).toHaveAttribute('aria-expanded','true');await expect(ui('mobile-menu')).toBeVisible();await page.keyboard.press('Escape');await expect(toggle).toHaveAttribute('aria-expanded','false');}
  const cards=()=>page.locator('[data-testid^="service-card-"]');
