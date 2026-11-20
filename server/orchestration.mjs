@@ -41,7 +41,11 @@ export class RealExecutionPort {
  // claims of verification against that correction's narrower write scope. Gates retain checks.
  requireFailureReport(t,context){
   if(t.teamSpec?.kind!=='implementation'||!t.teamSpec.remediationFor?.length)return;
-  const failures=(context.inputs?.handoffs??[]).flatMap(h=>h.tests??[]).filter(e=>e.source==='runner'&&e.status==='FAIL'&&checkKind(e.command)==='browser');
+  const handoffs=context.inputs?.handoffs??[],failedBrowser=e=>e.source==='runner'&&e.status==='FAIL'&&checkKind(e.command)==='browser';
+  // A correction addresses the explicitly named gates. Older ancestor failures stay
+  // attached as history, but must not veto a complete diagnostic from the current gate.
+  const current=handoffs.filter(h=>t.teamSpec.remediationFor.includes(h.taskId)).flatMap(h=>h.tests??[]).filter(failedBrowser);
+  const failures=current.length?current:handoffs.flatMap(h=>h.tests??[]).filter(failedBrowser);
   if(failures.some(e=>!e.report?.complete))throw Object.assign(Error('Complete browser failure report is unavailable; the historical receipt is only a preview. Obtain explicitly approved diagnostic evidence before another Frontend execution; no model turn submitted'),{code:'BROWSER_REPORT_REQUIRED'});
  }
  validateEvidence(t,context){if(!t.teamSpec||!this.actions)return;const revision=this.actions.verificationRevision(t.teamSpec.scope),tests=[...t.teamSpec.testEvidence,...(t.teamSpec.kind==='implementation'?[]:context?.team?.handoffs.flatMap(h=>h.testResults)??[])];if(tests.some(e=>e.source==='runner'&&e.revision!==revision))throw new Error('Test evidence is stale; do not proceed');}
