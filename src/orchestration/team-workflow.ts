@@ -129,7 +129,13 @@ function teamTaskPrefix(t:WorkflowTask):string{return `Stage 6 employee ${t.agen
 export function teamTaskPrompt(t:WorkflowTask,c:Context):string{if(t.teamSpec?.kind==='resolution')return resolutionPrompt(t,c);return boundedTeamPrompt(teamTaskPrefix(t),t,c);}
 /** Reproduce the former admission failure without invoking any runtime. */
 export function originalTeamPromptLength(t:WorkflowTask,c:Context){return teamTaskPrefix(t).length+JSON.stringify(compactTask(t,c,0)).length;}
-function boundedTeamPrompt(prefix:string,t:WorkflowTask,c:Context){for(const level of [0,1,2]){const prompt=prefix+JSON.stringify(compactTask(t,c,level));if(prompt.length<=orchestratedPromptLimit)return prompt;}throw Object.assign(new Error('Attributed task context cannot fit the '+orchestratedPromptLimit+' character prompt budget; explicit context reduction required'),{code:'TEAM_PROMPT_BUDGET'});}
+function boundedTeamPrompt(prefix:string,t:WorkflowTask,c:Context){for(const level of [0,1,2]){const prompt=prefix+JSON.stringify(compactTask(t,c,level));if(prompt.length<=orchestratedPromptLimit)return prompt;}
+ // Receipt IDs and provenance can exceed the preview budget even with empty logs.
+ // Preserve the entire authoritative contract/handoffs in their hashed snapshots;
+ // this final preview only points to those attachments instead of duplicating them.
+ const referenced=prefix+JSON.stringify({previewOnly:true,referenceOnly:true,completeContract:'project/task-contract.json',completeHandoffs:'project/upstream-handoffs.json',completeReports:'project/qa-reports/<report.id>.json',id:t.id,title:t.title,workflowId:c.workflowId,scope:t.teamSpec?.scope,round:t.teamSpec?.round,handoffReferences:c.team?.handoffs.map(h=>({sourceTaskId:h.sourceTaskId,gateVerdict:h.gateVerdict}))});
+ if(referenced.length<=orchestratedPromptLimit)return referenced;
+ throw Object.assign(new Error('Attributed task context cannot fit the '+orchestratedPromptLimit+' character prompt budget; explicit context reduction required'),{code:'TEAM_PROMPT_BUDGET'});}
 function compactTask(t:WorkflowTask,c:Context,level=0){
  const log=level===0?1000:level===1?160:0,note=level===0?200:level===1?80:0,tail=(value:string,n:number)=>n?value.slice(-n):'';
  return {previewOnly:true,completeContract:'project/task-contract.json',id:t.id,title:t.title,description:t.description.slice(0,level===0?1000:level===1?400:0),objective:c.rootTask.slice(0,level===0?1000:level===1?400:0),workflowId:c.workflowId,acceptance:t.teamSpec?.acceptance.map(x=>x.slice(0,200)).slice(0,10),scope:t.teamSpec?.scope,round:t.teamSpec?.round,
