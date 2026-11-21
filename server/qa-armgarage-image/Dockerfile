@@ -8,6 +8,7 @@ RUN node node_modules/playwright/cli.js install --with-deps chromium
 COPY qa-web-image/runner.mjs ./legacy-runner.mjs
 COPY qa-web-image/vitest.config.mjs qa-web-image/vite.config.mjs qa-web-image/tsconfig.json ./
 COPY qa-armgarage-image/runner.mjs qa-armgarage-image/browser-contract.mjs qa-armgarage-image/catalog.mjs ./
+COPY qa-armgarage-image/runtime.mjs qa-armgarage-image/fonts.conf ./
 COPY qa-armgarage-image/vitest.config.mjs qa-armgarage-image/armgarage-domain.test.mjs ./
 USER 1000:1000
 WORKDIR /work
