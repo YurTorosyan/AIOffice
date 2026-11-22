@@ -16,6 +16,6 @@ export function validateVerificationDeferral(w:Workflow,t:WorkflowTask){
  if(Object.keys(d).sort().join(',')!=='approvalId,approvedAt,executionId,findingIds,qaTaskId'||!Array.isArray(d.findingIds)||new Set(d.findingIds).size!==d.findingIds.length||typeof d.approvedAt!=='string'||!Number.isFinite(Date.parse(d.approvedAt))||!implementationHandoffReady(w,t))throw new Error('Invalid verification deferral; original blocked result and approved receipt required');
  if(w.status==='completed'){
   const qa=w.tasks.find(q=>q.id===w.team?.gates.qa),e=qa?.teamSpec?.testEvidence;
-  if(qa?.status!=='completed'||qa.result?.team?.verdict!=='PASS'||!e?.length||e.some(r=>r.status!=='PASS'||r.source!==(w.source==='codex'?'runner':'mock'))||!w.team?.approvals.some(a=>a.taskId===qa.id&&a.action==='run_tests'&&a.status==='approved'&&a.revision&&e.every(r=>r.revision===a.revision)))throw new Error('Deferred verification needs approved passing QA evidence before completion');
+  if(qa?.status!=='completed'||qa.result?.team?.verdict!=='PASS'||!e?.length||e.some(r=>r.status!=='PASS'||r.source!==(w.source==='codex'?'runner':'mock'))||!e.every(r=>w.team?.approvals.some(a=>a.taskId===(r.reportOwnerTaskId??qa.id)&&a.action==='run_tests'&&a.status==='approved'&&a.revision===r.revision&&a.commands.includes(r.command))))throw new Error('Deferred verification needs approved passing QA evidence before completion');
  }
 }

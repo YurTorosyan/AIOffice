@@ -45,6 +45,17 @@ test('unperformed checks do not count as passing QA and original metadata cannot
 test('real deferral requires unchanged applied revision in the owned project',()=>{
  const w={projectId:'p',team:{approvals:[{taskId:'source',action:'apply_changes',status:'approved',revision:'a'.repeat(64)}]}},t={id:'source',teamSpec:{scope:['src/source.ts']}};let revision='a'.repeat(64);const port=new RealExecutionPort({projectId:'p'},{revision:()=>revision});port.validateVerificationDeferral(w,t);revision='b'.repeat(64);assert.throws(()=>port.validateVerificationDeferral(w,t),/changed/);assert.throws(()=>port.validateVerificationDeferral({...w,projectId:'other'},t),/ownership/);
 });
+
+test('completion accepts preserved report ownership only with an exact approved command and revision',async()=>{
+ const f=await fixture();try{
+  await f.engine.command('handoff','defer_verification','api');const w=f.w(),source=w.tasks.find(t=>t.id==='api')!,old=w.tasks.find(t=>t.id===w.team!.gates.qa)!;
+  const evidence={reportOwnerTaskId:old.id,source:'runner' as const,command:'trusted browser',status:'PASS' as const,exitCode:0,revision:'a'.repeat(64),output:'passed',report:{version:1 as const,id:'qa-'+ 'b'.repeat(64),sha256:'c'.repeat(64),characters:6,complete:true}};
+  const qa=structuredClone(old);qa.id='qa-evidence';qa.status='completed';qa.teamSpec!.testEvidence=[evidence];qa.result={...structuredClone(source.result!),team:{...structuredClone(source.result!.team!),verdict:'PASS',tests:[evidence],findings:[],patches:[]}};w.tasks.push(qa);w.team!.gates.qa=qa.id;w.status='completed';w.source='codex';
+  const approval={id:'test-approval',taskId:old.id,action:'run_tests',status:'approved',revision:evidence.revision,commands:[evidence.command]} as any;w.team!.approvals.push(approval);
+  const original=JSON.stringify(source.result);assert.doesNotThrow(()=>validateVerificationDeferral(w,source));assert.equal(JSON.stringify(source.result),original);
+  approval.commands=['different command'];assert.throws(()=>validateVerificationDeferral(w,source),/passing QA evidence/);approval.commands=[evidence.command];approval.revision='d'.repeat(64);assert.throws(()=>validateVerificationDeferral(w,source),/passing QA evidence/);approval.revision=evidence.revision;approval.status='rejected';assert.throws(()=>validateVerificationDeferral(w,source),/passing QA evidence/);
+ }finally{f.adapter.stop();}
+});
 test('failed QA still creates corrective work without copying the original deferral into a new task',async()=>{
  const f=await fixture();try{await f.engine.command('handoff','defer_verification','api');f.port.scenario='team-qa-fail';await f.engine.command('handoff','resume');for(let i=0;i<45&&f.w().status==='running';i++){await f.engine.tick();for(const a of f.w().team!.approvals.filter(a=>a.status==='pending'))await f.engine.command('handoff','approve_action',a.id);await f.port.advance(f.w().tasks);await f.engine.tick();}
  const w=f.w(),fixes=w.tasks.filter(t=>t.id.startsWith('fix-'));assert(fixes.length);assert(fixes.every(t=>!t.verificationDeferral));assert.equal(w.status,'completed');assert.equal(w.tasks.find(t=>t.id==='api')!.result!.team!.verdict,'BLOCKED');assert.equal(w.tasks.find(t=>t.id===w.team!.gates.qa)!.result!.team!.verdict,'PASS');validateWorkflowBook(f.storage.book,'mock');
