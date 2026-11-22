@@ -92,7 +92,7 @@ export class TeamActions {
  reportSnapshots(t,context){
   const refs=[...(t.teamSpec?.testEvidence??[]).map(e=>({taskId:t.id,e})),...(context.inputs?.handoffs??[]).flatMap(h=>(h.tests??[]).map(e=>({taskId:h.taskId,e})))],snapshots=[],seen=new Set();let size=0;
   for(const {taskId,e} of refs){if(!e.report)continue;
-   const row=this.reports.get(e.report,{workflowId:context.workflowId,taskId,command:e.command,revision:e.revision}),op=this.operations.get(row.operationId);
+   const reportOwner=e.reportOwnerTaskId??taskId;const row=this.reports.get(e.report,{workflowId:context.workflowId,taskId:reportOwner,command:e.command,revision:e.revision}),op=this.operations.get(row.operationId);
    if(op.state!=='completed'||op.action!=='run_tests'||op.workflowId!==row.workflowId||op.taskId!==row.taskId||op.agentId!=='qa'||!op.receipt.tests.some(x=>x.command===e.command&&x.revision===e.revision&&JSON.stringify(x.report)===JSON.stringify(e.report))||row.status!==e.status||row.exitCode!==e.exitCode)throw Error('QA report has no matching committed runner receipt');
    if(seen.has(e.report.id))continue;seen.add(e.report.id);
    const text=JSON.stringify(row);size+=text.length;if(size>200000)throw Error('Full QA diagnostic snapshot budget exceeded; split context without truncating reports');

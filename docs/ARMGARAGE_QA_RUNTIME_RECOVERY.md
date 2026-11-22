@@ -64,6 +64,21 @@ old result. Do not reuse the consumed previous approval or apply any source file
 No Codex work, automatic team resume, corrective cycle increase or reclassification
 of old receipts is authorized by this preparation.
 
+## Evidence handoff format
+
+New task inputs use version 3: a test with an immutable report reference carries
+that reference instead of duplicating its long console preview in every transitive
+handoff. Complete sanitized output is still attached, hashed and checked against
+the committed operation. Existing version 2 inputs are recomputed in their original
+format for validation and are not rewritten.
+
+`TestEvidence.reportOwnerTaskId` explicitly retains the original QA task when an
+independent evidence continuation reviews checks already executed for that task.
+Artifact loading still checks the project, workflow, actual report owner, command,
+revision, hash, result and matching committed runner receipt. This field neither
+creates a test receipt nor authorizes an execution. Model output cannot manufacture
+runner evidence. Completed task results remain immutable.
+
 ## Follow-up: screenshot file limit reproduced (2026-11-22)
 
 The approved single repeat passed all 69 Vitest tests and the production build.

@@ -62,7 +62,7 @@ export class RealExecutionPort {
  }
  preview(t){return this.actions.preview(t);}
  approvalCommands(t){return this.actions.approvalCommands(t);}
- canRecheckGate(w,t){const qa=w.tasks.find(t=>t.id===w.team.gates.qa),revision=this.actions.verificationRevision(t.teamSpec.scope);return !!qa?.teamSpec.testEvidence.length&&qa.teamSpec.testEvidence.every(e=>e.source==='runner'&&e.status==='PASS'&&e.revision===revision)&&w.team.approvals.some(a=>a.action==='run_tests'&&a.taskId===qa.id&&a.status==='approved'&&a.revision===revision);}
+ canRecheckGate(w,t){const qa=w.tasks.find(t=>t.id===w.team.gates.qa),revision=this.actions.verificationRevision(t.teamSpec.scope);return !!qa?.teamSpec.testEvidence.length&&qa.teamSpec.testEvidence.every(e=>e.source==='runner'&&e.status==='PASS'&&e.revision===revision)&&w.team.approvals.some(a=>a.action==='run_tests'&&(a.taskId===qa.id||qa.teamSpec.testEvidence.some(e=>e.reportOwnerTaskId===a.taskId))&&a.status==='approved'&&a.revision===revision);}
  reconcileStorage(){if(this.actions?.permissions.error)this.actions.permissions.reconcileStorage();for(const p of this.team.members.values()){if(p.state.responsePersistenceError)p.reconcileResponse();if(p.state.recoveryError)p.reconcileStorage();}}
  async prepareOperationRecovery(w,t,a){const p=await this.actions.prepareRecovery(w,t,a);return {operationId:p.operationId,planHash:p.planHash,state:p.state,completedPaths:p.resources.filter(r=>r.observation==='after').map(r=>r.path)};}
  async cleanupOperation(w,t,a){return this.actions.cleanupOperation(w,t,a,a.recoveryPreview);}

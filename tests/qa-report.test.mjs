@@ -29,3 +29,12 @@ test('verified runner reports reach complete Frontend snapshots; missing/tampere
  const duplicate=structuredClone(context);duplicate.inputs.handoffs.push({taskId:'foreign',tests:[e]});assert.throws(()=>actions.reportSnapshots(t,duplicate));
  op.state='running';assert.throws(()=>actions.reportSnapshots(t,context),/committed runner/);op.state='completed';const foreign=structuredClone(context);foreign.inputs.handoffs[0].taskId='another-qa';assert.throws(()=>actions.reportSnapshots(t,foreign));op.receipt.tests=[];assert.throws(()=>actions.reportSnapshots(t,context),/committed runner/);
 });
+
+test('evidence continuations retain the actual report owner and still require its committed receipt',()=>{
+ const {root,store}=fixture(),ref=store.put(ctx,report()),e={...report(),source:'runner',report:ref,reportOwnerTaskId:'qa'};delete e.mode;delete e.complete;
+ const permissions=new PermissionAuthority(root,{projectId:'p',storage:new MemoryPermissionStorage()}),actions=new TeamActions(root,{permissions}),op={state:'completed',action:'run_tests',workflowId:ctx.workflowId,taskId:'qa',agentId:'qa',receipt:{tests:[e]}};actions.operations={get:()=>op};
+ const task={id:'qa-evidence',teamSpec:{testEvidence:[e]}},context={workflowId:'workflow',inputs:{handoffs:[]}};
+ const snapshots=actions.reportSnapshots(task,context);assert.equal(snapshots.length,1);assert.equal(JSON.parse(snapshots[0].text).taskId,'qa');
+ assert.throws(()=>actions.reportSnapshots({...task,teamSpec:{testEvidence:[{...e,reportOwnerTaskId:'foreign'}]}},context));
+ op.state='running';assert.throws(()=>actions.reportSnapshots(task,context),/committed runner/);op.state='completed';op.receipt.tests=[];assert.throws(()=>actions.reportSnapshots(task,context),/committed runner/);
+});

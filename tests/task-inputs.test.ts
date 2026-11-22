@@ -6,11 +6,22 @@ import {createHash} from 'node:crypto';
 import {MockCodexAdapter} from '../src/integration/MockCodexAdapter.ts';
 import {MockExecutionPort,MemoryWorkflowStorage} from '../src/orchestration/MockExecutionPort.ts';
 import {Orchestrator} from '../src/orchestration/Orchestrator.ts';
-import {buildTaskInputs} from '../src/orchestration/task-inputs.ts';
+import {buildTaskInputs,validateTaskInputs} from '../src/orchestration/task-inputs.ts';
 import {dependencySatisfied,deriveTeamPhase} from '../src/orchestration/team-workflow.ts';
 import {validateWorkflowBook} from '../src/orchestration/model.ts';
 import {RealExecutionPort} from '../server/orchestration.mjs';
 import {TeamActions} from '../server/team-actions.mjs';
+
+test('new handoffs reference complete reports while legacy v2 previews remain immutable',()=>{
+ const evidence={source:'runner',command:'browser',status:'PASS',exitCode:0,revision:'a'.repeat(64),output:'complete diagnostic preview\n'.repeat(100),report:{version:1,id:'qa-'+ 'b'.repeat(64),sha256:'c'.repeat(64),characters:2600,complete:true},reportOwnerTaskId:'qa-original'};
+ const source={id:'qa',agentId:'qa',status:'completed',dependencies:[],description:'Original criteria',teamSpec:{acceptance:['All acceptance remains'],scope:[]},result:{summary:'Current evidence',decisions:['Keep history'],warnings:[],unresolved:[],team:{verdict:'PASS',tests:[evidence],codeInfo:[],findings:[]}}};
+ const w={tasks:[source],team:{approvals:[]}} as any,t={dependencies:['qa'],teamSpec:{scope:[]}} as any;
+ const legacy=buildTaskInputs(w,t,2);assert.equal(legacy.handoffs[0].tests![0].output,evidence.output);
+ t.inputContext={inputs:legacy};assert.doesNotThrow(()=>validateTaskInputs(w,t));
+ const current=buildTaskInputs(w,t);assert.equal(current.version,3);assert(current.handoffs[0].tests![0].output.includes(evidence.report.id));assert(current.handoffs[0].tests![0].output.length<evidence.output.length);
+ assert.deepEqual(current.handoffs[0].tests![0].report,evidence.report);assert.equal(current.handoffs[0].tests![0].reportOwnerTaskId,'qa-original');assert.equal(source.result.team.tests[0].output,evidence.output);
+ t.inputContext={inputs:current};assert.doesNotThrow(()=>validateTaskInputs(w,t));current.handoffs[0].tests![0].output='forged reference';assert.throws(()=>validateTaskInputs(w,t));
+});
 async function fixture(foreign=false){
  const adapter=new MockCodexAdapter(),port=new MockExecutionPort(adapter),storage=new MemoryWorkflowStorage(),engine=new Orchestrator(port,storage);port.scenario='team-parallel';const original=port.teamResult.bind(port);port.teamResult=t=>{const r=original(t) as any;if(t.id==='ui'){r.team.verdict='BLOCKED';r.team.patches=[];r.summary='Missing dependency source snapshots and approved design handoff';r.team.findings=[{id:'missing-input',severity:'high',message:r.summary,responsibleTask:t.id,reproduction:'Attach approved source inputs',files:['src/team-ui.ts',foreign?'src/foreign.ts':'src/team-api.ts']}];}return r;};
  await adapter.action('connect_all');await engine.create('Build public integrated UI','inputs',{team:true});await engine.tick();for(let i=0;i<2;i++){await port.advance(engine.snapshot().workflows[0].tasks);await engine.tick();}const a=engine.snapshot().workflows[0].team!.approvals.find(a=>a.action==='apply_changes')!;await engine.command('inputs','approve_action',a.id);await engine.tick();await port.advance(engine.snapshot().workflows[0].tasks);await engine.tick();await engine.command('inputs','pause');return {adapter,port,storage,engine,w:()=>engine.snapshot().workflows[0]};
