@@ -7,7 +7,7 @@ import {MockCodexAdapter} from '../src/integration/MockCodexAdapter.ts';
 import {MockExecutionPort,MemoryWorkflowStorage} from '../src/orchestration/MockExecutionPort.ts';
 import {Orchestrator} from '../src/orchestration/Orchestrator.ts';
 import {buildTaskInputs,validateTaskInputs} from '../src/orchestration/task-inputs.ts';
-import {dependencySatisfied,deriveTeamPhase} from '../src/orchestration/team-workflow.ts';
+import {dependencySatisfied,deriveTeamPhase,handoffs} from '../src/orchestration/team-workflow.ts';
 import {validateWorkflowBook} from '../src/orchestration/model.ts';
 import {RealExecutionPort} from '../server/orchestration.mjs';
 import {TeamActions} from '../server/team-actions.mjs';
@@ -19,6 +19,9 @@ test('new handoffs reference complete reports while legacy v2 previews remain im
  const legacy=buildTaskInputs(w,t,2);assert.equal(legacy.handoffs[0].tests![0].output,evidence.output);
  t.inputContext={inputs:legacy};assert.doesNotThrow(()=>validateTaskInputs(w,t));
  const current=buildTaskInputs(w,t);assert.equal(current.version,3);assert(current.handoffs[0].tests![0].output.includes(evidence.report.id));assert(current.handoffs[0].tests![0].output.length<evidence.output.length);
+ const directContext={inputs:current,upstream:[{taskId:'qa',result:{decisions:[],warnings:[],unresolved:[]}}]} as any;
+ assert(handoffs(w,t,directContext)[0].testResults[0].output.includes(evidence.report.id));
+ assert.equal(handoffs(w,t,{...directContext,inputs:legacy})[0].testResults[0].output,evidence.output);
  assert.deepEqual(current.handoffs[0].tests![0].report,evidence.report);assert.equal(current.handoffs[0].tests![0].reportOwnerTaskId,'qa-original');assert.equal(source.result.team.tests[0].output,evidence.output);
  t.inputContext={inputs:current};assert.doesNotThrow(()=>validateTaskInputs(w,t));current.handoffs[0].tests![0].output='forged reference';assert.throws(()=>validateTaskInputs(w,t));
 });

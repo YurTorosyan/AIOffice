@@ -1,7 +1,7 @@
 import {validateQAReportRef,type QAReportRef} from './qa-report.ts';
 import {evidenceState,webEvidenceComplete} from './quality.ts';
 import {workflowBudgets,proposalBudget} from './budgets.ts';
-import {findingReferencesAllowed,contextContinuationAddressed} from './task-inputs.ts';
+import {findingReferencesAllowed,contextContinuationAddressed,referencedTestEvidence} from './task-inputs.ts';
 import {implementationHandoffReady,validateVerificationDeferral} from './implementation-handoff.ts';
 import {orchestratedPromptLimit} from './prompt-budget.ts';
 import {safeText} from '../checkpoints/model.ts';
@@ -117,7 +117,7 @@ export function handoffs(w:Workflow,t:WorkflowTask,context:Context):Handoff[]{re
  return {id:`handoff-${w.id}-${d.id}-${t.id}`,sourceEmployee:d.agentId,targetEmployee:t.agentId,taskId:t.id,sourceTaskId:d.id,workflowId:w.id,objective:t.description,completedWork:d.result?.team?.completedWork??[],decisions:u.result.decisions,
  changedFiles:[...new Set(receipts.filter(a=>a.action==='apply_changes').flatMap(a=>a.patches.map(p=>p.path)))],
  ...(d.verificationDeferral?{deferredVerification:{qaTaskId:d.verificationDeferral.qaTaskId,findings:structuredClone(d.result!.team!.findings)}}:{}),gateVerdict:d.result?.team?.verdict,actionReceipts:receipts.map(a=>({id:a.id,taskId:a.taskId,action:a.action,status:a.status,revision:a.revision})),
- codeInfo:d.result?.team?.codeInfo??[],testResults:d.result?.team?.tests??[],warnings:u.result.warnings,unresolved:u.result.unresolved,nextAction:d.result?.team?.nextAction??t.description,createdAt:new Date().toISOString()};
+ codeInfo:d.result?.team?.codeInfo??[],testResults:context.inputs?.version===3?(d.result?.team?.tests??[]).map(referencedTestEvidence):d.result?.team?.tests??[],warnings:u.result.warnings,unresolved:u.result.unresolved,nextAction:d.result?.team?.nextAction??t.description,createdAt:new Date().toISOString()};
  });}
 
 export function finalResult(w:Workflow):TeamFinal {const active=w.tasks.filter(t=>t.status!=='cancelled'),latest=(kind:WorkKind)=>w.tasks.find(t=>t.id===w.team!.gates[kind]);return {objective:w.rootTask,employees:[...new Set(active.map(t=>t.agentId))],completedTasks:active.filter(t=>t.status==='completed').map(t=>t.id),changedFiles:[...new Set(active.flatMap(t=>t.result?.filesChanged??[]))],tests:active.flatMap(t=>t.result?.team?.tests??[]),securityFindings:latest('security')?.result?.team?.findings??[],qa:latest('qa')?.result?.team?.verdict??'BLOCKED',review:latest('review')?.result?.team?.verdict??'BLOCKED',warnings:[...new Set(active.filter(t=>t.id!=='plan').flatMap(t=>[...(t.result?.warnings??[]),...(t.result?.unresolved??[])]))],status:'COMPLETED',createdAt:w.createdAt,completedAt:new Date().toISOString()};}
