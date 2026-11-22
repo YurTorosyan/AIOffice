@@ -1,8 +1,17 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {budgets,runBounded,withViewportBrowsers} from '../server/qa-armgarage-image/runtime.mjs';
-import {WebQAExecutor,webSupportFiles} from '../server/qa-web.mjs';
+import {WebQAExecutor,webSupportFiles,webContainerArgs} from '../server/qa-web.mjs';
 import packages from '../server/qa-web-image/package.json' with {type:'json'};
+
+test('only ARMGARAGE screenshots receive the bounded larger bitmap file limit',()=>{
+ const name='ai-office-web-qa-00000000-0000-4000-8000-000000000000';
+ for(const registration of ['armgarage','coffee-house'])for(const mode of ['browser','vitest','build','probe']){
+  const args=webContainerArgs(name,mode,registration);
+  assert(args.includes(registration==='armgarage'&&mode==='browser'?'fsize=134217728:134217728':'fsize=16777216:16777216'));
+  for(const bound of ['--network=none','--read-only','--cap-drop=ALL','--memory=1g','--user=1000:1000','--security-opt=no-new-privileges'])assert(args.includes(bound));
+ }
+});
 
 test('bounded runner preserves normal test exits and marks timeout/output/signal as infrastructure',async()=>{
  const execute=(code,options={})=>runBounded(process.execPath,['--input-type=module','--eval',code],{cwd:process.cwd(),timeoutMs:10000,...options});

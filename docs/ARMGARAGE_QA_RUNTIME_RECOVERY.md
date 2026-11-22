@@ -64,6 +64,27 @@ old result. Do not reuse the consumed previous approval or apply any source file
 No Codex work, automatic team resume, corrective cycle increase or reclassification
 of old receipts is authorized by this preparation.
 
+## Follow-up: screenshot file limit reproduced (2026-11-22)
+
+The approved single repeat passed all 69 Vitest tests and the production build.
+The browser completed the 390px journey and all 768px functional assertions,
+then closed on the 768px full-page screenshot. New telemetry showed no page
+errors, no cgroup OOM events and peak memory of approximately 303 MB.
+
+An independent synthetic 768×9016 page reproduced the same screenshot crash with
+`RLIMIT_FSIZE=16 MiB` and succeeded with `128 MiB` (compressed PNG: 115876 bytes).
+Large file-backed screenshot buffers require more space than the final PNG.
+Only ARMGARAGE browser containers now use the bounded 128 MiB file limit;
+other modes and Coffee House retain 16 MiB. Memory, network, privilege, sandbox
+and filesystem restrictions remain unchanged. Evidence is under
+`work/qa-runtime-repair/screenshot-limit-{16777216,134217728}.json`.
+
+The repeat saved validated production assets and their original build digest.
+A further approved browser-only operation can consume these exact assets after
+checking source hashes, image, build receipt and asset digest. It must preserve
+the successful Vitest/build receipts and the blocked browser report, not run
+Vitest/build again, and not silently substitute a PASS for the old operation.
+
 If the approved repeat passes, prepare a separate QA evidence continuation and
 Security reassessment using fresh receipts, preserving the previous BLOCKED
 responses. Only then can the pending Reviewer and final Lead continue. This is

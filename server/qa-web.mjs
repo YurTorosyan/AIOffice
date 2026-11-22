@@ -15,7 +15,10 @@ export function webContainerArgs(name,mode,registration='coffee-house',operation
  const image=webRegistration(registration);
  if(!/^ai-office-web-qa-[a-f0-9-]{36}$/.test(name)||!['probe','vitest','build','browser'].includes(mode)||!/^sha256:[a-f0-9]{64}$/.test(image.image))throw Error('Invalid fixed QA image/profile');
  if(sha(readFileSync(seccomp))!=='80fd2aa8207f28065018ec5411cd132947b304300fc1367f4a934e520f70702b')throw Error('Seccomp profile changed');
- return ['run','--rm','--pull=never','--name',name,'--label','ai-office.owner=web-qa',...(operationId?['--label','ai-office.operation='+operationId]:[]),'--network=none','--read-only','--cap-drop=ALL','--security-opt=no-new-privileges','--security-opt=seccomp='+seccomp,'--user=1000:1000','--pids-limit=256','--memory=1g','--memory-swap=1g','--cpus=2','--ulimit','nofile=1024:1024','--ulimit','fsize=16777216:16777216','--tmpfs','/work:rw,nosuid,nodev,size=64m,mode=1777','--tmpfs','/tmp:rw,nosuid,nodev,size=64m,mode=1777','--shm-size=128m','--ipc=private','--workdir=/work','--log-driver=none','--init','-i',image.image,mode];
+ // Chromium uses file-backed bitmap buffers for full-page screenshots. 16 MiB
+ // terminates it on tall tablet pages even when the compressed PNG is small.
+ const fileLimit=registration==='armgarage'&&mode==='browser'?134217728:16777216;
+ return ['run','--rm','--pull=never','--name',name,'--label','ai-office.owner=web-qa',...(operationId?['--label','ai-office.operation='+operationId]:[]),'--network=none','--read-only','--cap-drop=ALL','--security-opt=no-new-privileges','--security-opt=seccomp='+seccomp,'--user=1000:1000','--pids-limit=256','--memory=1g','--memory-swap=1g','--cpus=2','--ulimit','nofile=1024:1024','--ulimit',`fsize=${fileLimit}:${fileLimit}`,'--tmpfs','/work:rw,nosuid,nodev,size=64m,mode=1777','--tmpfs','/tmp:rw,nosuid,nodev,size=64m,mode=1777','--shm-size=128m','--ipc=private','--workdir=/work','--log-driver=none','--init','-i',image.image,mode];
 }
 export function webSnapshot(files,sources){
  if(!Array.isArray(files)||!files.length||files.length>16||!Array.isArray(sources)||sources.length>24)throw Error('Invalid web snapshot');const seen=new Set();let size=0;
