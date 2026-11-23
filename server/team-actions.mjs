@@ -1,3 +1,5 @@
+import {presentationOnly} from "../src/design/pilot.ts";
+import {designAllows} from "../src/design/model.ts";
 import {BuildArtifacts} from './build-artifacts.mjs';
 import {QAReportStore} from './qa-report-store.mjs';
 import {validateTest} from '../src/orchestration/team-workflow.ts';
@@ -40,7 +42,7 @@ export class TeamActions {
  webRegistration(){const file=this.permissions.boundary.path('package.json').absolute;return existsSync(file)?webRegistration(JSON.parse(readFileSync(file,'utf8')).name).name:'coffee-house';}
  verificationRevision(scope){if(!webScope(scope))return sha(JSON.stringify({profile:nodeVerificationIdentity(),sources:this.revision(scope),configuration:['package.json','package-lock.json','tsconfig.json'].map(path=>{const file=this.permissions.boundary.path(path).absolute;return [path,existsSync(file)?sha(readFileSync(file)):null];})}));const registration=this.webRegistration(),paths=[...new Set([...scope,...webSupportFiles,...(registration==='armgarage'?['README.md']:[])])].sort();return sha(JSON.stringify({profile:webVerificationIdentity(registration),files:paths.map(path=>{const file=this.permissions.boundary.path(path).absolute;return [path,existsSync(file)?sha(readFileSync(file)):null];})}));}
  validatePlan(w){
-  const implementations=w.tasks.filter(t=>t.teamSpec?.kind==='implementation'&&t.status!=='cancelled');if(w.design&&!implementations.length&&w.tasks.every(t=>t.type==='design'&&t.agentId==='design'&&t.teamSpec?.scope.length===0))return;const scope=[...new Set(implementations.flatMap(t=>t.teamSpec.scope))];
+  const implementations=w.tasks.filter(t=>t.teamSpec?.kind==='implementation'&&t.status!=='cancelled');if(!implementations.length&&presentationOnly(w))return;const scope=[...new Set(implementations.flatMap(t=>t.teamSpec.scope))];
   if(!scope.some(p=>/^tests\/.+\.test\.(?:ts|tsx|js|mjs)$/.test(p)))throw Error('Plan has no executable test path; include tests within the existing 8-file budget');
   const profile=webScope(scope)?webRegistration(this.webRegistration()).permission:'node_tests';
   if(!qaSupports(this.confinedExecutor,profile))throw Error('Required isolated '+profile+' profile is unavailable; accepted plan retained, no specialist started');
@@ -55,7 +57,7 @@ export class TeamActions {
  inspect(w,t,a){return inspectOperation(this.operations,a.recovery?.operationId??a.operationId??a.id,{projectId:w.projectId??t.projectId??'office-demo',workflowId:w.id,taskId:t.id});}
  operationPayload(w,t,a){return {projectId:w.projectId??t.projectId??'office-demo',workflow:w.id,task:t.id,action:a.action,patches:a.patches,previous:a.previous,commands:a.commands,scope:t.teamSpec.scope};}
  async applyApproved(w,t,a){
-  if(w.design&&!w.design.conceptApproved&&a.action==='apply_changes'&&(t.type==='frontend'||t.teamSpec.scope.some(p=>/\.(tsx|css)$/.test(p))))throw Error('Approve a visual concept before UI application');
+  if(a.action==='apply_changes'&&!designAllows(w.design,t.type,t.teamSpec.scope,t.id,t.teamSpec.kind))throw Error('Approve a visual concept before UI application');
   if(a.status!=='pending'||a.taskId!==t.id||a.employeeId!==t.agentId)throw new Error('Invalid action owner');
   const id=a.recovery?.operationId??a.operationId??a.id,payload=this.operationPayload(w,t,a),fingerprint=operationFingerprint(payload),existing=this.operations.maybe(id);
   if(existing&&(existing.fingerprint!==fingerprint||existing.workflowId!==w.id||existing.taskId!==t.id))throw new Error('Operation payload changed');

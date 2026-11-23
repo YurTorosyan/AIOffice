@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import {teamOutputSchema} from '../server/team-output.mjs';
 import {CheckpointPilot} from '../server/checkpoint-pilot.mjs';
 import {MemoryCheckpointStorage} from '../src/checkpoints/model.ts';
+
+test('only concept and Frontend pilot producers receive an HTML/CSS schema; visual reviewers stay bounded',()=>{
+ for(const [id,agentId] of [['concept-draft-a','design'],['concept-draft-b','design'],['frontend-pilot-v1','frontend']]){const schema=teamOutputSchema({id,agentId,teamSpec:{kind:'specification',scope:[]}});assert(schema.properties.team.properties.designDraft);assert.equal(schema.properties.team.properties.patches.maxItems,0);}
+ for(const id of ['pilot-review-abc','visual-review-abc','design-handoff'])assert.equal(teamOutputSchema({id,agentId:'design',teamSpec:{kind:'specification',scope:[]}}).properties.team.properties.designDraft,undefined);
+});
 test('team structured outputs enforce proposal-only evidence and scoped patch paths',()=>{
  const task={id:'implement',teamSpec:{kind:'implementation',scope:['src/helper.ts','tests/helper.test.ts']}},schema=teamOutputSchema(task);assert.equal(schema.additionalProperties,false);assert.equal(schema.properties.filesChanged.maxItems,0);assert.equal(schema.properties.team.properties.tests.maxItems,0);assert.deepEqual(schema.properties.team.properties.patches.items.properties.path.enum,task.teamSpec.scope);assert.equal(schema.properties.team.properties.patches.maxItems,4);
  const qa=teamOutputSchema({...task,teamSpec:{...task.teamSpec,kind:'qa'}});assert.equal(qa.properties.team.properties.patches.maxItems,0);assert.equal(teamOutputSchema({id:'legacy'}),undefined);

@@ -4,7 +4,7 @@ export const permissionActions = [
  'file.read','file.create','file.modify','file.delete','file.rename','file.move',
  'directory.read','directory.create','directory.modify','directory.delete',
  'git.status','git.diff','git.log','git.branch.create','git.checkout','git.commit','git.push','git.pull','git.merge','git.reset','git.force_push',
- 'terminal.safe','terminal.sensitive','terminal.privileged',
+ 'design.render','terminal.safe','terminal.sensitive','terminal.privileged',
  'dependency.install','dependency.remove','dependency.update','dependency.package_script',
  'project.create','project.import','project.open','project.switch','project.archive','project.reactivate','project.refresh','git.fetch','git.clean','git.branch.delete',
  'network.request','network.api','network.download','config.modify','config.environment','config.build','secret.read',
@@ -52,6 +52,7 @@ export function evaluatePolicy(ctx:PermissionContext,request:ActionRequest):Poli
  if(!securityEmployees.includes(ctx.agentId as SecurityEmployee)||!ctx.active||ctx.agentId!==request.agentId||ctx.workflowId!==request.workflowId||ctx.taskId!==request.taskId)return deny('Employee, active task or workflow ownership mismatch');
  if(!permissionActions.includes(request.action)||!request.resources.length||request.resources.length>16)return deny('Unknown action or invalid resources');
  if(ctx.projectId&&request.projectId!==ctx.projectId)return deny('Project ownership mismatch');
+ if(request.action==='design.render')return ['design','frontend'].includes(ctx.agentId)&&request.resources.length===1&&/^@design\/[a-f0-9]{64}$/.test(request.resources[0])&&ctx.files.includes(request.resources[0])&&!request.command?{decision:'approval_required',risk,reason:'Exact isolated static render approval required'}:deny('Render requires exact registered draft binding');
  if(request.action.startsWith('project.'))return ctx.agentId==='lead'&&request.resources.length===1&&request.resources[0].startsWith('@project/')?{decision:'allowed',risk:'safe',reason:'Director project metadata operation'}:deny('Project management requires Director context');
  if(['git.reset','git.force_push','git.clean','git.branch.delete'].includes(request.action))return deny('Destructive Git operations are not enabled');
  if(request.action==='secret.read'||request.action==='config.environment'||request.action==='terminal.privileged')return deny('Raw secrets, environment configuration and privileged execution are forbidden');

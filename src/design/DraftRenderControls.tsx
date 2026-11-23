@@ -1,0 +1,15 @@
+import {useState} from 'react';
+import type {Workflow} from '../orchestration/model.ts';
+import type {DesignAction} from './model.ts';
+export function DraftRenderControls({workflow:w,call,onChange,action}:{workflow:Workflow;call:(path:string,data:object)=>Promise<any>;onChange:()=>void;action:(data:Partial<DesignAction>)=>Promise<void>}){
+ const [prepared,setPrepared]=useState<{requestId:string;hash:string;profile:string}|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const d=w.design!,pilot=d.pilot,e=pilot?.evidence;
+ const drafts=w.tasks.filter(t=>t.status==='completed'&&t.result?.team?.designDraft&&(t.id===pilot?.taskId?!e:!d.conceptApproved&&!d.renders?.some(r=>r.sourceTaskId===t.id)));
+ const render=async(taskId?:string)=>{setBusy(true);setError('');try{if(taskId)setPrepared(await call('render/prepare',{taskId}));else if(prepared){await call('render/confirm',{requestId:prepared.requestId,expectedHash:prepared.hash});setPrepared(null);onChange();}}catch(e){setError((e as Error).message);}finally{setBusy(false);}};
+ return <section className="design-pilot-card"><h4>Frontend · визуальный пилот</h4><p>{pilot?({required:'Ожидается отдельный пилот по выбранному концепту.',render_required:'Пилот готов к изолированному рендеру.',review_required:'Дизайнер сравнивает пилот с концептом.',changes_required:'Дизайнер запросил изменения. Остальная реализация ждёт.',awaiting_approval:'Пилот проверен дизайнером и ожидает вашего согласования.',approved:'Пилот принят. Допускается остальная UI-реализация.'})[pilot.status]:'Пилот будет подготовлен после выбора концепта.'}</p>
+ {error&&<p role="alert">{error}</p>}{drafts.map(t=><button key={t.id} disabled={busy||w.status!=='paused'} onClick={()=>void render(t.id)}>Подготовить рендер · {t.title}</button>)}
+ {drafts.length>0&&w.status!=='paused'&&<p>Поставьте workflow на паузу перед рендером.</p>}
+ {prepared&&<div className="design-render-approval"><strong>Разрешить один изолированный рендер?</strong><p>390 / 768 / 1440 px · без JavaScript и сети. Файлы сайта не меняются.</p><small>Версия: {prepared.hash.slice(0,16)}</small><br/><button disabled={busy} onClick={()=>void render()}>Разрешить и отрисовать</button><button disabled={busy} onClick={()=>setPrepared(null)}>Отложить</button></div>}
+ {busy&&<p role="status">Подготовка изображений…</p>}{e&&<><a href={'/api/design/preview?workflowId='+encodeURIComponent(w.id)+'&renderId='+e.id} target="_blank" rel="noreferrer">Открыть отдельный пилот ↗</a><div className="design-pilot-images">{e.screenshots.map(ref=><a key={ref.id} href={'/api/design/artifact?workflowId='+encodeURIComponent(w.id)+'&id='+ref.id} target="_blank" rel="noreferrer"><img src={'/api/design/artifact?workflowId='+encodeURIComponent(w.id)+'&id='+ref.id} alt={'Пилот · '+ref.width+' px'}/><span>{ref.width} px</span></a>)}</div>{pilot?.directorApprovalRequired&&<button disabled={busy||pilot.status!=='awaiting_approval'} onClick={()=>void action({action:'approve_pilot',conceptId:d.selectedConceptId!,evidenceId:e.id})}>Согласовать этот пилот</button>}</>}
+ </section>;
+}

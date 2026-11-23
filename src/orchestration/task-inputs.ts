@@ -14,6 +14,7 @@ export function buildTaskInputs(w:Workflow,t:WorkflowTask,version:2|3=3):TaskInp
 }
 export function validateTaskInputs(w:Workflow,t:WorkflowTask){const actual=t.inputContext?.inputs;if(!actual)return;const expected=buildTaskInputs(w,t,actual.version===3?3:2);if(actual.version===undefined){delete expected.version;delete expected.requiredFiles;expected.handoffs=expected.handoffs.map(({taskId,agentId,summary,decisions,codeInfo,acceptance,verdict})=>({taskId,agentId,summary,decisions,codeInfo,acceptance,verdict}));}else if(actual.version!==2&&actual.version!==3)throw new Error('Unsupported task input version');if(JSON.stringify(actual)!==JSON.stringify(expected))throw new Error('Task inputs differ from approved dependency context');}
 export function findingReferencesAllowed(w:Workflow,reporter:WorkflowTask,f:Finding){
+ const pilot=reporter.inputContext?.design?.pilot,e=pilot?.evidence;if(reporter.id.startsWith('pilot-review-')&&reporter.agentId==='design'&&e&&reporter.description.includes(e.draftSha)&&f.responsibleTask===e.sourceTaskId&&f.files.length===0&&w.tasks.some(t=>t.id===e.sourceTaskId&&t.agentId==='frontend'&&t.teamSpec?.kind==='specification'&&t.teamSpec.scope.length===0))return true;
  const owner=w.tasks.find(x=>x.id===f.responsibleTask&&x.teamSpec?.kind==='implementation');if(!owner)return false;
  if(f.files.every(p=>owner.teamSpec!.scope.includes(p)))return true;
  // Independent gates may cite approved dependency inputs as context. The named owner
