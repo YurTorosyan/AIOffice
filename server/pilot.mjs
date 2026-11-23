@@ -1,3 +1,4 @@
+import {designImageInputs} from './design-image-inputs.mjs';
 import {workflowBudgets} from '../src/orchestration/budgets.ts';
 import {safeText} from '../src/security/redaction.ts';
 import {modelCatalog} from '../src/resources/policy.ts';
@@ -114,7 +115,7 @@ export class LeadPilot {
         this.state.threadId = thread.thread.id; this.state.instructionSources = thread.instructionSources || [];
         this.event('thread/started', `Read-only thread confirmed; ${this.role} profile supplied as developer instructions`);
         const turn = await this.rpc.request('turn/start', { ...this.resourceSelection(),...(this.outputSchema?{outputSchema:this.outputSchema}:{}),threadId: this.state.threadId,
-          input: [{ type: 'text', text: this.lead.skills.map(s=>`$${s.name}`).join(' ') + '\n' + this.prompt + '\n\nThe bridge has already read the authorized project files below. Use these complete, hashed repository snapshots instead of running file-reading commands; this makes the pilot work when the nested Windows shell sandbox is unavailable. Do not invoke shell or filesystem tools. Explicitly inspect the attached employee TOML profile and follow its developer_instructions. Skill inputs follow this message.\nREPOSITORY_SNAPSHOTS_JSON\n' + JSON.stringify(context) }, ...this.lead.skills.map(s => ({ type: 'skill', ...s }))],
+          input: [{ type: 'text', text: this.lead.skills.map(s=>`$${s.name}`).join(' ') + '\n' + this.prompt + '\n\nThe bridge has already read the authorized project files below. Use these complete, hashed repository snapshots instead of running file-reading commands; this makes the pilot work when the nested Windows shell sandbox is unavailable. Do not invoke shell or filesystem tools. Explicitly inspect the attached employee TOML profile and follow its developer_instructions. Skill inputs follow this message.\nREPOSITORY_SNAPSHOTS_JSON\n' + JSON.stringify(context) }, ...this.lead.skills.map(s => ({ type: 'skill', ...s })),...designImageInputs(context,this.root)],
           sandboxPolicy: { type: 'readOnly', networkAccess: false }, approvalPolicy: 'on-request', approvalsReviewer: 'user' });
         this.state.turnId ??= turn.turn.id;
       } catch (error) { this.error(error.message); const rpc = this.rpc; this.rpc = null; rpc?.close(); throw error; }

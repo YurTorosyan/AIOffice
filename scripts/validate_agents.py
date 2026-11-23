@@ -6,13 +6,17 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TOOLING = ROOT / 'work' / 'validation-deps'
+TOOLING = ROOT / 'work' / 'validation-deps-current'
+if not TOOLING.is_dir():
+    TOOLING = ROOT / 'work' / 'validation-deps'
 if TOOLING.is_dir():
     sys.path.insert(0, str(TOOLING))
 try:
     import yaml
+    if not hasattr(yaml, 'SafeLoader'):
+        raise ImportError('Incomplete PyYAML installation')
 except ImportError:
-    raise SystemExit('Validation needs PyYAML. Run: python -m pip install --target work/validation-deps "PyYAML>=6,<7"')
+    raise SystemExit('Validation needs PyYAML. Run: python -m pip install --target work/validation-deps-current "PyYAML>=6,<7"')
 
 
 class UniqueKeyLoader(yaml.SafeLoader):
